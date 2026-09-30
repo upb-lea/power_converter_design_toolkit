@@ -322,10 +322,9 @@ def test_initialize_heat_sink_optimization(test_type: TestCase, is_error: bool) 
                 calculation_mode="new",
                 subdirectory="summary",
             ),
-            data_generation=tc.DataGeneration(
-                calculation_mode="new",
-                subdirectory="data_generation"
-            ),
+            data_generation=tc.DataGeneration(calculation_mode_visualization="new",
+                                              calculation_mode_manufacture="new",
+                                              subdirectory="dummy"),
             configuration_data_files=tc.ConfigurationDataFiles(
                 topology_files=["topology.toml"],
                 capacitor_configuration_files=["capacitor.toml"],

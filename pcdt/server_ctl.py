@@ -21,6 +21,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 # own libraries
 import pcdt.server_ctl_dtos as server_ctl_dtos
+from pcdt.constant_path import TEMPLATE_FOLDER, HTML_TEMPLATE_FOLDER_NAME, STYLESHEET_FOLDER_NAME, PCDT_ROOT
 
 # Structure classes
 # Structure class of request command
@@ -67,19 +68,16 @@ class PcdtServer:
     app = FastAPI()
     app.add_middleware(SessionMiddleware, secret_key="your_secret_key")
 
-    # Get path of this file
-    _base_dir = os.path.dirname(os.path.abspath(__file__))
     # Set template directory
-    _template_directory = os.path.join(_base_dir, "htmltemplates")
-
+    _template_directory: str = os.path.join(PCDT_ROOT, TEMPLATE_FOLDER, HTML_TEMPLATE_FOLDER_NAME)
     templates = Jinja2Templates(directory=_template_directory)
 
     # Currently dummy password, later to secure in specific way
     users = {"Andi": "hallo"}
 
     # Progress status icon definition to display
-    icon = ["StyleSheets/OptIdle.png", "StyleSheets/OptInProgress.png", "StyleSheets/OptDone.png",
-            "StyleSheets/OptSkipped.png"]
+    icon = [f"{STYLESHEET_FOLDER_NAME}/OptIdle.png", f"{STYLESHEET_FOLDER_NAME}/OptInProgress.png",
+            f"{STYLESHEET_FOLDER_NAME}/OptDone.png", f"{STYLESHEET_FOLDER_NAME}/OptSkipped.png"]
 
     # Allocate multi processing variables
     server_request_queue: Queue
@@ -92,7 +90,7 @@ class PcdtServer:
     # Development
     _ssl_cert = abspath("ssl/cert.pem")  # Default for development
     _ssl_key = abspath("ssl/key.pem")
-    _optuna_path = abspath("htmltemplates/OptunaOrg.html")
+    _optuna_path = abspath(f"{_template_directory}/OptunaOrg.html")
 
     status_message = "Wait for button press!"  # Initial text
     # Server object
@@ -498,8 +496,8 @@ class PcdtServer:
                     PcdtServer.break_status = 1
                 # Display the control page
                 break_status = PcdtServer.break_status
-                return PcdtServer.templates.TemplateResponse("control_page.html",
-                                                             {"request": request, "url_back": "/html_homepage1", "break_status": break_status})
+                return PcdtServer.templates.TemplateResponse(request=request, name="control_page.html",
+                                                             context={"url_back": "/html_homepage1", "break_status": break_status})
 
         # Init request for main process
         request_data = ServerRequestData()
@@ -534,16 +532,16 @@ class PcdtServer:
         else:
             PcdtServer._breakpoint_flag = False
 
-        return PcdtServer.templates.TemplateResponse("main_page1.html",
-                                                     {"request": request, "c_table_data": table_data_circuit,
-                                                      "i_table_main_data": table_main_data_inductor,
-                                                      "t_table_main_data": table_main_data_transformer,
-                                                      "h_table_data": table_data_heat_sink,
-                                                      "s_table_data": table_data_summary,
-                                                      "total_process_time": PcdtServer.get_format_time(data.total_process_time),
-                                                      "text_message": PcdtServer.status_message,
-                                                      "break_pt_text": breakpoint_message,
-                                                      "user": user})
+        return PcdtServer.templates.TemplateResponse(request=request, name="main_page1.html",
+                                                     context={"c_table_data": table_data_circuit,
+                                                              "i_table_main_data": table_main_data_inductor,
+                                                              "t_table_main_data": table_main_data_transformer,
+                                                              "h_table_data": table_data_heat_sink,
+                                                              "s_table_data": table_data_summary,
+                                                              "total_process_time": PcdtServer.get_format_time(data.total_process_time),
+                                                              "text_message": PcdtServer.status_message,
+                                                              "break_pt_text": breakpoint_message,
+                                                              "user": user})
 
     @staticmethod
     @app.get("/html_homepage2", response_class=HTMLResponse, response_model=None)
@@ -583,8 +581,8 @@ class PcdtServer:
             if user is not None:
                 # Set the break status
                 break_status = PcdtServer._breakpoint_flag
-                return PcdtServer.templates.TemplateResponse("control_page.html",
-                                                             {"request": request, "url_back": "/html_homepage2", "break_status": break_status})
+                return PcdtServer.templates.TemplateResponse(request=request, name="control_page.html",
+                                                             context={"url_back": "/html_homepage2", "break_status": break_status})
 
         # Init request for main process
         request_data = ServerRequestData()
@@ -628,17 +626,17 @@ class PcdtServer:
         else:
             PcdtServer._breakpoint_flag = False
 
-        return PcdtServer.templates.TemplateResponse("main_page2.html", {"request": request,
-                                                                         "c_table_data": table_data_circuit,
-                                                                         "i_table_data": table_data_inductor,
-                                                                         "t_table_data": table_data_transformer,
-                                                                         "h_table_data": table_data_heat_sink,
-                                                                         "s_table_data": table_data_summary,
-                                                                         "configuration_process_time": PcdtServer.get_format_time(data.conf_process_time),
-                                                                         "c_selected_filtered_point_index": c_selected_filtered_point_index,
-                                                                         "text_message": PcdtServer.status_message,
-                                                                         "break_pt_text": breakpoint_message,
-                                                                         "user": user})
+        return PcdtServer.templates.TemplateResponse(request=request, name="main_page2.html",
+                                                     context={"c_table_data": table_data_circuit,
+                                                              "i_table_data": table_data_inductor,
+                                                              "t_table_data": table_data_transformer,
+                                                              "h_table_data": table_data_heat_sink,
+                                                              "s_table_data": table_data_summary,
+                                                              "configuration_process_time": PcdtServer.get_format_time(data.conf_process_time),
+                                                              "c_selected_filtered_point_index": c_selected_filtered_point_index,
+                                                              "text_message": PcdtServer.status_message,
+                                                              "break_pt_text": breakpoint_message,
+                                                              "user": user})
 
     @staticmethod
     @app.get("/control_page", response_class=HTMLResponse, response_model=None)
@@ -677,8 +675,8 @@ class PcdtServer:
             PcdtServer.status_message = "Stops the server and the optimization (if prog_exit_flag==true)"
             PcdtServer.req_stop.value = 1
 
-        return PcdtServer.templates.TemplateResponse("control_page.html",
-                                                     {"request": request, "url_back": url_back, "break_status": PcdtServer._breakpoint_flag})
+        return PcdtServer.templates.TemplateResponse(request=request, name="control_page.html",
+                                                     context={"url_back": url_back, "break_status": PcdtServer._breakpoint_flag})
 
     @staticmethod
     @app.get("/login", response_class=HTMLResponse, response_model=None)
@@ -690,7 +688,7 @@ class PcdtServer:
         :return: html-page
         :rtype:  _TemplateResponse
         """
-        return PcdtServer.templates.TemplateResponse("login.html", {"request": request})
+        return PcdtServer.templates.TemplateResponse(request=request, name="login.html")
 
     @staticmethod
     @app.post("/login", response_model=None)
@@ -712,7 +710,8 @@ class PcdtServer:
             request.session["user"] = username
             # Send back success and request client to request base url '/' with GET-Method (303)
             return RedirectResponse(url="/", status_code=303)
-        return PcdtServer.templates.TemplateResponse("login.html", {"request": request, "error": "Invalid credentials"})
+
+        return PcdtServer.templates.TemplateResponse(request=request, name="login.html", context={"error": "Invalid credentials"})
 
     @staticmethod
     @app.get("/admin", response_class=HTMLResponse, response_model=None)
@@ -730,7 +729,8 @@ class PcdtServer:
         """
         if not username:
             return RedirectResponse(url="/login")
-        return PcdtServer.templates.TemplateResponse("admin.html", {"request": request, "user": username})
+
+        return PcdtServer.templates.TemplateResponse(request=request, name="admin.html", context={"user": username})
 
     @staticmethod
     @app.get("/pareto_front", response_class=HTMLResponse, response_model=None)
@@ -774,15 +774,14 @@ class PcdtServer:
         # Check if result is not valid
         if not html_data.validity:
             # Invalid result page
-            return PcdtServer.templates.TemplateResponse("pareto_front.html",
-                                                         {"request": request,
-                                                          "info_string": html_data.evaluation_info,
-                                                          "pareto_front": "No data available",
-                                                          "url_back": url_back})
+            return PcdtServer.templates.TemplateResponse(request=request, name="pareto_front.html",
+                                                         context={"request": request,
+                                                                  "info_string": html_data.evaluation_info,
+                                                                  "pareto_front": "No data available",
+                                                                  "url_back": url_back})
         else:
             # Add information and back-button
-            return PcdtServer.templates.TemplateResponse("pareto_front.html",
-                                                         {"request": request,
-                                                          "info_string": html_data.evaluation_info,
-                                                          "pareto_front": html_data.pareto_front_optuna,
-                                                          "url_back": url_back})
+            return PcdtServer.templates.TemplateResponse(request=request, name="pareto_front.html",
+                                                         context={"info_string": html_data.evaluation_info,
+                                                                  "pareto_front": html_data.pareto_front_optuna,
+                                                                  "url_back": url_back})

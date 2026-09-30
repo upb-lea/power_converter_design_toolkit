@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Candidate visualization</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link rel="stylesheet" href="StyleSheets/browser_start_page.css">
+    <link rel="stylesheet" href="/StyleSheets/browser_start_page.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>Candidate visualization</h1>
+        <!-- Graphic with information -->
+        <div id="plot1"></div>
+        <div id="plot2"></div>
+        <div id="dataWindow">
+            <h2>Punkt-Daten</h2>
+            <div id="dataContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // Pareto candidate list
+        const points = [];
+
+        // Scale multiplication factor to prevent cut of points
+        const x_ext_scale = 1.1;
+        const y_ext_scale = 1.1;
+
+        const no_event_time = 50;
+
+        // Debug
+        let t = 0;
+        let tt = 0;
+        let SelectionFlag = false;
+
+        // Counter variable
+        let i = 0;
+        // Minimal update time for ploty-events
+        let Ploty1HoverTimeout;
+        let Ploty1UnhoverTimeout;
+
+        let Ploty2HoverTimeout;
+        let Ploty2UnhoverTimeout;
+        // Initialize the list
+        {%- for item in candidate_list %}
+            {%- if item.total_volume is not none and item.total_volume|length > 0 %}
+        points.push({ x: {{ item.total_volume|float }}, y_loss: {{ item.total_mean_loss|float }}, y_eff: {{ item.weighted_efficiency|float }}, cid: {{ item.combination_id|int}}, id: {{ loop.index0 }} });
+            {%- endif %}
+        {%- endfor %}
+
+        // Calculate maximum value of x-axe for both plots
+        const max_x = Math.max(...points.map(p => p.x)) * x_ext_scale;
+
+        // Common configuration for both plots
+        const config = {
+            displayModeBar: true,
+            displaylogo: false
+        };
+
+
+        // Prepare efficieny data for Plotly
+        const data_eff = [{
+            x: points.map(p => p.x),
+            y: points.map(p => p.y_eff),
+            mode: 'markers',
+            type: 'scatter',
+            marker: {
+                size: 12,
+                color: 'blue'
+            },
+            text: [],
+            hovertemplate: '',
+            name: 'Alle Punkte'
+        }];
+
+        // Calculate maximum value of y-axe
+        const max_y_eff = Math.max(...points.map(p => p.y_eff)) * y_ext_scale;
+
+        // Configure efficiency diagram
+        const layout_eff = {
+            title: 'Design candidates (Efficiency)',
+            xaxis: {
+                title: 'volume / m³',
+                range: [0, max_x]
+            },
+            yaxis: {
+                title: 'efficiency',
+                range: [0, max_y_eff]
+            },
+            hovermode: 'closest',
+            showlegend: false
+        };
+
+        // Prepare loss data for Plotly
+        const data_loss = [{
+            x: points.map(p => p.x),
+            y: points.map(p => p.y_loss),
+            mode: 'markers',
+            type: 'scatter',
+            marker: {
+                size: 12,
+                color: 'blue'
+            },
+            text: [],
+            hovertemplate: '',
+            name: 'Alle Punkte'
+        }];
+
+        // Calculate maximum value of y-axe
+        const max_y_loss = Math.max(...points.map(p => p.y_loss)) * y_ext_scale;
+
+        // Configure diagram
+        const layout_loss = {
+            title: 'Design candidates (Power loss)',
+            xaxis: {
+                title: 'volume / m³',
+                range: [0, max_x]
+            },
+            yaxis: {
+                title: 'power loss / W',
+                range: [0, max_y_loss]
+            },
+            hovermode: 'closest',
+            showlegend: false
+        };
+
+        // Tabelle aktualisieren
+        function updateTable(act_pointIndex) {
+
+            const x = points[act_pointIndex].x;
+            const y_eff = points[act_pointIndex].y_eff;
+            const y_loss = points[act_pointIndex].y_loss;
+            const cid = points[act_pointIndex].cid;
+            const pointId = points[act_pointIndex].id;
+
+            // Show candidate brief information and use html commands
+            dataContentDiv.innerHTML = `<strong>Punkt ${pointId}</strong><br>
+                <table>
+                    <thead>
+                        <tr>
+                            <th colspan="4">Design candidates</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th>Combination ID</th>
+                            <td>${cid}</td>
+                            <th>Circuit ID</th>
+                            <td>${act_pointIndex}</td>
+                        </tr>
+                        <tr>
+                            <th>Total volume</th>
+                            <td colspan="3">${x.toPrecision(4)} m³</td>
+                        </tr>
+                        <tr>
+                            <th>Weighted efficiency</th>
+                            <td>${y_eff.toPrecision(4)} W</td>
+                            <th>Total mean loss</th>
+                            <td>${y_loss.toPrecision(4)} W</td>
+                        </tr>
+                        <tr>
+                            <th>3D data available</th>
+                            <td><img src="StyleSheets/OptIdle.png" alt="Status Icon" width="20" height="20"></td>
+                            <th>View details</th>
+                            <td><button disabled>View details</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // Highlight points of  efficiency and loss plot
+        function highlightTracePoints (act_pointIndex) {
+
+                    const x = points[act_pointIndex].x;
+                    const y_eff = points[act_pointIndex].y_eff;
+                    const y_loss = points[act_pointIndex].y_loss;
+
+                     // Add new point to highlight the design candidate in efficiency plot
+                    Plotly.addTraces(plotDiv1, [{x: [x], y: [y_eff], mode: 'markers', type: 'scatter',
+                                     marker: {size: 10, color: 'red'}, showlegend: false, hoverinfo: 'skip' }]);
+                    highlight1TraceIndex = plotDiv1.data.length - 1;
+
+                    // Add new point to highlight the design candidate in loss plot
+                    Plotly.addTraces(plotDiv2, [{x: [x], y: [y_loss], mode: 'markers', type: 'scatter',
+                                     marker: {size: 10, color: 'red'}, showlegend: false, hoverinfo: 'skip' }]);
+                    highlight2TraceIndex = plotDiv2.data.length - 1;
+        }
+
+        // Remove highlighted points of efficiency and loss plot
+        function unhighlightTracePoints () {
+            // Remove  highlight point of efficiency plot
+            while (plotDiv1.data.length > 1) {Plotly.deleteTraces(plotDiv1, [plotDiv1.data.length - 1]);}
+            highlight1TraceIndex = null;
+            // Remove  highlight point of loss plot
+            while (plotDiv2.data.length > 1) {Plotly.deleteTraces(plotDiv2, [plotDiv2.data.length - 1]);}
+            highlight2TraceIndex = null;
+
+            // Delete the information
+            dataContentDiv.textContent = '';
+        }
+
+        // Toggle the selection flag
+        function toggleSelectionFlag() {
+            // Check SelectionFlag for true
+            if(SelectionFlag==false) {
+                SelectionFlag = true;
+            }
+            else
+            {   // Set SelectionFlag to false
+                SelectionFlag = false;
+            }
+        }
+
+        // Create diagrams
+        // Plot1
+        const plotDiv1 = document.getElementById('plot1');
+        Plotly.newPlot(plotDiv1, data_eff, layout_eff, config);
+
+        // Plot2
+        const plotDiv2 = document.getElementById('plot2');
+        Plotly.newPlot(plotDiv2, data_loss, layout_loss, config);
+
+        const dataContentDiv = document.getElementById('dataContent');
+        let highlight1TraceIndex = null;
+        let highlight2TraceIndex = null;
+
+
+        //---- Efficiency plot -------------------------------------------------------------------------------
+        // Specific event listener of efficiency plot
+        plotDiv1.on('plotly_hover', function(eventData) {
+            // Clear previous timeout
+            clearTimeout(Ploty1HoverTimeout);
+            // Use timeout and check events. This will only be performed, if no new event occurs within no_event_time (in ms)
+            Ploty1HoverTimeout = setTimeout(() => {
+                if (eventData && eventData.points && eventData.points.length > 0 && SelectionFlag == false)
+                {
+                    const point = eventData.points[0];
+                    const pointIndex = point.pointIndex;
+
+                    // Highlight points in both diagrams
+                    highlightTracePoints(pointIndex);
+
+                    // Update table for selected point
+                    updateTable(pointIndex);
+                }
+            }, no_event_time);
+        });
+
+        // Remove new highlight point for the design candidate
+        plotDiv1.on('plotly_unhover', function() {
+            if(SelectionFlag == false) {
+                clearTimeout(Ploty1UnhoverTimeout);
+                // Use timeout and check events. This will only performed, if no new event occurs within no_event_time (in ms)
+                Ploty1UnhoverTimeout = setTimeout(() => {
+                    // Remove highlighted points and table content
+                    unhighlightTracePoints();
+                }, no_event_time);
+            }
+        });
+
+        // Specific event listener of efficiency plot
+        plotDiv1.on('plotly_click', function(eventData) {
+            // Seach for detailed view
+            if (eventData?.points?.length > 0) {
+                toggleSelectionFlag();
+            }
+        });
+
+        //---- Loss plot -------------------------------------------------------------------------------
+
+        // Specific event listener of loss plot
+        plotDiv2.on('plotly_hover', function(eventData) {
+            // Clear previous timeout
+            clearTimeout(Ploty2HoverTimeout);
+            // Use timeout and check events. This will only be performed, if no new event occurs within no_event_time (in ms)
+            Ploty2HoverTimeout = setTimeout(() => {
+                if (eventData && eventData.points && eventData.points.length > 0 && SelectionFlag == false)
+                {
+                    const point = eventData.points[0];
+                    const pointIndex = point.pointIndex;
+
+                    // Highlight points in both diagrams
+                    highlightTracePoints(pointIndex);
+
+                    // Update table for selected point
+                    updateTable(pointIndex);
+                }
+            }, no_event_time);
+        });
+
+
+        // Remove new highlight point for the design candidate
+        plotDiv2.on('plotly_unhover', function() {
+            if(SelectionFlag == false) {
+                clearTimeout(Ploty2UnhoverTimeout);
+                // Use timeout and check events. This will only performed, if no new event occurs within no_event_time (in ms)
+                Ploty2UnhoverTimeout = setTimeout(() => {
+                    // Remove highlighted points and table content
+                    unhighlightTracePoints();
+                }, no_event_time);
+            }
+        });
+
+        plotDiv2.on('plotly_click', function(eventData) {
+            // Seach for detailed view
+            if (eventData?.points?.length > 0) {
+                toggleSelectionFlag();
+            }
+        });
+
+
+    </script>
+</body>
+</html>
+
+

@@ -20,7 +20,7 @@ from pcdt.constants import FACTOR_M_TO_MM
 
 logger = logging.getLogger(__name__)
 
-class DataGeneration:
+class ManufactureDataGeneration:
     """Generate manufacturing data."""
 
     @staticmethod
@@ -327,7 +327,7 @@ class DataGeneration:
         target_file_path = os.path.join(output_filepath, f"inductor_{inductor_number}_core.step")
         # Create file, if it does not exist
         if not os.path.isfile(target_file_path):
-            success = DataGeneration._run_freecad(
+            success = ManufactureDataGeneration._run_freecad(
                 freecad_script_file=pq_core_filepath,
                 output_file=target_file_path,
                 variables={
@@ -351,7 +351,7 @@ class DataGeneration:
         target_file_path = os.path.join(output_filepath, f"inductor_{inductor_number}_core_original.step")
         # Create file, if it does not exist
         if not os.path.isfile(target_file_path):
-            success = DataGeneration._run_freecad(
+            success = ManufactureDataGeneration._run_freecad(
                 freecad_script_file=pq_core_filepath,
                 output_file=target_file_path,
                 variables={
@@ -379,7 +379,7 @@ class DataGeneration:
         # Create file, if it does not exist
         if not os.path.isfile(target_file_path):
             # generate inductor bobbin
-            success = DataGeneration._run_freecad(
+            success = ManufactureDataGeneration._run_freecad(
                 freecad_script_file=bobbin_filepath,
                 output_file=target_file_path,
 
@@ -466,7 +466,7 @@ class DataGeneration:
         target_file_path = os.path.join(output_filepath, f"transformer_{transformer_number}_core_lower.step")
         # Create file, if it does not exist
         if not os.path.isfile(target_file_path):
-            success = DataGeneration._run_freecad(
+            success = ManufactureDataGeneration._run_freecad(
                 freecad_script_file=pq_core_filepath,
                 output_file=target_file_path,
                 variables={
@@ -490,7 +490,7 @@ class DataGeneration:
         target_file_path = os.path.join(output_filepath, f"transformer_{transformer_number}_core_original.step")
         # Create file, if it does not exist
         if not os.path.isfile(target_file_path):
-            success = DataGeneration._run_freecad(
+            success = ManufactureDataGeneration._run_freecad(
                 freecad_script_file=pq_core_filepath,
                 output_file=f"{output_filepath}/transformer_{transformer_number}_core_original.step",
                 variables={
@@ -514,7 +514,7 @@ class DataGeneration:
         target_file_path = os.path.join(output_filepath, f"transformer_{transformer_number}_core_upper.step")
         # Create file, if it does not exist
         if not os.path.isfile(target_file_path):
-            success = DataGeneration._run_freecad(
+            success = ManufactureDataGeneration._run_freecad(
                 freecad_script_file=pq_core_filepath,
                 output_file=target_file_path,
                 variables={
@@ -543,7 +543,7 @@ class DataGeneration:
         # Create file, if it does not exist
         if not os.path.isfile(target_file_path):
             # generate transformer upper bobbin
-            success = DataGeneration._run_freecad(
+            success = ManufactureDataGeneration._run_freecad(
                 freecad_script_file=bobbin_filepath,
                 output_file=target_file_path,
 
@@ -576,7 +576,7 @@ class DataGeneration:
         # Create file, if it does not exist
         if not os.path.isfile(target_file_path):
             # generate transformer lower bobbin
-            success = DataGeneration._run_freecad(
+            success = ManufactureDataGeneration._run_freecad(
                 freecad_script_file=bobbin_filepath,
                 output_file=target_file_path,
 
@@ -642,7 +642,7 @@ class DataGeneration:
         target_file_path = os.path.join(output_filepath, "heat_sink.step")
         # Create file, if it does not exist
         if not os.path.isfile(target_file_path):
-            success = DataGeneration._run_freecad(
+            success = ManufactureDataGeneration._run_freecad(
                 freecad_script_file=heat_sink_model_filepath,
                 output_file=target_file_path,
                 variables={
@@ -700,7 +700,7 @@ class DataGeneration:
         for combination_id in df_summary["combination_id"]:
             logger.info(f"Generate manufacturing data for {combination_id=}")
 
-            circuit_id, capacitor_id_list, inductor_id_list, transformer_id_list, heat_sink_id = DataGeneration._read_summary_parameters(
+            circuit_id, capacitor_id_list, inductor_id_list, transformer_id_list, heat_sink_id = ManufactureDataGeneration._read_summary_parameters(
                 combination_id, df_summary)
 
             # read circuit file
@@ -715,7 +715,7 @@ class DataGeneration:
                 os.makedirs(waveform_filepath)
 
             df_circuit = pd.read_csv(circuit_filepath)
-            DataGeneration._generate_circuit_data(circuit_id, df_circuit, output_filepath)
+            ManufactureDataGeneration._generate_circuit_data(circuit_id, df_circuit, output_filepath)
 
             # generate operating point table for microcontroller programming
             circuit_id_filepath = os.path.join(circuit_configuration.circuit_study_data.optimization_directory, FILTERED_RESULTS_PATH, f"{circuit_id}.pkl")
@@ -736,7 +736,7 @@ class DataGeneration:
                 capacitor_filepath = os.path.join(capacitor_configuration_list[count].study_data.optimization_directory,
                                                   str(circuit_id), capacitor_configuration_list[count].study_data.study_name, CAPACITOR_RESULTS)
                 df_capacitor = pd.read_csv(capacitor_filepath)
-                DataGeneration._generate_capacitor_data(capacitor_id, df_capacitor, output_filepath, count)
+                ManufactureDataGeneration._generate_capacitor_data(capacitor_id, df_capacitor, output_filepath, count)
 
             # read inductor file
             for count, inductor_id in enumerate(inductor_id_list):
@@ -745,7 +745,7 @@ class DataGeneration:
                                                  f"{inductor_configuration_list[count].study_data.study_name}.csv")
                 df_inductor = pd.read_csv(inductor_filepath)
                 inductor_insulations = inductor_configuration_list[count].inductor_toml_data.insulations  # type: ignore
-                DataGeneration._generate_inductor_data(inductor_id, df_inductor, output_filepath, count, inductor_insulations)
+                ManufactureDataGeneration._generate_inductor_data(inductor_id, df_inductor, output_filepath, count, inductor_insulations)
 
                 inductor_figure_filepath = os.path.join(inductor_configuration_list[count].study_data.optimization_directory, str(circuit_id),
                                                         inductor_configuration_list[count].study_data.study_name, CIRCUIT_INDUCTOR_FEM_LOSSES_FOLDER,
@@ -765,7 +765,7 @@ class DataGeneration:
                 if not isinstance(transformer_insulations, tc.TomlTransformerInsulation):
                     raise TypeError(f"Transformer insulations missing (Type {type(transformer_insulations)}, "
                                     f"but not type pcdt.toml_checker.TomlTransformerInsulation.")
-                DataGeneration._generate_transformer_data(transformer_id, df_transformer, output_filepath, count, transformer_insulations)
+                ManufactureDataGeneration._generate_transformer_data(transformer_id, df_transformer, output_filepath, count, transformer_insulations)
 
                 transformer_figure_filepath = os.path.join(transformer_configuration_list[count].study_data.optimization_directory, str(circuit_id),
                                                            transformer_configuration_list[count].study_data.study_name, CIRCUIT_TRANSFORMER_FEM_LOSSES_FOLDER,
@@ -777,4 +777,4 @@ class DataGeneration:
             # read heat sink file
             heat_sink_filepath = os.path.join(heat_sink_configuration.optimization_directory, f"{heat_sink_configuration.study_name}.csv")
             df_heat_sink = pd.read_csv(heat_sink_filepath)
-            DataGeneration._generate_heat_sink_data(heat_sink_id, df_heat_sink, output_filepath)
+            ManufactureDataGeneration._generate_heat_sink_data(heat_sink_id, df_heat_sink, output_filepath)

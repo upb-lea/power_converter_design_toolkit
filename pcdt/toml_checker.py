@@ -133,7 +133,8 @@ class Summary(BaseModel):
 class DataGeneration(BaseModel):
     """Flow control for the data generation."""
 
-    calculation_mode: Literal['new', 'continue', 'skip_purge']
+    calculation_mode_manufacture: Literal['new', 'continue', 'skip_purge']
+    calculation_mode_visualization: Literal['new', 'skip_purge']
     subdirectory: str
 
 class ConfigurationDataFiles(BaseModel):

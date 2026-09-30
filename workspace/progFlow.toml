@@ -22,7 +22,7 @@
 
 [circuit]
     number_of_trials = 500
-    calculation_mode = "new" # (new,continue,skip)
+    calculation_mode = "skip" # (new,continue,skip)
     subdirectory = "01_circuit"
 
 [capacitor]
@@ -32,17 +32,17 @@
 
 [inductor]
     numbers_of_trials = [500]
-    calculation_modes = ["skip"] # (new,continue,skip)
+    calculation_modes = ["new"] # (new,continue,skip)
     subdirectory = "03_inductor"
 
 [transformer]
     numbers_of_trials = [500]
-    calculation_modes = ["skip"] # (new,continue,skip)
+    calculation_modes = ["new"] # (new,continue,skip)
     subdirectory = "04_transformer"
 
 [heat_sink]
     number_of_trials = 500
-    calculation_mode = "skip" # (new,continue,skip)
+    calculation_mode = "new" # (new,continue,skip)
     subdirectory = "05_heat_sink"
 
 [pre_summary]
@@ -54,8 +54,9 @@
     subdirectory = "07_summary"
 
 [data_generation]
-    calculation_mode = "new" # (new,continue,skip_purge)
     subdirectory = "08_data_generation"
+    calculation_mode_visualization = "new" # (new,skip_purge)
+    calculation_mode_manufacture = "new" # (new,continue,skip_purge)
 
 [configuration_data_files]
     # General configuration file followed by circuit configuration file
