@@ -404,13 +404,14 @@ class InductorOptimization:
                 r_th_ind_heat_sink = ThermalCalcSupport.calculate_r_th_tim(
                     area_to_heat_sink, thermal_data)
 
-                inductor_results = InductorResults(
+                reluctance_inductor_results = InductorResults(
                     loss_array=combined_loss_array,
                     winding_loss_array=winding_loss_array,
                     core_loss_array=core_loss_array,
                     volume=inductor_volume,
                     area_to_heat_sink=area_to_heat_sink,
                     r_th_ind_heat_sink=r_th_ind_heat_sink,
+                    inductance=inductor_requirements.target_inductance,
                     circuit_id=circuit_id,
                     inductor_number_in_circuit=inductor_requirements.inductor_number_in_circuit,
                     inductor_id=inductor_id
@@ -418,7 +419,7 @@ class InductorOptimization:
 
                 pickle_file = os.path.join(new_circuit_dto_directory, f"{int(inductor_id)}.pkl")
                 with open(pickle_file, 'wb') as output:
-                    pickle.dump(inductor_results, output, pickle.HIGHEST_PROTOCOL)
+                    pickle.dump(reluctance_inductor_results, output, pickle.HIGHEST_PROTOCOL)
 
         # returns the number of filtered results
         return quantity_of_inductor_id_pareto
@@ -578,34 +579,34 @@ class InductorOptimization:
                         logger.debug(f"   * Inductor study: {act_io_config.inductor_study_name}")
                         logger.debug(f"   * Inductor ID: {inductor_id}")
 
-                        volume, combined_losses, area_to_heat_sink, winding_loss, core_loss, geometry_figure_path = (
-                            fmt.InductorOptimization.FemSimulation.full_simulation(
-                                df_geometry_re_simulation_number, current_waveform=current_waveform,
-                                inductor_config_filepath=config_filepath, process_number=process_number, print_derivations=False))
-                        combined_loss_array[vec_vvp] = combined_losses
-                        winding_loss_array[vec_vvp] = winding_loss
-                        core_loss_array[vec_vvp] = core_loss
+                        fem_output, p_total, area_to_heat_sink = fmt.InductorOptimization.FemSimulation.full_simulation(
+                            df_geometry_re_simulation_number, current_waveform=current_waveform,
+                            inductor_config_filepath=config_filepath, process_number=process_number)
+                        combined_loss_array[vec_vvp] = p_total
+                        winding_loss_array[vec_vvp] = fem_output.p_loss_winding
+                        core_loss_array[vec_vvp] = fem_output.p_core_magnet
 
                     # Calculate thermal resistance
                     r_th_ind_heat_sink = ThermalCalcSupport.calculate_r_th_tim(area_to_heat_sink, thermal_data)
 
-                    inductor_results = InductorResults(
+                    fem_inductor_results = InductorResults(
                         loss_array=combined_loss_array,
                         winding_loss_array=winding_loss_array,
                         core_loss_array=core_loss_array,
-                        volume=volume,
+                        volume=fem_output.volume,
                         area_to_heat_sink=area_to_heat_sink,
                         r_th_ind_heat_sink=r_th_ind_heat_sink,
+                        inductance=fem_output.inductance,
                         circuit_id=circuit_id,
                         inductor_id=inductor_id,
                         inductor_number_in_circuit=inductor_requirements.inductor_number_in_circuit,
                     )
 
-                    shutil.copy(geometry_figure_path, os.path.join(new_circuit_dto_directory, f"{int(inductor_id)}.png"))
+                    shutil.copy(fem_output.geometry_figure_path, os.path.join(new_circuit_dto_directory, f"{int(inductor_id)}.png"))
 
                     pickle_file = os.path.join(new_circuit_dto_directory, f"{int(inductor_id)}.pkl")
                     with open(pickle_file, 'wb') as output:
-                        pickle.dump(inductor_results, output, pickle.HIGHEST_PROTOCOL)
+                        pickle.dump(fem_inductor_results, output, pickle.HIGHEST_PROTOCOL)
             except Exception as e:
                 logger.warning(f"circuit {circuit_id} with inductor {inductor_id}: an operation point exceeds the boundary!")
                 failed_file = os.path.join(new_circuit_dto_directory, f"{int(inductor_id)}_failed.txt")
