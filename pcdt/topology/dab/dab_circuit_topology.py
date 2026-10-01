@@ -1663,13 +1663,44 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
 
         df.to_csv(f"{results_path}/control_parameters.csv")
 
-        parameters_microcontroller = ""
-        for count, row in df.iterrows():
-            line = "{" + (f'{count}, {row["v1"]}, {row["v2"]}, {row["p"]}, {row["phi / deg"]}, {row["tau_1 / deg"]}, {row["tau_2 / deg"]}, '
-                          f'{int(row["t_dead_1 / ns"])}, {int(row["t_dead_2 / ns"])}') + "},\n"
-            parameters_microcontroller = parameters_microcontroller + line
+        parameters_microcontroller = (
+            "/*\n"
+            "Code generated file by the optimization code.\n"
+            "For a new converter design, replace this file by the new code generated file.\n"
+            "*/\n\n"
+            '#include "driverlib.h"\n'
+            '#include "stddef.h"\n\n'
+            "// Define a struct to store the values for each entry\n"
+            "typedef struct {\n"
+            "    uint8_t number;\n"
+            "    uint8_t target_voltage_1;\n"
+            "    uint8_t target_voltage_2;\n"
+            "    uint8_t target_power;\n"
+            "    double phi_deg;\n"
+            "    double tau1_deg;\n"
+            "    double tau2_deg;\n"
+            "    double t_dead_1_ns;\n"
+            "    double t_dead_2_ns;\n"
+            "} DataEntry;\n\n"
+            "DataEntry data[] =\n"
+            "{\n")
 
-        with open(f"{results_path}/control_parameters.txt", "w") as f:
+        print(f"{parameters_microcontroller=}")
+
+        for count, row in df.iterrows():
+            line = (
+                "    {" + (f'{count}, {row["v1"]}, {row["v2"]}, {row["p"]}, {row["phi / deg"]}, {row["tau_1 / deg"]}, {row["tau_2 / deg"]}, '
+                           f'{int(row["t_dead_1 / ns"])}, {int(row["t_dead_2 / ns"])}') + "},\n")
+            parameters_microcontroller = parameters_microcontroller + line
+        parameters_microcontroller += (
+            "};\n\n"
+            "size_t data_size(void){\n"
+            "    return sizeof(data) / sizeof(data[0]);\n"
+            "};\n\n"
+            f"uint32_t frequency = {int(combination_dto.input_config.fs)};"
+        )
+
+        with open(f"{results_path}/control_parameters.c", "w") as f:
             f.write(parameters_microcontroller)
 
     @staticmethod

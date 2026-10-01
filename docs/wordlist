@@ -436,3 +436,11 @@ cmd
 PcdtServer
 Jinja
 css
+uint
+driverlib
+stddef
+struct
+typedef
+DataEntry
+sizeof
+
