@@ -1,6 +1,6 @@
 # Path configuration
 [general]
-    project_directory = "2026-09-02_example"
+    project_directory = "2026-09-31_example"
     topology = "dab"  # dab, sbc
 
 [breakpoints]
@@ -22,12 +22,12 @@
 
 [circuit]
     number_of_trials = 500
-    calculation_mode = "skip" # (new,continue,skip)
+    calculation_mode = "new" # (new,continue,skip)
     subdirectory = "01_circuit"
 
 [capacitor]
     # number of the entries corresponds to the number of required capacitors of the  topology
-    calculation_modes = ["skip", "skip"] # (new,skip)
+    calculation_modes = ["new", "new"] # (new,skip)
     subdirectory = "02_capacitor"
 
 [inductor]
@@ -54,9 +54,9 @@
     subdirectory = "07_summary"
 
 [data_generation]
-    subdirectory = "08_data_generation"
     calculation_mode_visualization = "new" # (new,skip_purge)
     calculation_mode_manufacture = "new" # (new,continue,skip_purge)
+    subdirectory = "08_data_generation"
 
 [configuration_data_files]
     # General configuration file followed by circuit configuration file

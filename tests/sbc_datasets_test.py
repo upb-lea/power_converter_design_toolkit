@@ -16,9 +16,6 @@ import transistordatabase as tdb
 # Enable logger
 pytestlogger = logging.getLogger(__name__)
 
-# Global variable to indicate, if transistor database is up to date
-is_tbd_updated: bool = False
-
 class TestCase(Enum):
     """Enum of test types."""
 
