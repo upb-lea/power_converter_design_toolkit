@@ -1380,7 +1380,6 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
         pkl_file_list = [f for f in os.listdir(dto_directory) if os.path.isfile(os.path.join(dto_directory, f))]
 
         circuit_id_filepath = os.path.join(dto_directory, pkl_file_list[0])
-        print(f"{circuit_id_filepath=}")
 
         with open(circuit_id_filepath, 'rb') as pickle_file_data:
             combination_dto: d_dtos.DabCircuitDTO = pickle.load(pickle_file_data)
@@ -1396,7 +1395,6 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
         pkl_file_list = [f for f in os.listdir(dto_directory) if os.path.isfile(os.path.join(dto_directory, f))]
 
         circuit_id_filepath = os.path.join(dto_directory, pkl_file_list[0])
-        print(f"{circuit_id_filepath=}")
 
         with open(circuit_id_filepath, 'rb') as pickle_file_data:
             combination_dto: d_dtos.DabCircuitDTO = pickle.load(pickle_file_data)
@@ -1684,8 +1682,6 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
             "} DataEntry;\n\n"
             "DataEntry data[] =\n"
             "{\n")
-
-        print(f"{parameters_microcontroller=}")
 
         for count, row in df.iterrows():
             line = (
