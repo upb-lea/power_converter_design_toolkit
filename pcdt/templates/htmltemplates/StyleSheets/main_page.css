@@ -1,0 +1,102 @@
+body {
+    font-family: "Latin Modern Roman", Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: left;
+}
+
+.tot_time{
+    font-size: 40px;
+    display: flex;
+    margin: 0;
+}
+
+.proc_time{
+    font-size: 30px;
+    display: flex;
+    margin: 0;
+}
+
+.container {
+    width: min(100vw, 800px);
+}
+
+.row_time {
+    margin: 0;
+    text-align: left;
+}
+
+.row {
+    display: flex;
+    margin-bottom: 10px;
+}
+
+.col {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid black;
+    text-align: center;
+}
+
+.row_legend {
+    display: flex;
+    margin-bottom: 0px; /* less space between the lines*/
+    line-height: 0;
+}
+
+.col_legend {
+    padding: 0px 2px;
+    display: flex;
+    align-items: center;  /* Center content */
+}
+
+.col_legend img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+.text-container {
+    flex-grow: 1;
+    text-align: left;
+}
+
+.single {
+    text-align: center;
+    padding: 10px;
+    border: 1px solid black;
+}
+
+/* Table setting */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px; /* Space to grid */
+}
+
+/* Table frame setting and style */
+th, td {
+    border: 1px solid black;
+    padding: 10px;
+    text-align: center;
+}
+
+
+button:disabled {
+    background-color: #ccc;  /* gray color*/
+    color: #666;             /* gray font */
+    cursor: not-allowed;      /* Show forbidden cursor */
+}
+
+/* Red button property */
+button.commandred {
+    font-size: 30px;
+    color: #fff;             /* White font*/
+    background-color: #f11;
+}
+
+/* Red button property */
+button.command {
+    font-size: 30px;
+}

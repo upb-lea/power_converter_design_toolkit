@@ -24,9 +24,6 @@ from pcdt.circuit_enums import CalcModeEnum
 # Enable logger
 pytestlogger = logging.getLogger(__name__)
 
-# Global variable to indicate, if transistor database is up to date
-is_tbd_updated: bool = False
-
 class TestCase(Enum):
     """Enum of test types."""
 
@@ -553,15 +550,10 @@ def get_transistor_name_list() -> list[str]:
     :rtype: list[str]
     """
     # Variable declaration
-    global is_tbd_updated
 
     # Create dictionary from transistor database list
     transistor_database = tdb.DatabaseManager()
     transistor_database.set_operation_mode_json()
-    if not is_tbd_updated:
-        transistor_database.update_from_fileexchange(True)
-    # Set to True to indicate to prevent obsolete re-update
-    is_tbd_updated = True
     keyword_list: list[str] = transistor_database.get_transistor_names_list()
     return keyword_list
 
@@ -599,7 +591,6 @@ def test_load_and_verify_circuit_parameters(get_transistor_name_list: list[str],
     """
     # Variable declaration
     test_object: ClassUnderTest = ClassUnderTest()
-    global is_tbd_updated
 
     # Called only on time while parametric test
     transistor_name_list = get_transistor_name_list
@@ -662,7 +653,7 @@ def test_load_and_verify_circuit_parameters(get_transistor_name_list: list[str],
     test_circuit_parameter_dict = test_circuit_parameter.model_dump()
 
     # Perform the test for the circuit
-    is_circuit_consistent, error_report_circuit = test_object.load_and_verify_circuit_parameters(test_circuit_parameter_dict, is_tbd_updated)
+    is_circuit_consistent, error_report_circuit = test_object.load_and_verify_circuit_parameters(test_circuit_parameter_dict)
 
     if test_type == TestCase.LowerBoundary or test_type == TestCase.UpperBoundary or test_type == TestCase.InBetween:
         # No error and empty report string
@@ -776,7 +767,6 @@ def test_initialize_circuit_optimization(get_transistor_name_list: list[str], te
     :type  is_error: bool
     """
     # Variable declaration
-    global is_tbd_updated
 
     # Called only on time while parametric test
     transistor_name_list = get_transistor_name_list
@@ -892,7 +882,7 @@ def test_initialize_circuit_optimization(get_transistor_name_list: list[str], te
         if not is_error:
             # Load the data from dict
             test_object.load_and_verify_general_parameters(test_general_parameter_dict)
-            test_object.load_and_verify_circuit_parameters(test_circuit_parameter_dict, is_tbd_updated)
+            test_object.load_and_verify_circuit_parameters(test_circuit_parameter_dict)
             # Perform the test
             is_initialized = test_object.initialize_circuit_optimization()
 
