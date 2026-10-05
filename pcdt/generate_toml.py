@@ -86,7 +86,8 @@ def generate_default_flow_control_toml(working_directory: str) -> None:
         subdirectory = "07_summary"
         
     [data_generation]
-        calculation_mode = "new" # (new,continue,skip_purge)
+        calculation_mode_visualization = "new" # (new,skip_purge)
+        calculation_mode_manufacture = "new"   # (new,continue,skip_purge)        
         subdirectory = "08_data_generation"
     
     [configuration_data_files]

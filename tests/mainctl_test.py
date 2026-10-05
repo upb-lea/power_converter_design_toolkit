@@ -91,8 +91,10 @@ test_FlowControl_base: tc.FlowControl = tc.FlowControl(
                               subdirectory="dummy"),
     summary=tc.Summary(calculation_mode="new",
                        subdirectory="dummy"),
-    data_generation=tc.DataGeneration(calculation_mode="new",
+    data_generation=tc.DataGeneration(calculation_mode_visualization="new",
+                                      calculation_mode_manufacture="new",
                                       subdirectory="dummy"),
+
     configuration_data_files=tc.ConfigurationDataFiles(
         topology_files=["dummy1", "dummy2"],
         capacitor_configuration_files=["dummy1", "dummy2"],

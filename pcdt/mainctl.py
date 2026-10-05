@@ -36,7 +36,8 @@ from pcdt import HeatSinkOptimization
 from pcdt.plot_control import ParetoPlots
 from pcdt import generate_logging_config
 import pcdt.generate_toml as toml_gen
-from pcdt.components.data_generation import DataGeneration
+from pcdt.components.manufacture_data_generation import ManufactureDataGeneration
+from pcdt.candidate_browser_generator import CandidateBrowserGen
 from pcdt.components.summary_processing import SummaryProcessing
 from pcdt.server_ctl_dtos import ConfigurationDataEntryDto, SummaryDataEntryDto
 from pcdt.server_ctl import PcdtServer as ServerCtl
@@ -50,7 +51,8 @@ from pcdt.constant_path import (CIRCUIT_INDUCTOR_RELUCTANCE_LOSSES_FOLDER, CIRCU
                                 CIRCUIT_TRANSFORMER_RELUCTANCE_LOSSES_FOLDER, CIRCUIT_TRANSFORMER_FEM_LOSSES_FOLDER,
                                 FILTERED_RESULTS_PATH, RELUCTANCE_COMPLETE_FILE, CIRCUIT_CAPACITOR_LOSS_FOLDER,
                                 FEM_COMPLETE_FILE, PROCESSING_COMPLETE_FILE, SUMMARY_COMBINATION_FOLDER, HEAT_SINK_DISC_FOLDER,
-                                PARETO_PLOT_PKL_FOLDER, PARETO_PLOT_PDF_FOLDER, PARETO_PLOT_PNG_FOLDER, FILEPATH_CONFIG_JSON)
+                                PARETO_PLOT_PKL_FOLDER, PARETO_PLOT_PDF_FOLDER, PARETO_PLOT_PNG_FOLDER, FILEPATH_CONFIG_JSON,
+                                DATA_GENERATION_VISUALIZATION, DATA_GENERATION_MANUFACTURE)
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +74,9 @@ class MainCtl:
     _heat_sink_optimization: HeatSinkOptimization | None
     _summary_pre_processing: SummaryProcessing | None
     _summary_processing: SummaryProcessing | None
+
+    # Data generation  class instances
+    _candidate_browser_gen: CandidateBrowserGen | None
 
     # Configuration list for capacitor, inductor and transformer
     _transformer_study_configuration_list: list[TransformerConfiguration]
@@ -107,7 +112,6 @@ class MainCtl:
         self._transformer_progress_time = []
 
         # Optimization class instances
-        # circuit_optimization is missing due to static class. Needs to be changed to instance class too.
         self._filtered_list_files = []
         self._circuit_optimization = None
         self._capacitor_selection = None
@@ -1596,10 +1600,21 @@ class MainCtl:
                                                                       circuit_configuration_file.replace(".toml", "")),
                                   calculation_mode=MainCtl._get_calculation_mode(toml_prog_flow.summary.calculation_mode))
 
-        _data_generation = StudyData(study_name="data_generation",
-                                     optimization_directory=os.path.join(project_directory, toml_prog_flow.data_generation.subdirectory,
-                                                                         circuit_configuration_file.replace(".toml", "")),
-                                     calculation_mode=MainCtl._get_calculation_mode(toml_prog_flow.data_generation.calculation_mode))
+        # Study data for data generation section
+
+        _data_generation_manufacture = StudyData(study_name="data_generation_manufacture",
+                                                 optimization_directory=os.path.join(project_directory, toml_prog_flow.data_generation.subdirectory,
+                                                                                     circuit_configuration_file.replace(".toml", ""),
+                                                                                     DATA_GENERATION_MANUFACTURE),
+                                                 calculation_mode=MainCtl._get_calculation_mode(toml_prog_flow.data_generation.calculation_mode_manufacture))
+
+        _data_generation_visualization = StudyData(
+            study_name="data_generation_visualization",
+            optimization_directory=os.path.join(
+                project_directory, toml_prog_flow.data_generation.subdirectory,
+                circuit_configuration_file.replace(".toml", ""),
+                DATA_GENERATION_VISUALIZATION),
+            calculation_mode=MainCtl._get_calculation_mode(toml_prog_flow.data_generation.calculation_mode_visualization))
 
         # Initialize the data for server monitoring (Only 1 circuit configuration is used, later to change)
         (self._circuit_list, self._inductor_main_list, self._inductor_list, self._transformer_main_list,
@@ -2010,16 +2025,26 @@ class MainCtl:
         # In case of CalcModeEnum.new_mode the old study is to delete
         if _summary_data.calculation_mode == CalcModeEnum.new_mode:
             # Delete old pre summary
-            self.delete_study_content(True, _summary_data.optimization_directory, _summary_data.study_name)
+            # self.delete_study_content(True, _summary_data.optimization_directory, _summary_data.study_name)
+            pass
 
         # -----------------------------
         # Data generation flow control
         # -----------------------------
 
-        # Check, if data generation is new or if it is to skip (Keep data integrity by delete old data)
-        if _data_generation.calculation_mode == CalcModeEnum.new_mode or _data_generation.calculation_mode == CalcModeEnum.skip_purge_mode:
+        # Comparison value to solve python code style checker issue
+        act_calculation_mode: CalcModeEnum = _data_generation_manufacture.calculation_mode
+        # Check, if manufacture data generation is new or if it is to skip (Keep data integrity by delete old data)
+        if act_calculation_mode == CalcModeEnum.new_mode or act_calculation_mode == CalcModeEnum.skip_purge_mode:
             # Delete old data
-            self.delete_study_content(True, _data_generation.optimization_directory, _data_generation.study_name)
+            self.delete_study_content(True, _data_generation_manufacture.optimization_directory, _data_generation_manufacture.study_name)
+
+        # Comparison value to solve python code style checker issue
+        act_calculation_mode = _data_generation_visualization.calculation_mode
+        # Check, if visualization data generation is new or if it is to skip (Keep data integrity by delete old data)
+        if act_calculation_mode == CalcModeEnum.new_mode or act_calculation_mode == CalcModeEnum.skip_purge_mode:
+            # Delete old data
+            self.delete_study_content(True, _data_generation_visualization.optimization_directory, _data_generation_visualization.study_name)
 
         # -- Start server  --------------------------------------------------------------------------------------------
 
@@ -2499,18 +2524,38 @@ class MainCtl:
         # Data generation
         # --------------------------
 
-        # Check, if data generation is to skip
-        if not _data_generation.calculation_mode == CalcModeEnum.skip_purge_mode:
-            logger.info("Start data generation")
+        # --- Manufacture data generation ---------------------------------------------------------
 
-            DataGeneration.generate_manufacturing_data(debug=toml_debug,
-                                                       circuit_configuration=self._circuit_optimization,
-                                                       heat_sink_configuration=self._heat_sink_study_data,
-                                                       inductor_configuration_list=self._inductor_study_configuration_list,
-                                                       transformer_configuration_list=self._transformer_study_configuration_list,
-                                                       capacitor_configuration_list=self._capacitor_selection_configuration_list,
-                                                       summary_data=_summary_data,
-                                                       data_generation_data=_data_generation)
+        # Check, if manufacture data generation is to perform
+        if not _data_generation_manufacture.calculation_mode == CalcModeEnum.skip_purge_mode:
+            logger.info("Start manufacture data generation")
+
+            ManufactureDataGeneration.generate_manufacturing_data(debug=toml_debug,
+                                                                  circuit_configuration=self._circuit_optimization,
+                                                                  heat_sink_configuration=self._heat_sink_study_data,
+                                                                  inductor_configuration_list=self._inductor_study_configuration_list,
+                                                                  transformer_configuration_list=self._transformer_study_configuration_list,
+                                                                  capacitor_configuration_list=self._capacitor_selection_configuration_list,
+                                                                  summary_data=_summary_data,
+                                                                  data_generation_data=_data_generation_manufacture)
+
+        # --- Candidate browser data generation ---------------------------------------------------
+
+        # Check, if result visualization data generation is to perform
+        if _data_generation_visualization.calculation_mode == CalcModeEnum.new_mode:
+            logger.info("Start result visualization data generation")
+
+            # Init candidate browser with study data
+            self._candidate_browser_gen = CandidateBrowserGen(_data_generation_visualization)
+
+            # Generate html-files and style sheet to visualize the result
+            self._candidate_browser_gen.generate_html_visualization(debug=toml_debug,
+                                                                    circuit_configuration=self._circuit_optimization,
+                                                                    heat_sink_configuration=self._heat_sink_study_data,
+                                                                    inductor_configuration_list=self._inductor_study_configuration_list,
+                                                                    transformer_configuration_list=self._transformer_study_configuration_list,
+                                                                    capacitor_configuration_list=self._capacitor_selection_configuration_list,
+                                                                    summary_data=_summary_data)
 
         # --------------------------
         # End of process
