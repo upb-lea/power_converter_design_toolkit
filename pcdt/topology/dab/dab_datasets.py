@@ -63,7 +63,7 @@ class HandleDabDto:
         return valid_directory_flag
 
     @staticmethod
-    def init_config(name: str, mesh_v1: np.ndarray, mesh_v2: np.ndarray, mesh_p: np.ndarray,
+    def init_config(circuit_id: str, mesh_v1: np.ndarray, mesh_v2: np.ndarray, mesh_p: np.ndarray,
                     sampling: CircuitSampling, n: float, ls: float, lc1: float, lc2: float, fs: float,
                     transistor_dto_1: d_dtos.TransistorDTO, transistor_dto_2: d_dtos.TransistorDTO,
                     lossfilepath: str, c_par_1: float, c_par_2: float, t_dead_1_max: float, t_dead_2_max: float,
@@ -71,8 +71,8 @@ class HandleDabDto:
         """
         Initialize the DAB structure.
 
-        :param name: name of the simulation
-        :type name: str
+        :param circuit_id: circuit ID
+        :type circuit_id: str
         :param mesh_v1: mesh or hypercube sampling for v1
         :type mesh_v1: np.ndarray
         :param mesh_v2: mesh or hypercube sampling for v2
@@ -171,7 +171,7 @@ class HandleDabDto:
             lossfilepath=lossfilepath)
 
         dab_dto = d_dtos.DabCircuitDTO(
-            circuit_id=name,
+            circuit_id=circuit_id,
             timestamp=None,
             metadata=None,
             input_config=input_configuration,

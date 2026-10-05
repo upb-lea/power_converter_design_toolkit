@@ -635,7 +635,7 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
                 transistor_2_dto: d_dtos.TransistorDTO = transistor_dto
 
         dab_calc = HandleDabDto.init_config(
-            name=dab_config.circuit_study_name,
+            circuit_id=dab_config.circuit_study_name,
             mesh_v1=fixed_parameters.mesh_v1,
             mesh_v2=fixed_parameters.mesh_v2,
             mesh_p=fixed_parameters.mesh_p,
@@ -1034,7 +1034,7 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
         fix_parameters = DabCircuitOptimization.calculate_fixed_parameters(dab_config)
 
         dab_dto = HandleDabDto.init_config(
-            name=str(trial_number),
+            circuit_id=str(trial_number),
             mesh_v1=fix_parameters.mesh_v1,
             mesh_v2=fix_parameters.mesh_v2,
             mesh_p=fix_parameters.mesh_p,
@@ -1082,7 +1082,7 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
             transistor_dto_2 = HandleDabDto.tdb_to_transistor_dto(str(df.at[index, "params_transistor_2_name_suggest"]))
 
             dab_dto = HandleDabDto.init_config(
-                name=str(df["number"][index].item()),
+                circuit_id=str(df["number"][index].item()),
                 mesh_v1=self._fixed_parameters.mesh_v1,
                 mesh_v2=self._fixed_parameters.mesh_v2,
                 mesh_p=self._fixed_parameters.mesh_p,
@@ -1665,6 +1665,16 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
             "/*\n"
             "Code generated file by the optimization code.\n"
             "For a new converter design, replace this file by the new code generated file.\n"
+            f"Timestamp calculation: {combination_dto.timestamp}\n"
+            f"Timestamp of this c-file generation: {np.asarray(datetime.datetime.now().isoformat())}\n"
+            f"Circuit ID: {combination_dto.circuit_id}\n"
+            f"Switching frequency: {combination_dto.input_config.fs}\n"
+            f"Ls: {combination_dto.input_config.Ls}\n"
+            f"Lc1: {combination_dto.input_config.Lc1}\n"
+            f"Lc2: {combination_dto.input_config.Lc2}\n"
+            f"n: {combination_dto.input_config.n}\n"
+            f"transistor_1: {combination_dto.input_config.transistor_dto_1.name}\n"
+            f"transistor_2: {combination_dto.input_config.transistor_dto_2.name}\n"
             "*/\n\n"
             '#include "driverlib.h"\n'
             '#include "stddef.h"\n\n'
