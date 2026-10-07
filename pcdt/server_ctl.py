@@ -99,11 +99,11 @@ class PcdtServer:
     req_stop = multiprocessing.Value('i', 0)
     stop_flag = multiprocessing.Value('i', 0)
     # Server process
-    _server_process = None
+    _server_process: multiprocessing.Process | None = None
     # program exit flag
     _prog_exit_flag = False
     # Server supervision
-    _server_supervision = None
+    _server_supervision: threading.Thread | None = None
     # Selected configuration index
     _c_config_index = 0
     # Selected filtered point index
@@ -147,13 +147,15 @@ class PcdtServer:
         # Start the server process
         PcdtServer._server_process = multiprocessing.Process(target=PcdtServer._run_server,
                                                              args=(act_server_request_queue, act_server_response_queue,))
-        PcdtServer._server_process.start()
+        if PcdtServer._server_supervision is not None:
+            PcdtServer._server_process.start()
 
         # Check if server process supervision is to start due to program exit requested by server
         if PcdtServer._prog_exit_flag:
             # Create thread for the server supervision and start it
             PcdtServer._server_supervision = threading.Thread(target=PcdtServer._supervise_server_stop, daemon=True)
-            PcdtServer._server_supervision.start()
+            if PcdtServer._server_supervision is not None:
+                PcdtServer._server_supervision.start()
 
     @staticmethod
     def stop_pcdt_server() -> None:
