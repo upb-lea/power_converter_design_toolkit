@@ -72,8 +72,10 @@ class ParetoPlots:
             plt.legend()
         plt.xlabel(x_label)
         plt.ylabel(y_label)
-        plt.xlim(xlim)
-        plt.ylim(ylim)
+        if xlim is not None:
+            plt.xlim((xlim[0], xlim[1]))
+        if ylim is not None:
+            plt.ylim((ylim[0], ylim[1]))
         plt.grid()
         plt.tight_layout()
         # make sure to not generate a filename.pdf.pdf (twice ".pdf").
@@ -312,8 +314,9 @@ class ParetoPlots:
                 x_scale_min = min(x_scale_min, 0.9 * df_fem_result[volume_key].min())
                 x_scale_max = max(x_scale_max, 1.1 * df_fem_result[volume_key].max())
 
-                y_scale_min = min(y_scale_min, 0.9 * np.min(loss_array_from_index))
-                y_scale_max = max(y_scale_max, 1.1 * np.max(loss_array_from_index))
+                if loss_array_from_index:
+                    y_scale_min = min(y_scale_min, 0.9 * np.min(loss_array_from_index))
+                    y_scale_max = max(y_scale_max, 1.1 * np.max(loss_array_from_index))
 
             # Set the target directory
             fig_name = os.path.join(summary_directory, f"transformer_c{circuit_number}_{transformer_study_data.study_name}")
