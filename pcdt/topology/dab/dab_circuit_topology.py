@@ -1463,23 +1463,22 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
         :param file_path: filename including absolute path
         :type file_path: str
         """
-        toml_data = '''
-        [default_data] # After update this configuration file according your project delete this line to validate it
-        [output_range]
-            v1_min_max_list=[690, 710]
-            v2_min_max_list=[175, 295]
-            p_min_max_list=[-2000, 2200]
-
-
-        [sampling]
-            sampling_method="dessca"
-            sampling_points=2
-            sampling_random_seed=10
-            v1_additional_user_point_list=[]
-            v2_additional_user_point_list=[]
-            p_additional_user_point_list=[]
-            additional_user_weighting_point_list=[]
-        '''
+        toml_data = (
+            '[default_data] # After update this configuration file according your project delete this line to validate it\n'
+            '[output_range]\n'
+            '    v1_min_max_list=[690, 710]\n'
+            '    v2_min_max_list=[175, 295]\n'
+            '    p_min_max_list=[-2000, 2200]\n\n'
+    
+            '[sampling]\n'
+            '    sampling_method="dessca"\n'
+            '    sampling_points=2\n'
+            '    sampling_random_seed=10\n'
+            '    v1_additional_user_point_list=[]\n'
+            '    v2_additional_user_point_list=[]\n'
+            '    p_additional_user_point_list=[]\n'
+            '    additional_user_weighting_point_list=[]'
+        )
         with open(file_path, 'w') as output:
             output.write(toml_data)
 
@@ -1491,50 +1490,44 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
         :param file_path: filename including absolute path
         :type file_path: str
         """
-        toml_data = '''
-        [default_data] # After update this configuration file according your project delete this line to validate it
-        [design_space]
-            f_s_min_max_list=[50e3, 300e3]
-            l_s_min_max_list=[20e-6, 900e-6]
-            l_1_min_max_list=[10e-6, 10e-3]
-            l_2__min_max_list=[10e-6, 1e-3]
-            n_min_max_list=[3, 7]
-            transistor_1_name_list=['CREE_C3M0065100J', 'CREE_C3M0120100J']
-            transistor_2_name_list=['CREE_C3M0060065J', 'CREE_C3M0120065J']
-            c_par_1=16e-12
-            c_par_2=16e-12
-            t_dead_1_max = 500e-9
-            t_dead_2_max = 500e-9
-
-        [output_range]
-            v1_min_max_list=[690, 710]
-            v2_min_max_list=[175, 295]
-            p_min_max_list=[-2000, 2200]
-
-        [sampling]
-            sampling_method="latin_hypercube"
-            sampling_points=4
-            sampling_random_seed=10
-            v1_additional_user_point_list=[700]
-            v2_additional_user_point_list=[180]
-            p_additional_user_point_list=[2000]
-
-        [filter_distance]
-            number_filtered_designs = 1
-            difference_percentage = 5
-
-        [thermal_data]
-            # [tim_thickness, tim_conductivity]
-            transistor_b1_cooling = [1e-3,12.0]
-            transistor_b2_cooling = [1e-3,12.0]            
-
-        '''
+        toml_data = (
+            '[default_data] # After update this configuration file according your project delete this line to validate it\n'
+            '[design_space]\n'
+            '    f_s_min_max_list=[50e3, 300e3]\n'    
+            '    l_s_min_max_list=[20e-6, 900e-6]\n'
+            '    l_1_min_max_list=[10e-6, 10e-3]\n'
+            '    l_2__min_max_list=[10e-6, 1e-3]\n'
+            '    n_min_max_list=[3, 7]\n'
+            '    transistor_1_name_list=["CREE_C3M0065100J", "CREE_C3M0120100J"]\n'
+            '    transistor_2_name_list=["CREE_C3M0060065J", "CREE_C3M0120065J"]\n'
+            '    c_par_1=16e-12\n'
+            '    c_par_2=16e-12\n'
+            '    t_dead_1_max = 500e-9\n'
+            '    t_dead_2_max = 500e-9\n\n'
+    
+            '[output_range]\n'
+            '    v1_min_max_list=[690, 710]\n'
+            '    v2_min_max_list=[175, 295]\n'
+            '    p_min_max_list=[-2000, 2200]\n\n'
+    
+            '[sampling]\n'
+            '    sampling_method="latin_hypercube"\n'
+            '    sampling_points=4\n'
+            '    sampling_random_seed=10\n'
+            '    v1_additional_user_point_list=[700]\n'
+            '    v2_additional_user_point_list=[180]\n'
+            '    p_additional_user_point_list=[2000]\n\n'
+    
+            '[filter_distance]\n'
+            '    number_filtered_designs = 1\n'
+            '    difference_percentage = 5\n\n'
+    
+            '[thermal_data]\n'
+            '    # [tim_thickness, tim_conductivity]\n'
+            '    transistor_b1_cooling = [1e-3,12.0]\n'
+            '    transistor_b2_cooling = [1e-3,12.0]\n')
         with open(file_path, 'w') as output:
             output.write(toml_data)
-
-    _transformer_study_configuration_list: list[TransformerConfiguration]
-    _inductor_study_configuration_list: list[InductorConfiguration]
-    _capacitor_selection_configuration_list: list[CapacitorConfiguration]
 
     def generate_result_dtos(self, summary_data: StudyData, capacitor_selection_data_list: list[CapacitorConfiguration],
                              inductor_configuration_list: list[InductorConfiguration],
