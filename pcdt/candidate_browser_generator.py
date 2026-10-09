@@ -14,7 +14,7 @@ import pcdt.toml_checker as tc
 from pcdt import CapacitorConfiguration, InductorConfiguration, TransformerConfiguration, StudyData, CircuitOptimizationBase
 from pcdt.constant_path import (TEMPLATE_FOLDER, HTML_TEMPLATE_FOLDER_NAME, STYLESHEET_FOLDER_NAME, CANDIDATE_BROWSER_HTML,
                                 PYTHON_TEMPLATE_FOLDER_NAME, WEBSERVER_TEMPLATE, VISUALIZATION_TEMPLATE, CB_START_CSS,
-                                CB_DETAIL_CCS, PCDT_ROOT, WEB_SERVER_PY, TMP_DETAILED_HTML)
+                                CB_DETAIL_CCS, PCDT_ROOT, WEB_SERVER_PY, TMP_DETAILED_HTML, CB_ICON, CB_IDLE_PNG)
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +78,7 @@ class CandidateBrowserGen:
         """
         # Variable declaration and initialization
         # Style sheet list
-        stylesheet_list: list[str] = [CB_START_CSS, CB_DETAIL_CCS]
+        stylesheet_list: list[str] = [CB_START_CSS, CB_DETAIL_CCS, CB_ICON, CB_IDLE_PNG]
         # Destination path for style sheets
         style_sheet_path: str
         # Style sheet source path
@@ -152,7 +152,6 @@ class CandidateBrowserGen:
         # Copy template to target location
         for template in template_list:
             shutil.copy(f"{self.html_template_folder}/{template}", template_path)
-
 
     def generate_html_visualization(self, debug: tc.Debug,
                                     circuit_configuration: CircuitOptimizationBase,

@@ -111,13 +111,15 @@
     <script>
         // Pareto circuit list
         const circuit_points = [];
+        const circuit_sel_point= [];
 
         // Pareto inductor list
         const inductor_points = [];
+        const inductor_sel_point= [];
 
         // Pareto transformer list
         const transformer_points = [];
-
+        const transformer_sel_point= [];
 
         // Scale multiplication factor to prevent cut of points
         const x_ext_scale = 1.1;
@@ -130,30 +132,42 @@
         let tt = 0;
 
         // Initialize the circuit list
-        {%- for item in plot_data.circuit_data %}
+        {%- for item in plot_data.circuit_data.points %}
             {%- if item.ZVS_rate is not none and item.ZVS_rate|length > 0 %}
         circuit_points.push({ x: {{ item.ZVS_rate|float }}, y: {{ item.Current_factor|float }}});
             {%- endif %}
         {%- endfor %}
 
+        // Initialize the selected point of the circuit
+        circuit_sel_point.push({ x: {{ plot_data.circuit_data.sel_point.ZVS_rate|float }},
+                                 y: {{ plot_data.circuit_data.sel_point.Current_factor|float }}});
+
         // Debug
         console.log("Circuit points:", circuit_points);
+        console.log("Circuit selected point:", circuit_sel_point);
 
 
         // Initialize the inductor list
-        {%- for item in plot_data.inductor_data %}
+        {%- for item in plot_data.inductor_data.points %}
             {%- if item.total_volume is not none and item.total_volume|length > 0 %}
         inductor_points.push({ x: {{ item.total_volume|float }}, y: {{ item.total_mean_loss|float }} });
             {%- endif %}
         {%- endfor %}
 
+        // Initialize the selected point of the inductor
+        inductor_sel_point.push({ x: {{ plot_data.inductor_data.sel_point.total_volume|float }},
+                                 y: {{ plot_data.inductor_data.sel_point.total_mean_loss|float }}});
+
         // Initialize the transformer list
-        {%- for item in plot_data.transformer_data %}
+        {%- for item in plot_data.transformer_data.points %}
             {%- if item.total_volume is not none and item.total_volume|length > 0 %}
         transformer_points.push({ x: {{ item.total_volume|float }}, y: {{ item.total_mean_loss|float }} });
             {%- endif %}
         {%- endfor %}
 
+        // Initialize the selected point of the transformer
+        transformer_sel_point.push({ x: {{ plot_data.transformer_data.sel_point.total_volume|float }},
+                                 y: {{ plot_data.transformer_data.sel_point.total_mean_loss|float }}});
 
 
         // Calculate maximum value of x-axe  and y-axe for circuit plot
@@ -188,7 +202,21 @@
             },
             text: [],
             hovertemplate: '',
-            name: 'Alle Punkte'
+            name: 'All points'
+        }];
+
+        const cir_sel_point = [{
+            x: circuit_sel_point.map(p => p.x),
+            y: circuit_sel_point.map(p => p.y),
+            mode: 'markers',
+            type: 'scatter',
+            marker: {
+                size: 14,
+                color: 'red'
+            },
+            text: [],
+            hovertemplate: '',
+            name: ''
         }];
 
         // Configure circuit diagram
@@ -218,7 +246,7 @@
             },
             text: [],
             // hovertemplate: '',
-            name: 'Alle Punkte'
+            name: 'All points'
         }];
 
         // Configure inductor diagram
@@ -248,7 +276,21 @@
             },
             text: [],
             // hovertemplate: '',
-            name: 'Alle Punkte'
+            name: 'All points'
+        }];
+
+        const ind_sel_point = [{
+            x: inductor_sel_point.map(p => p.x),
+            y: inductor_sel_point.map(p => p.y),
+            mode: 'markers',
+            type: 'scatter',
+            marker: {
+                size: 14,
+                color: 'red'
+            },
+            text: [],
+            hovertemplate: '',
+            name: ''
         }];
 
         // Configure inductor diagram
@@ -266,20 +308,32 @@
             showlegend: false
         };
 
+        const tr_sel_point = [{
+            x: transformer_sel_point.map(p => p.x),
+            y: transformer_sel_point.map(p => p.y),
+            mode: 'markers',
+            type: 'scatter',
+            marker: {
+                size: 14,
+                color: 'red'
+            },
+            text: [],
+            hovertemplate: '',
+            name: ''
+        }];
+
         // Create diagrams
         // Circuit plot
         const plotDivCir = document.getElementById('plotcircuit');
-        Plotly.newPlot(plotDivCir, cir_data, cir_layout, config);
+        Plotly.newPlot(plotDivCir, [...cir_data, ...cir_sel_point], cir_layout, config);
 
         // Inductor plot
         const plotDivInd = document.getElementById('plotinductor');
-        Plotly.newPlot(plotDivInd, ind_data, ind_layout, config);
+        Plotly.newPlot(plotDivInd, [...ind_data, ...ind_sel_point], ind_layout, config);
 
         // Transformer plot
         const plotDivTr = document.getElementById('plottransformer');
-        Plotly.newPlot(plotDivTr, tr_data, tr_layout, config);
-
-
+        Plotly.newPlot(plotDivTr, [...tr_data, ...tr_sel_point], tr_layout, config);
 
         // Request detailed view sheet
         function open3DView() {

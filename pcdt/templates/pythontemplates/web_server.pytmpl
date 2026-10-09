@@ -20,15 +20,17 @@ from fastapi.staticfiles import StaticFiles
 PCDT_ROOT: str
 SUMMARY_DATA_CSV: str
 CIRCUIT_DATA_CSV: str
-CAPACITOR_DATA_BASE: str
-INDUCTOR_DATA_BASE: str
-TRANSFORMER_DATA_BASE: str
+CAPACITOR_BASE_PATH: str
+INDUCTOR_BASE_PATH: str
+TRANSFORMER_BASE_PATH: str
 CAPACITOR0_CSV: str
 CAPACITOR1_CSV: str
 INDUCTOR_CSV: str
 TRANSFORMER_CSV: str
 HEAT_SINK_CSV: str
-VISUALIZATION_BASE_DIR: str
+VISUALIZATION_BASE_PATH: str
+# Name key (Use a key, which does not correspond to any SI-unit)
+NAME_KEY="STR"
 
 # Allocate FastAPI instance
 app = FastAPI()
@@ -38,8 +40,8 @@ candidates_key_list: list[dict] = []
 
 def initialize_path(act_workspace_name: str):
     # Variable declaration
-    global PCDT_ROOT, SUMMARY_DATA_CSV, CIRCUIT_DATA_CSV, CAPACITOR_DATA_BASE, INDUCTOR_DATA_BASE, VISUALIZATION_BASE_DIR
-    global TRANSFORMER_DATA_BASE, CAPACITOR0_CSV, CAPACITOR1_CSV, INDUCTOR_CSV, TRANSFORMER_CSV, HEAT_SINK_CSV
+    global PCDT_ROOT, SUMMARY_DATA_CSV, CIRCUIT_DATA_CSV, CAPACITOR_BASE_PATH, INDUCTOR_BASE_PATH, VISUALIZATION_BASE_PATH
+    global TRANSFORMER_BASE_PATH, CAPACITOR0_CSV, CAPACITOR1_CSV, INDUCTOR_CSV, TRANSFORMER_CSV, HEAT_SINK_CSV
     global app, templates
 
     # Find root directory
@@ -68,23 +70,23 @@ def initialize_path(act_workspace_name: str):
     # Directory structure derivate from root directory
     SUMMARY_DATA_CSV = os.path.join(PCDT_ROOT, "{{ path_info.summary_data_csv }}")
     CIRCUIT_DATA_CSV = os.path.join(PCDT_ROOT, "{{ path_info.circuit_data_csv }}")
-    CAPACITOR_DATA_BASE = os.path.join(PCDT_ROOT, "{{ path_info.capacitor_base_path }}")
-    INDUCTOR_DATA_BASE = os.path.join(PCDT_ROOT, "{{ path_info.inductor_base_path }}")
-    TRANSFORMER_DATA_BASE = os.path.join(PCDT_ROOT, "{{ path_info.transformer_base_path }}")
+    CAPACITOR_BASE_PATH = os.path.join(PCDT_ROOT, "{{ path_info.capacitor_base_path }}")
+    INDUCTOR_BASE_PATH = os.path.join(PCDT_ROOT, "{{ path_info.inductor_base_path }}")
+    TRANSFORMER_BASE_PATH = os.path.join(PCDT_ROOT, "{{ path_info.transformer_base_path }}")
     CAPACITOR0_CSV = "{{ path_info.capacitor0_csv }}"
     CAPACITOR1_CSV = "{{ path_info.capacitor1_csv }}"
     INDUCTOR_CSV = "{{ path_info.inductor_csv }}"
     TRANSFORMER_CSV = "{{ path_info.transformer_csv }}"
     HEAT_SINK_CSV = os.path.join(PCDT_ROOT, "{{ path_info.heat_sink_csv }}")
-    VISUALIZATION_BASE_DIR = os.path.join(PCDT_ROOT,"{{ path_info.visualization_base_path }}")
+    VISUALIZATION_BASE_PATH = os.path.join(PCDT_ROOT,"{{ path_info.visualization_base_path }}")
 
     # Register FastAPI
     # app.add_api_route(path="/", methods=["GET"], endpoint=startpage, response_class=HTMLResponse)
 
     # templates = Jinja2Templates(directory=os.path.join(VISUALIZATION_BASE_DIR, "templates"))
-    templates = Jinja2Templates(directory=os.path.join(VISUALIZATION_BASE_DIR, "htmltemplates"))
+    templates = Jinja2Templates(directory=os.path.join(VISUALIZATION_BASE_PATH, "htmltemplates"))
     # app.mount("/StyleSheets", StaticFiles(directory=str(os.path.join(VISUALIZATION_BASE_DIR, "StyleSheets"))), name="css")
-    app.mount("/StyleSheets", StaticFiles(directory= os.path.join(VISUALIZATION_BASE_DIR, "StyleSheets")),
+    app.mount("/StyleSheets", StaticFiles(directory= os.path.join(VISUALIZATION_BASE_PATH, "StyleSheets")),
               name="css")
 
 def load_candidates()-> list [dict]:
@@ -123,7 +125,7 @@ def get_candidate_ids(cid: int)-> dict:
 @app.get("/")
 def startpage():
     # Return the start page
-    return FileResponse(os.path.join(VISUALIZATION_BASE_DIR, "candidate_browser.html"))
+    return FileResponse(os.path.join(VISUALIZATION_BASE_PATH, "candidate_browser.html"))
 
 @app.get("/detailed-view", response_class=HTMLResponse)
 async def detailed_view(request: Request, combination_id: int):
@@ -139,9 +141,12 @@ async def detailed_view(request: Request, combination_id: int):
      )
 
 
-def read_component_plot_data(file_path: str, x_key: str, y_key: str, x_value: str, y_value: str) -> list[dict]:
+def read_component_plot_data(file_path: str, x_key: str, y_key: str, x_value: str, y_value: str,
+                             id_key: str, sel_id: int) -> dict[str, dict | list[dict]]:
     # Variable declaration
-    plot_component_data: list[dict] = []
+    plot_component_data: dict[str, dict | list[dict]] = {}
+    plot_points: list[dict] = []
+    plot_selected_point: dict = {}
 
     # Check if file exists
     if os.path.isfile(file_path):
@@ -151,17 +156,23 @@ def read_component_plot_data(file_path: str, x_key: str, y_key: str, x_value: st
             for data_row in reader:
                 # Check if row is valid
                 if data_row["state"] == "COMPLETE":
-                    plot_component_data.append({
-                        x_value: data_row[x_key],
-                        y_value: data_row[y_key],
-                    })
+                    plot_points.append({x_value: data_row[x_key], y_value: data_row[y_key]})
+                    # Check if the data point corresponds to the selection
+                    if data_row[id_key] == sel_id:
+                        plot_selected_point={x_value: data_row[x_key], y_value: data_row[y_key]}
+
+        # Put points and selected point together
+        plot_component_data["points"] = plot_points
+        plot_component_data["sel_point"] = plot_selected_point
     else:
         # Notify the user about not existing file
         print(f"File '{file_path}' does not exists!")
 
+
+
     return plot_component_data
 
-def read_component_candidate_data(file_path: str, id_name: str, id: int, parameter_list: list[tuple[str, str]]) -> dict:
+def read_component_candidate_data(file_path: str, id_key: str, id: int, parameter_list: list[tuple[str, str, str]]) -> dict:
     # Variable declaration
     candidate_component_data: dict = {}
     data: dict|None = None
@@ -173,27 +184,65 @@ def read_component_candidate_data(file_path: str, id_name: str, id: int, paramet
             # Find candidate
             for data_row in reader:
                 # Check if row is valid
-                if data_row["state"] == "COMPLETE" and data_row[id_name] == id:
+                if data_row["state"] == "COMPLETE" and data_row[id_key] == id:
                     data = data_row
                     break
 
         if data is not None:
             # Get values from row
             for item in parameter_list:
-                value = data.get(item[0])
-                candidate_component_data[item[1]] = value
+                raw_value = data.get(item[0])
                 # Check if entry is valid
-                if value is None:
+                if raw_value is not None:
+                    # Check if entry is a name
+                    if item[2] is NAME_KEY:
+                        #Overtake the name
+                        candidate_component_data[item[1]] = raw_value
+                    else:
+                        try:
+                            float_value: float = float(raw_value)
+                            # Format raw value and assign it to dictionary
+                            candidate_component_data[item[1]] = format_si(float_value, item[2])
+                        except:
+                            print(f"String {raw_value} does not corresponds to a float value")
+                            # Format raw value and assign it to dictionary
+                            candidate_component_data[item[1]] = "Invalid"
+                else:
                     print(f"Column {item[0]} does not exist")
+                    # Format raw value and assign it to dictionary
+                    candidate_component_data[item[1]] = "Invalid"
     else:
         # Notify the user about not existing file
         print(f"File '{file_path}' does not exists!")
 
     return candidate_component_data
 
-def read_csv_data(cid: int) -> tuple[dict, dict[str, list[dict]]]:
+def format_si(value: float, unit: str) -> str:
     # Variable declaration
-    plot_data: dict[str, list[dict]] = {}
+    abs_value: float = abs(value)
+
+    # Check if value is within expected range
+    if 1e-9 <= abs_value < 1e9:
+        # Write 4 digits
+        if abs_value >= 1e6:
+            return f"{value * 1e-6:.4g} M{unit}"
+        elif abs_value >= 1e3:
+            return f"{value * 1e-3:.4g} k{unit}"
+        elif abs_value >= 1:
+            return f"{value:.4g} {unit}"
+        elif abs_value >= 1e-3:
+            return f"{value * 1e3:.4g} m{unit}"
+        elif abs_value >= 1e-6:
+            return f"{value * 1e6:.4g} µ{unit}"
+        else:
+            return f"{value * 1e9:.4g} n{unit}"
+    else:
+        # Use scientific format
+        return f"{value:.4e} {unit}"
+
+def read_csv_data(cid: int) -> tuple[dict, dict[str, dict[str, dict | list[dict]]]]:
+    # Variable declaration
+    plot_data: dict[str, dict[str, dict | list[dict]]] = {}
     candidate_data: dict = {}
 
     # Map cid to correspondent file pathes
@@ -201,23 +250,32 @@ def read_csv_data(cid: int) -> tuple[dict, dict[str, list[dict]]]:
 
     if file_path_dict:
         # Read plot data
-        plot_data = read_csv_plot_data(file_path_dict)
+        plot_data = read_csv_plot_data(file_path_dict, cid)
         # Read design candidate data
         candidate_data = read_csv_candidate_data(file_path_dict, cid)
     # Return the candidate list
     return candidate_data, plot_data
 
 
-def read_csv_plot_data(plot_file_path_dict: dict) -> dict[str, list[dict]]:
+def read_csv_plot_data(plot_file_path_dict: dict,  act_cid: int) -> dict[str, dict | list[dict]]:
     # Variable declaration
-    plot_data: dict[str, list[dict]] = {}
+    plot_data: dict[str, dict | list[dict]] = {}
+
+    # Find combinationId
+    candidate_ids = get_candidate_ids(act_cid)
 
     # Read circuit plot data
-    plot_data["circuit_data"] = read_component_plot_data(plot_file_path_dict["circuit_csv_file"],"values_0" , "values_1", "ZVS_rate" ,"Current_factor" )
+    plot_data["circuit_data"] = read_component_plot_data(
+        plot_file_path_dict["circuit_csv_file"],"values_0" , "values_1", "ZVS_rate" ,"Current_factor",
+        "number", candidate_ids["cir_id"] )
     # Read inductor plot data
-    plot_data["inductor_data"] = read_component_plot_data(plot_file_path_dict["inductor_csv_file"],"values_0" , "values_1", "total_volume" ,"total_mean_loss" )
+    plot_data["inductor_data"] = read_component_plot_data(
+        plot_file_path_dict["inductor_csv_file"],"values_0" , "values_1", "total_volume" ,"total_mean_loss",
+        "number", candidate_ids["ind_id"] )
     # Read transformer plot data
-    plot_data["transformer_data"] = read_component_plot_data(plot_file_path_dict["transformer_csv_file"],"values_0" , "values_1", "total_volume" ,"total_mean_loss" )
+    plot_data["transformer_data"] = read_component_plot_data(
+        plot_file_path_dict["transformer_csv_file"],"values_0" , "values_1", "total_volume" ,"total_mean_loss",
+        "number", candidate_ids["tr_id"])
     # Read heat sink plot data
     # plot_data["heat_sink"] = read_component_plot_data(plot_file_path_dict["inductor_csv_file"],"values_0" , "values_0", "volume" ,"ploss" )
 
@@ -228,20 +286,21 @@ def read_csv_candidate_data(file_path_dict: dict, act_cid: int) -> dict[str, lis
     # Variable declaration
     candidate_data: dict = {}
     # Parameter name in csv-sheet and browser template name
-    circuit_parameter_list: list[tuple[str, str]] = [("params_f_s_suggest", "fs"), ("params_l_1_suggest", "l1"), ("params_l_2_suggest", "l2"),
-                                                     ("params_l_s_suggest", "ls"), ("params_transistor_1_name_suggest", "T1_type"),
-                                                     ("params_transistor_2_name_suggest", "T2_type")]
-    inductor_parameter_list: list[tuple[str, str]] = [("values_0", "ind_vol"), ("values_1", "ind_loss"), ("user_attrs_flux_density_peak", "ind_peak_flux"),
-                                                      ("params_core_name", "ind_core"), ("params_material_name", "ind_material"), ("params_material_name", "ind_l"),
-                                                      ("params_turns", "ind_turns"), ("user_attrs_l_air_gap", "ind_airgap"), ("params_litz_wire_name", "ind_litz")]
+    circuit_parameter_list: list[tuple[str, str, str]] = [("params_f_s_suggest", "fs", "Hz"), ("params_l_1_suggest", "l1", "H"),
+                                                          ("params_l_2_suggest", "l2", "H"),
+                                                     ("params_l_s_suggest", "ls", "H"), ("params_transistor_1_name_suggest", "T1_type", NAME_KEY),
+                                                     ("params_transistor_2_name_suggest", "T2_type", NAME_KEY)]
+    inductor_parameter_list: list[tuple[str, str, str]] = [("values_0", "ind_vol", "m³"), ("values_1", "ind_loss", "W"), ("user_attrs_flux_density_peak", "ind_peak_flux", "T"),
+                                                      ("params_core_name", "ind_core", NAME_KEY), ("params_material_name", "ind_material", NAME_KEY), ("params_material_name", "ind_l", "H"),
+                                                      ("params_turns", "ind_turns", ""), ("user_attrs_l_air_gap", "ind_airgap", "m"), ("params_litz_wire_name", "ind_litz", NAME_KEY)]
 
-    transformer_parameter_list: list[tuple[str, str]] = [("values_0", "tr_vol"), ("values_1", "tr_loss"), ("params_core_name", "tr_core"),
-                                                         ("params_material_name", "tr_material"), ("params_core_name", "tr_l"), ("user_attrs_l_bot_air_gap", "tr_bot_airgap"),
-                                                         ("user_attrs_l_top_air_gap", "tr_top_airgap"), ("params_primary_litz_name", "tr_litz_prim"),
-                                                         ("params_secondary_litz_name", "tr_litz_sec"), ("params_n_p_top", "tr_turn_ptop"),
-                                                         ("params_n_p_bot", "tr_turn_pbot"), ("params_n_s_bot", "tr_turn_sbot"), ("user_attrs_b_max_top", "tr_flux_top"),
-                                                         ("user_attrs_core_inner_diameter", "tr_core_inner_dia"), ("user_attrs_b_max_middle", "tr_flux_mid"),
-                                                         ("user_attrs_b_max_bot", "tr_flux_bot"), ("user_attrs_winding_losses", "tr_wind_loss")]
+    transformer_parameter_list: list[tuple[str, str, str]] = [("values_0", "tr_vol", "m³"), ("values_1", "tr_loss", "W"), ("params_core_name", "tr_core", NAME_KEY),
+                                                         ("params_material_name", "tr_material", NAME_KEY), ("params_core_name", "tr_l", "H"), ("user_attrs_l_bot_air_gap", "tr_bot_airgap", "m"),
+                                                         ("user_attrs_l_top_air_gap", "tr_top_airgap", "m"), ("params_primary_litz_name", "tr_litz_prim", NAME_KEY),
+                                                         ("params_secondary_litz_name", "tr_litz_sec", NAME_KEY), ("params_n_p_top", "tr_turn_ptop", ""),
+                                                         ("params_n_p_bot", "tr_turn_pbot", ""), ("params_n_s_bot", "tr_turn_sbot", ""), ("user_attrs_b_max_top", "tr_flux_top", "T"),
+                                                         ("user_attrs_core_inner_diameter", "tr_core_inner_dia", "m"), ("user_attrs_b_max_middle", "tr_flux_mid", "T"),
+                                                         ("user_attrs_b_max_bot", "tr_flux_bot", "T"), ("user_attrs_winding_losses", "tr_wind_loss", "W")]
 
     # Find combinationId
     candidate_ids = get_candidate_ids(act_cid)
@@ -274,10 +333,10 @@ def get_file_path_list(cid: int) -> dict:
     # Check if candidate is found
     if candidate_ids is not None:
         file_path_dict["circuit_csv_file"] = CIRCUIT_DATA_CSV
-        file_path_dict["capacitor0_csv_file"] = os.path.join(CAPACITOR_DATA_BASE,candidate_ids["cir_id"], CAPACITOR0_CSV)
-        file_path_dict["capacitor1_csv_file"] = os.path.join(CAPACITOR_DATA_BASE,candidate_ids["cir_id"], CAPACITOR1_CSV)
-        file_path_dict["inductor_csv_file"] = os.path.join(INDUCTOR_DATA_BASE,candidate_ids["cir_id"], INDUCTOR_CSV)
-        file_path_dict["transformer_csv_file"] = os.path.join(TRANSFORMER_DATA_BASE,candidate_ids["cir_id"], TRANSFORMER_CSV)
+        file_path_dict["capacitor0_csv_file"] = os.path.join(CAPACITOR_BASE_PATH, candidate_ids["cir_id"], CAPACITOR0_CSV)
+        file_path_dict["capacitor1_csv_file"] = os.path.join(CAPACITOR_BASE_PATH, candidate_ids["cir_id"], CAPACITOR1_CSV)
+        file_path_dict["inductor_csv_file"] = os.path.join(INDUCTOR_BASE_PATH, candidate_ids["cir_id"], INDUCTOR_CSV)
+        file_path_dict["transformer_csv_file"] = os.path.join(TRANSFORMER_BASE_PATH, candidate_ids["cir_id"], TRANSFORMER_CSV)
         file_path_dict["heat_sink_csv_file"] = HEAT_SINK_CSV
 
     return file_path_dict
