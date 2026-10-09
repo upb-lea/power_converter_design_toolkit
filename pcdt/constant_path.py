@@ -44,7 +44,7 @@ WEB_SERVER_PY = "web_server.py"
 TMP_DETAILED_HTML = "browser_detailed_page_template.html"
 CB_START_CSS = "browser_start_page.css"
 CB_DETAIL_CCS = "browser_detailed_page.css"
-CB_ICON = "power_conv_icon.png"
+CB_ICON = "program_icon.png"
 CB_IDLE_PNG = "OptIdle.png"
 # processing status
 RELUCTANCE_COMPLETE_FILE = "reluctance_processing_complete.json"
