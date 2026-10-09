@@ -52,7 +52,7 @@ from pcdt.constant_path import (CIRCUIT_INDUCTOR_RELUCTANCE_LOSSES_FOLDER, CIRCU
                                 FILTERED_RESULTS_PATH, RELUCTANCE_COMPLETE_FILE, CIRCUIT_CAPACITOR_LOSS_FOLDER,
                                 FEM_COMPLETE_FILE, PROCESSING_COMPLETE_FILE, SUMMARY_COMBINATION_FOLDER, HEAT_SINK_DISC_FOLDER,
                                 PARETO_PLOT_PKL_FOLDER, PARETO_PLOT_PDF_FOLDER, PARETO_PLOT_PNG_FOLDER, FILEPATH_CONFIG_JSON,
-                                DATA_GENERATION_VISUALIZATION, DATA_GENERATION_MANUFACTURE)
+                                DATA_GENERATION_VISUALIZATION, DATA_GENERATION_MANUFACTURE, CONFIG_FILE_FOLDER)
 
 logger = logging.getLogger(__name__)
 
@@ -1489,23 +1489,26 @@ class MainCtl:
         file_path = os.path.join(workspace_path, "progFlow.toml")
         is_flow_control_loaded, dict_prog_flow = self.load_toml_file(file_path)
 
-        if not is_flow_control_loaded:
+        # Verify toml data and transfer to class
+        toml_prog_flow = tc.FlowControl(**dict_prog_flow)
+
+        config_filepath = os.path.join(workspace_path, toml_prog_flow.general.project_directory, CONFIG_FILE_FOLDER)
+
+        if not os.path.exists(config_filepath):
+            os.makedirs(config_filepath)
+
             # Set default topology
             self._circuit_optimization = pcdt.topology.dab.DabCircuitOptimization()
             # Generate topology dependent default files
-            toml_gen.generate_default_flow_control_toml(workspace_path)
-            file_path = os.path.join(workspace_path, "DabGeneralConf.toml")
+            file_path = os.path.join(config_filepath, "DabGeneralConf.toml")
             self._circuit_optimization.generate_general_toml(file_path)
-            file_path = os.path.join(workspace_path, "DabCircuitConf.toml")
+            file_path = os.path.join(config_filepath, "DabCircuitConf.toml")
             self._circuit_optimization.generate_circuit_toml(file_path)
             # Generate missing component default files
-            toml_gen.generate_missing_toml_files(workspace_path)
-            raise ValueError(f"Program flow toml file does not exist in path {workspace_path}.\n"
+            toml_gen.generate_missing_toml_files(config_filepath)
+            raise ValueError(f"Program flow toml file does not exist in path {config_filepath}.\n"
                              "A default program flow toml file and corresponding default configuration files are generated.\n"
                              "All generated default files needs to be updated before using.")
-
-        # Verify toml data and transfer to class
-        toml_prog_flow = tc.FlowControl(**dict_prog_flow)
 
         # Verify program flow configuration
         is_consistent, issue_report = self._verify_program_flow_parameter(toml_prog_flow)
@@ -1529,7 +1532,7 @@ class MainCtl:
         # --------------------------
         logger.debug("Read misc file")
         # Load the configuration for program flow and check the validity
-        file_path = os.path.join(workspace_path, "Misc.toml")
+        file_path = os.path.join(config_filepath, "Misc.toml")
         misc_loaded, dict_misc = self.load_toml_file(file_path)
 
         # Verify toml data and transfer to class
@@ -1538,7 +1541,7 @@ class MainCtl:
         # -----------------------------
         # summary configuration
         # -----------------------------
-        summary_toml_file_path = os.path.join(workspace_path, toml_prog_flow.configuration_data_files.summary_configuration_file)
+        summary_toml_file_path = os.path.join(config_filepath, toml_prog_flow.configuration_data_files.summary_configuration_file)
         summary_toml_loaded, dict_summary_toml = self.load_toml_file(summary_toml_file_path)
 
         # Verify toml data and transfer to class
@@ -1637,10 +1640,11 @@ class MainCtl:
         # -----------------------------
         logger.debug("Read general toml control")
         # Init general configuration
-        is_general_toml_loaded, dict_general_toml = self.load_toml_file(general_configuration_file)
+        file_path = os.path.join(workspace_path, toml_prog_flow.general.project_directory, CONFIG_FILE_FOLDER, general_configuration_file)
+        is_general_toml_loaded, dict_general_toml = self.load_toml_file(file_path)
 
         if not is_general_toml_loaded:
-            file_path = os.path.join(workspace_path, general_configuration_file)
+
             self._circuit_optimization.generate_general_toml(file_path)
             raise ValueError(f"General toml configuration file: {file_path} does not exist.\n"
                              f"A default file is generated and needs to be updated!")
@@ -1666,10 +1670,10 @@ class MainCtl:
             MainCtl._get_calculation_mode(toml_prog_flow.circuit.calculation_mode))
 
         # Init circuit configuration
-        is_circuit_loaded, dict_circuit = MainCtl.load_toml_file(circuit_configuration_file)
+        file_path = os.path.join(workspace_path, toml_prog_flow.general.project_directory, CONFIG_FILE_FOLDER, circuit_configuration_file)
+        is_circuit_loaded, dict_circuit = MainCtl.load_toml_file(file_path)
 
         if not is_circuit_loaded:
-            file_path = os.path.join(workspace_path, circuit_configuration_file)
             self._circuit_optimization.generate_general_toml(file_path)
             raise ValueError(f"Circuit configuration file: {file_path} does not exist.\n"
                              f"A default file is generated and needs to be updated!")
@@ -1714,10 +1718,10 @@ class MainCtl:
         # Check if capacitor components are required
         for index, configuration_file in enumerate(toml_prog_flow.configuration_data_files.capacitor_configuration_files):
             # Init capacitor configuration
-            is_capacitor_loaded, dict_capacitor = self.load_toml_file(configuration_file)
+            file_path = os.path.join(workspace_path, toml_prog_flow.general.project_directory, CONFIG_FILE_FOLDER, configuration_file)
+            is_capacitor_loaded, dict_capacitor = self.load_toml_file(file_path)
 
             if not is_capacitor_loaded:
-                file_path = os.path.join(workspace_path, configuration_file)
                 toml_gen.generate_default_capacitor_toml(file_path)
                 raise ValueError(f"General toml configuration file: {file_path} does not exist\n"
                                  f"for the required capacitor {index}\n"
@@ -1774,10 +1778,10 @@ class MainCtl:
         # Load required configuration files
         for index, configuration_file in enumerate(toml_prog_flow.configuration_data_files.inductor_configuration_files):
             # Load the inductor-configuration parameter
-            is_inductor_loaded, inductor_dict = self.load_toml_file(configuration_file)
+            file_path = os.path.join(workspace_path, toml_prog_flow.general.project_directory, CONFIG_FILE_FOLDER, configuration_file)
+            is_inductor_loaded, inductor_dict = self.load_toml_file(file_path)
 
             if not is_inductor_loaded:
-                file_path = os.path.join(workspace_path, configuration_file)
                 toml_gen.generate_default_inductor_toml(file_path)
                 raise ValueError(f"General toml configuration file: {file_path} does not exist\n"
                                  f"for the required inductor {index}\n"
@@ -1858,10 +1862,10 @@ class MainCtl:
         # Load required configuration files
         for index, configuration_file in enumerate(toml_prog_flow.configuration_data_files.transformer_configuration_files):
             # Load the transformer-configuration parameter
-            is_transformer_loaded, transformer_dict = self.load_toml_file(configuration_file)
+            file_path = os.path.join(workspace_path, toml_prog_flow.general.project_directory, CONFIG_FILE_FOLDER, configuration_file)
+            is_transformer_loaded, transformer_dict = self.load_toml_file(file_path)
 
             if not is_transformer_loaded:
-                file_path = os.path.join(workspace_path, configuration_file)
                 toml_gen.generate_default_transformer_toml(file_path)
                 raise ValueError(f"General toml configuration file: {file_path} does not exist\n"
                                  f"for the required transformer {index}\n"
@@ -1938,13 +1942,16 @@ class MainCtl:
         # -----------------------------
 
         heat_sink_toml_filepath = toml_prog_flow.configuration_data_files.heat_sink_configuration_file
-        is_heat_sink_loaded, heat_sink_dict = self.load_toml_file(heat_sink_toml_filepath)
-        toml_heat_sink = pcdt.TomlHeatSink(**heat_sink_dict)
+        file_path = os.path.join(workspace_path, toml_prog_flow.general.project_directory, CONFIG_FILE_FOLDER, heat_sink_toml_filepath)
+        is_heat_sink_loaded, heat_sink_dict = self.load_toml_file(file_path)
+
         if not is_heat_sink_loaded:
-            file_path = os.path.join(workspace_path, toml_prog_flow.configuration_data_files.heat_sink_configuration_file)
             toml_gen.generate_default_heat_sink_toml(file_path)
-            raise ValueError(f"Transformer toml configuration file: {file_path} does not exist.\n"
+            raise ValueError(f"Heat sink toml configuration file: {file_path} does not exist.\n"
                              f"A default file is generated and needs to be updated!")
+
+        toml_heat_sink = pcdt.TomlHeatSink(**heat_sink_dict)
+
         # Verify optimization parameter
         is_consistent, issue_report = pcdt.HeatSinkOptimization.verify_optimization_parameter(toml_heat_sink)
         if not is_consistent:

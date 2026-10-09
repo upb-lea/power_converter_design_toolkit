@@ -635,7 +635,7 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
                 transistor_2_dto: d_dtos.TransistorDTO = transistor_dto
 
         dab_calc = HandleDabDto.init_config(
-            name=dab_config.circuit_study_name,
+            circuit_id=dab_config.circuit_study_name,
             mesh_v1=fixed_parameters.mesh_v1,
             mesh_v2=fixed_parameters.mesh_v2,
             mesh_p=fixed_parameters.mesh_p,
@@ -1034,7 +1034,7 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
         fix_parameters = DabCircuitOptimization.calculate_fixed_parameters(dab_config)
 
         dab_dto = HandleDabDto.init_config(
-            name=str(trial_number),
+            circuit_id=str(trial_number),
             mesh_v1=fix_parameters.mesh_v1,
             mesh_v2=fix_parameters.mesh_v2,
             mesh_p=fix_parameters.mesh_p,
@@ -1082,7 +1082,7 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
             transistor_dto_2 = HandleDabDto.tdb_to_transistor_dto(str(df.at[index, "params_transistor_2_name_suggest"]))
 
             dab_dto = HandleDabDto.init_config(
-                name=str(df["number"][index].item()),
+                circuit_id=str(df["number"][index].item()),
                 mesh_v1=self._fixed_parameters.mesh_v1,
                 mesh_v2=self._fixed_parameters.mesh_v2,
                 mesh_p=self._fixed_parameters.mesh_p,
@@ -1380,7 +1380,6 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
         pkl_file_list = [f for f in os.listdir(dto_directory) if os.path.isfile(os.path.join(dto_directory, f))]
 
         circuit_id_filepath = os.path.join(dto_directory, pkl_file_list[0])
-        print(f"{circuit_id_filepath=}")
 
         with open(circuit_id_filepath, 'rb') as pickle_file_data:
             combination_dto: d_dtos.DabCircuitDTO = pickle.load(pickle_file_data)
@@ -1396,7 +1395,6 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
         pkl_file_list = [f for f in os.listdir(dto_directory) if os.path.isfile(os.path.join(dto_directory, f))]
 
         circuit_id_filepath = os.path.join(dto_directory, pkl_file_list[0])
-        print(f"{circuit_id_filepath=}")
 
         with open(circuit_id_filepath, 'rb') as pickle_file_data:
             combination_dto: d_dtos.DabCircuitDTO = pickle.load(pickle_file_data)
@@ -1465,23 +1463,22 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
         :param file_path: filename including absolute path
         :type file_path: str
         """
-        toml_data = '''
-        [default_data] # After update this configuration file according your project delete this line to validate it
-        [output_range]
-            v1_min_max_list=[690, 710]
-            v2_min_max_list=[175, 295]
-            p_min_max_list=[-2000, 2200]
-
-
-        [sampling]
-            sampling_method="dessca"
-            sampling_points=2
-            sampling_random_seed=10
-            v1_additional_user_point_list=[]
-            v2_additional_user_point_list=[]
-            p_additional_user_point_list=[]
-            additional_user_weighting_point_list=[]
-        '''
+        toml_data = (
+            '[default_data] # After update this configuration file according your project delete this line to validate it\n'
+            '[output_range]\n'
+            '    v1_min_max_list=[690, 710]\n'
+            '    v2_min_max_list=[175, 295]\n'
+            '    p_min_max_list=[-2000, 2200]\n\n'
+    
+            '[sampling]\n'
+            '    sampling_method="dessca"\n'
+            '    sampling_points=2\n'
+            '    sampling_random_seed=10\n'
+            '    v1_additional_user_point_list=[]\n'
+            '    v2_additional_user_point_list=[]\n'
+            '    p_additional_user_point_list=[]\n'
+            '    additional_user_weighting_point_list=[]'
+        )
         with open(file_path, 'w') as output:
             output.write(toml_data)
 
@@ -1493,50 +1490,44 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
         :param file_path: filename including absolute path
         :type file_path: str
         """
-        toml_data = '''
-        [default_data] # After update this configuration file according your project delete this line to validate it
-        [design_space]
-            f_s_min_max_list=[50e3, 300e3]
-            l_s_min_max_list=[20e-6, 900e-6]
-            l_1_min_max_list=[10e-6, 10e-3]
-            l_2__min_max_list=[10e-6, 1e-3]
-            n_min_max_list=[3, 7]
-            transistor_1_name_list=['CREE_C3M0065100J', 'CREE_C3M0120100J']
-            transistor_2_name_list=['CREE_C3M0060065J', 'CREE_C3M0120065J']
-            c_par_1=16e-12
-            c_par_2=16e-12
-            t_dead_1_max = 500e-9
-            t_dead_2_max = 500e-9
-
-        [output_range]
-            v1_min_max_list=[690, 710]
-            v2_min_max_list=[175, 295]
-            p_min_max_list=[-2000, 2200]
-
-        [sampling]
-            sampling_method="latin_hypercube"
-            sampling_points=4
-            sampling_random_seed=10
-            v1_additional_user_point_list=[700]
-            v2_additional_user_point_list=[180]
-            p_additional_user_point_list=[2000]
-
-        [filter_distance]
-            number_filtered_designs = 1
-            difference_percentage = 5
-
-        [thermal_data]
-            # [tim_thickness, tim_conductivity]
-            transistor_b1_cooling = [1e-3,12.0]
-            transistor_b2_cooling = [1e-3,12.0]            
-
-        '''
+        toml_data = (
+            '[default_data] # After update this configuration file according your project delete this line to validate it\n'
+            '[design_space]\n'
+            '    f_s_min_max_list=[50e3, 300e3]\n'    
+            '    l_s_min_max_list=[20e-6, 900e-6]\n'
+            '    l_1_min_max_list=[10e-6, 10e-3]\n'
+            '    l_2__min_max_list=[10e-6, 1e-3]\n'
+            '    n_min_max_list=[3, 7]\n'
+            '    transistor_1_name_list=["CREE_C3M0065100J", "CREE_C3M0120100J"]\n'
+            '    transistor_2_name_list=["CREE_C3M0060065J", "CREE_C3M0120065J"]\n'
+            '    c_par_1=16e-12\n'
+            '    c_par_2=16e-12\n'
+            '    t_dead_1_max = 500e-9\n'
+            '    t_dead_2_max = 500e-9\n\n'
+    
+            '[output_range]\n'
+            '    v1_min_max_list=[690, 710]\n'
+            '    v2_min_max_list=[175, 295]\n'
+            '    p_min_max_list=[-2000, 2200]\n\n'
+    
+            '[sampling]\n'
+            '    sampling_method="latin_hypercube"\n'
+            '    sampling_points=4\n'
+            '    sampling_random_seed=10\n'
+            '    v1_additional_user_point_list=[700]\n'
+            '    v2_additional_user_point_list=[180]\n'
+            '    p_additional_user_point_list=[2000]\n\n'
+    
+            '[filter_distance]\n'
+            '    number_filtered_designs = 1\n'
+            '    difference_percentage = 5\n\n'
+    
+            '[thermal_data]\n'
+            '    # [tim_thickness, tim_conductivity]\n'
+            '    transistor_b1_cooling = [1e-3,12.0]\n'
+            '    transistor_b2_cooling = [1e-3,12.0]\n')
         with open(file_path, 'w') as output:
             output.write(toml_data)
-
-    _transformer_study_configuration_list: list[TransformerConfiguration]
-    _inductor_study_configuration_list: list[InductorConfiguration]
-    _capacitor_selection_configuration_list: list[CapacitorConfiguration]
 
     def generate_result_dtos(self, summary_data: StudyData, capacitor_selection_data_list: list[CapacitorConfiguration],
                              inductor_configuration_list: list[InductorConfiguration],
@@ -1667,6 +1658,16 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
             "/*\n"
             "Code generated file by the optimization code.\n"
             "For a new converter design, replace this file by the new code generated file.\n"
+            f"Timestamp calculation: {combination_dto.timestamp}\n"
+            f"Timestamp of this c-file generation: {np.asarray(datetime.datetime.now().isoformat())}\n"
+            f"Circuit ID: {combination_dto.circuit_id}\n"
+            f"Switching frequency: {combination_dto.input_config.fs}\n"
+            f"Ls: {combination_dto.input_config.Ls}\n"
+            f"Lc1: {combination_dto.input_config.Lc1}\n"
+            f"Lc2: {combination_dto.input_config.Lc2}\n"
+            f"n: {combination_dto.input_config.n}\n"
+            f"transistor_1: {combination_dto.input_config.transistor_dto_1.name}\n"
+            f"transistor_2: {combination_dto.input_config.transistor_dto_2.name}\n"
             "*/\n\n"
             '#include "driverlib.h"\n'
             '#include "stddef.h"\n\n'
@@ -1684,8 +1685,6 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
             "} DataEntry;\n\n"
             "DataEntry data[] =\n"
             "{\n")
-
-        print(f"{parameters_microcontroller=}")
 
         for count, row in df.iterrows():
             line = (

@@ -47,10 +47,10 @@ def calc_modulation_params(n: np.float64, ls: np.float64, lc1: np.float64, lc2: 
     # g: greater
 
     # Create empty meshes
-    phi = np.full_like(v1, np.nan)
-    tau1 = np.full_like(v1, np.nan)
-    tau2 = np.full_like(v1, np.nan)
-    zvs = np.full_like(v1, np.nan)
+    phi = np.full_like(v1, np.nan, dtype=np.float64)
+    tau1 = np.full_like(v1, np.nan, dtype=np.float64)
+    tau2 = np.full_like(v1, np.nan, dtype=np.float64)
+    zvs = np.full_like(v1, np.nan, dtype=np.float64)
     _Im2_mask = np.full_like(v1, False)
     _IIm2_mask = np.full_like(v1, False)
     _IIIm1_part_1_mask = np.full_like(v1, False)

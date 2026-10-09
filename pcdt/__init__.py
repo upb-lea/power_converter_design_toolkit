@@ -19,5 +19,4 @@ from pcdt.sampling import *
 # supervision class
 from pcdt.server_ctl import *
 from pcdt.server_ctl_dtos import *
-from pcdt.visualization import *
 from pcdt.constants import *

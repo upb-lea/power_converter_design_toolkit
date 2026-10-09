@@ -31,7 +31,7 @@ class ParetoPlots:
     @staticmethod
     def generate_pareto_plot(x_values_list: list, y_values_list: list, color_list: list, alpha_list: list[float],
                              x_label: str, y_label: str, label_list: list[str | None], fig_name_path: str,
-                             xlim: list | None = None, ylim: list | None = None) -> None:
+                             xlim: tuple[float, float] | None = None, ylim: tuple[float, float] | None = None) -> None:
         """
         Generate multiple Pareto plot in one PDF file.
 
@@ -72,8 +72,10 @@ class ParetoPlots:
             plt.legend()
         plt.xlabel(x_label)
         plt.ylabel(y_label)
-        plt.xlim(xlim)
-        plt.ylim(ylim)
+        if xlim is not None:
+            plt.xlim(xlim)
+        if ylim is not None:
+            plt.ylim(ylim)
         plt.grid()
         plt.tight_layout()
         # make sure to not generate a filename.pdf.pdf (twice ".pdf").
@@ -215,8 +217,8 @@ class ParetoPlots:
                                              alpha_list=alpha_list,
                                              x_label=r'$\mathcal{V}_\mathrm{ind}$ / cm³', y_label=r'$P_\mathrm{ind}$ / W',
                                              label_list=label_list,
-                                             fig_name_path=fig_name, xlim=[x_scale_min, x_scale_max],
-                                             ylim=[y_scale_min, y_scale_max])
+                                             fig_name_path=fig_name, xlim=(x_scale_min, x_scale_max),
+                                             ylim=(y_scale_min, y_scale_max))
 
     @staticmethod
     def plot_transformer_results(transformer_study_data: StudyData, filtered_list_files: list[str], summary_directory: str,
@@ -322,8 +324,8 @@ class ParetoPlots:
                                              alpha_list=alpha_list,
                                              x_label=r'$\mathcal{V}_\mathrm{transformer}$ / cm³', y_label=r'$P_\mathrm{transformer}$ / W',
                                              label_list=label_list,
-                                             fig_name_path=fig_name, xlim=[x_scale_min, x_scale_max],
-                                             ylim=[y_scale_min, y_scale_max])
+                                             fig_name_path=fig_name, xlim=(x_scale_min, x_scale_max),
+                                             ylim=(y_scale_min, y_scale_max))
 
     @staticmethod
     def plot_capacitor_results(capacitor_study_data: StudyData, filtered_list_files: list[str], summary_directory: str) -> None:
@@ -372,7 +374,7 @@ class ParetoPlots:
             ParetoPlots.generate_pareto_plot(x_values_list, y_values_list, color_list=["black", "red"], alpha_list=[0.5, 0.5],
                                              x_label=r'$\mathcal{V}_\mathrm{capacitor}$ / cm³',
                                              y_label=r'$P_\mathrm{capacitor}$ / W', label_list=label_list,
-                                             fig_name_path=fig_name, xlim=[x_scale_min, x_scale_max], ylim=[y_scale_min, y_scale_max])
+                                             fig_name_path=fig_name, xlim=(x_scale_min, x_scale_max), ylim=(y_scale_min, y_scale_max))
 
     @staticmethod
     def plot_heat_sink_results(heat_sink_study_data: StudyData, summary_directory: str) -> None:
@@ -482,7 +484,7 @@ class ParetoPlots:
 
         ParetoPlots.generate_pareto_plot(x_values_list, y_values_list, label_list=label_list, color_list=color_list, alpha_list=[0.5, 0.7],
                                          x_label=r"$\mathcal{V}_\mathrm{Converter}$ / cm³", y_label=r"$P_\mathrm{Converter,avg}$ / W",
-                                         fig_name_path=fig_name, xlim=[x_scale_min, x_scale_max], ylim=[y_scale_min, y_scale_max])
+                                         fig_name_path=fig_name, xlim=(x_scale_min, x_scale_max), ylim=(y_scale_min, y_scale_max))
 
     @staticmethod
     def plot_summary_weighted_efficiency(summary_study_data: StudyData, circuit_optimization: CircuitOptimizationBase, filter_distance: list[float],
@@ -542,4 +544,4 @@ class ParetoPlots:
 
         ParetoPlots.generate_pareto_plot(x_values_list, y_values_list, label_list=label_list, color_list=color_list, alpha_list=[0.5, 0.7],
                                          x_label=r"$\mathcal{V}_\mathrm{Converter}$ / cm³", y_label=r"$\eta_\mathrm{Converter,weighted}$",
-                                         fig_name_path=fig_name, xlim=[x_scale_min, x_scale_max], ylim=[y_scale_min, y_scale_max])
+                                         fig_name_path=fig_name, xlim=(x_scale_min, x_scale_max), ylim=(y_scale_min, y_scale_max))

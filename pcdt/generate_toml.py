@@ -10,16 +10,21 @@ def generate_missing_toml_files(working_directory: str) -> None:
     :type working_directory: str
     """
     # check for missing component configuration files
-    if not os.path.isfile(os.path.join(working_directory, "DabInductorConf.toml")):
-        generate_default_inductor_toml(working_directory)
-    if not os.path.isfile(os.path.join(working_directory, "DabTransformerConf.toml")):
-        generate_default_transformer_toml(working_directory)
-    if not os.path.isfile(os.path.join(working_directory, "DabHeatSinkConf.toml")):
-        generate_default_heat_sink_toml(working_directory)
-    if not os.path.isfile(os.path.join(working_directory, "DabSummaryConf.toml")):
-        generate_default_summary_toml(working_directory)
-    if not os.path.isfile(os.path.join(working_directory, "Misc.toml")):
-        generate_default_misc_toml(working_directory)
+    inductor_filepath = os.path.join(working_directory, "DabInductorConf.toml")
+    if not os.path.isfile(inductor_filepath):
+        generate_default_inductor_toml(inductor_filepath)
+    transformer_filepath = os.path.join(working_directory, "DabTransformerConf.toml")
+    if not os.path.isfile(transformer_filepath):
+        generate_default_transformer_toml(transformer_filepath)
+    heat_sink_filepath = os.path.join(working_directory, "DabHeatSinkConf.toml")
+    if not os.path.isfile(heat_sink_filepath):
+        generate_default_heat_sink_toml(heat_sink_filepath)
+    summary_filepath = os.path.join(working_directory, "DabSummaryConf.toml")
+    if not os.path.isfile(summary_filepath):
+        generate_default_summary_toml(summary_filepath)
+    misc_filepath = os.path.join(working_directory, "Misc.toml")
+    if not os.path.isfile(misc_filepath):
+        generate_default_misc_toml(misc_filepath)
 
 def generate_default_flow_control_toml(working_directory: str) -> None:
     """
@@ -121,12 +126,11 @@ def generate_default_misc_toml(file_path: str) -> None:
     :param file_path: filename including absolute path
     :type file_path: str
     """
-    toml_data = '''
-    [default_data] # After update this configuration file according your project delete this line to validate it
-    min_efficiency_percent=80
-    control_board_volume=10e-6
-    control_board_loss=1
-    '''
+    toml_data = (
+        '[default_data] # After update this configuration file according your project delete this line to validate it\n'
+        'min_efficiency_percent=80\n'
+        'control_board_volume=10e-6\n'
+        'control_board_loss=1')
     with open(file_path, 'w') as output:
         output.write(toml_data)
 
@@ -137,14 +141,15 @@ def generate_default_capacitor_toml(file_path: str) -> None:
     :param file_path: filename including absolute path
     :type file_path: str
     """
-    toml_data = '''
-    [default_data] # After update this configuration file according your project delete this line to validate it
-    maximum_peak_to_peak_voltage_ripple = 1
-    temperature_ambient = 90
-    voltage_safety_margin_percentage = 10
-    maximum_number_series_capacitors = 2
-    lifetime_h = 30_000
-    '''
+    toml_data = (
+        '[default_data] # After update this configuration file according your project delete this line to validate it\n'
+        'maximum_peak_to_peak_voltage_ripple = 1\n'
+        'temperature_ambient = 90\n'
+        'voltage_safety_margin_percentage = 10\n'
+        'maximum_number_series_capacitors = 2\n'
+        'lifetime_h = 30_000\n\n'
+        '[filter_distance]\n'
+        '    factor_dc_losses_min_max_list = [0.01, 100]')
     with open(file_path, 'w') as output:
         output.write(toml_data)
 
@@ -182,6 +187,10 @@ def generate_default_inductor_toml(file_path: str) -> None:
     [thermal_data]
         # [tim_thickness, tim_conductivity]
         thermal_cooling = [1e-3,12.0]
+        
+    [settings]
+        fft_filter_value_factor=0.01
+        mesh_accuracy=0.8
         
     [filter_distance]
         factor_dc_losses_min_max_list=[0.01, 100]
@@ -264,7 +273,7 @@ def generate_default_heat_sink_toml(file_path: str) -> None:
         width_b_min_max_list=[0.02, 0.08]
         length_l_min_max_list=[0.08, 0.20]
         height_d_min_max_list=[0.001, 0.003]
-        number_fins_n_min_max_list=[5, 20]
+        number_cooling_channels_n_min_max_list=[5, 20]
         thickness_fin_t_min_max_list=[1e-3, 5e-3]
     
     [boundary_conditions]
