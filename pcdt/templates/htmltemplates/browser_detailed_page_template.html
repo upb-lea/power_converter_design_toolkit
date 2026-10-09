@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design candidate details</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link rel="icon" type="image/png" href="/StyleSheets/power_conv_icon.png">
+    <link rel="stylesheet" href="StyleSheets/browser_detailed_page.css">
+    <link rel="stylesheet" href="/StyleSheets/browser_detailed_page.css">
+</head>
+<body>
+    <h1>Detailed view of selected candidate</h1>
+    <div class="container">
+        <!-- Graphic with information -->
+        <div class="plot-column">
+            <!-- Circuit plot -->
+            <div id="plotcircuit"></div>
+            <!-- Inductor plot -->
+            <div id="plotinductor"></div>
+            <!-- Transformer plot -->
+            <div id="plottransformer"></div>
+        </div>
+        <div class="data-column">
+            <!-- Detailed data -->
+            <table>
+                <thead>
+                    <tr>
+                        <th colspan="4">Circuit parameter <span class="table-subtitle">(CombinationID: {{ cid }})</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th>Switching frequency[kHz]</th><td>{{ cir_data.fs }}</td>
+                        <th>Inductor values</th><td>L1={{ cir_data.l1}}, l2={{ cir_data.l1}}, Ls={{ cir_data.ls}}</td>
+                   </tr>
+                    <tr>
+                        <th>Transistor 1</th><td>{{ cir_data.T1_type }}</td>
+                        <th>Transistor 2</th><td>{{ cir_data.T2_type }}</td>
+                   </tr>
+                </tbody>
+            </table>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th colspan="6">Inductor parameter</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th>Volume</th><td>{{ ind_data.ind_vol }}</td>
+                        <th>Power loss</th><td>{{ ind_data.ind_loss}}</td>
+                        <th>Mag. peak flux</th><td>{{ ind_data.ind_peak_flux }}</td>
+                   </tr>
+                    <tr>
+                        <th>Core name</th><td>{{ ind_data.ind_core }}</td>
+                        <th>Magnetic material</th><td>{{ ind_data.ind_material}}</td>
+                        <th>Inductivity</th><td>{{ ind_data.ind_l}}</td>
+                   </tr>
+                   <tr>
+                        <th>turns</th><td>{{ ind_data.ind_turns }}</td>
+                        <th>Air gap</th><td>{{ ind_data.ind_airgap }}</td>
+                        <th>Litz material</th><td>{{ ind_data.ind_litz}}</td>
+                   </tr>
+                </tbody>
+            </table>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th colspan="6">Transformer parameter</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th>Volume</th><td>{{ tr_data.tr_vol }}</td>
+                        <th>Power loss</th><td>{{ tr_data.tr_loss}}</td>
+                        <th>Winding loss</th><td>{{ tr_data.tr_wind_loss}}</td>
+                   </tr>
+                    <tr>
+                        <th>Core name</th><td>{{ tr_data.tr_core }}</td>
+                        <th>Magnetic material</th><td>{{ tr_data.tr_material }}</td>
+                        <th>Inductivity</th><td>{{ tr_data.tr_l }}</td>
+                   </tr>
+                   <tr>
+                        <th>Air gap (top.)</th><td>{{ tr_data.tr_top_airgap }}</td>
+                        <th>Air gap (bot.)</th><td>{{ tr_data.tr_bot_airgap }}</td>
+                        <th>Core inner diameter</th><td>{{ tr_data.tr_core_inner_dia }}</td>
+                   </tr>
+                   <tr>
+                        <th>Turns primary (top.)</th><td>{{ tr_data.tr_turn_ptop }}</td>
+                        <th>Turns primary (bot.)</th><td>{{ tr_data.tr_turn_pbot }}</td>
+                        <th>Turns secondary (bot.)</th><td>{{ tr_data.tr_turn_sbot }}</td>
+                   </tr>
+                   <tr>
+                        <th>flux density (top.)</th><td>{{ tr_data.tr_flux_top }}</td>
+                        <th>flux density (bot.)</th><td>{{ tr_data.tr_flux_mid }}</td>
+                        <th>flux density (bot.)</th><td>{{ tr_data.tr_flux_bot }}</td>
+                   </tr>
+                    <tr>
+                        <th>Prim. Litz material</th><td>{{ tr_data.tr_litz_prim}}</td>
+                        <th>Sec. Litz material</th><td>{{ tr_data.tr_litz_sec}}</td>
+                        <th>View details</th><td><button id="View3DButton" onclick="open3DView()" disabled>3D View</button></td>
+                   </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Pareto circuit list
+        const circuit_points = [];
+
+        // Pareto inductor list
+        const inductor_points = [];
+
+        // Pareto transformer list
+        const transformer_points = [];
+
+
+        // Scale multiplication factor to prevent cut of points
+        const x_ext_scale = 1.1;
+        const y_ext_scale = 1.1;
+
+        const no_event_time = 50;
+
+        // Debug
+        let t = 0;
+        let tt = 0;
+
+        // Initialize the circuit list
+        {%- for item in plot_data.circuit_data %}
+            {%- if item.ZVS_rate is not none and item.ZVS_rate|length > 0 %}
+        circuit_points.push({ x: {{ item.ZVS_rate|float }}, y: {{ item.Current_factor|float }}});
+            {%- endif %}
+        {%- endfor %}
+
+        // Debug
+        console.log("Circuit points:", circuit_points);
+
+
+        // Initialize the inductor list
+        {%- for item in plot_data.inductor_data %}
+            {%- if item.total_volume is not none and item.total_volume|length > 0 %}
+        inductor_points.push({ x: {{ item.total_volume|float }}, y: {{ item.total_mean_loss|float }} });
+            {%- endif %}
+        {%- endfor %}
+
+        // Initialize the transformer list
+        {%- for item in plot_data.transformer_data %}
+            {%- if item.total_volume is not none and item.total_volume|length > 0 %}
+        transformer_points.push({ x: {{ item.total_volume|float }}, y: {{ item.total_mean_loss|float }} });
+            {%- endif %}
+        {%- endfor %}
+
+
+
+        // Calculate maximum value of x-axe  and y-axe for circuit plot
+        const cir_max_x = Math.max(...circuit_points.map(p => p.x)) * x_ext_scale;
+        const cir_max_y = Math.max(...circuit_points.map(p => p.y)) * y_ext_scale;
+
+        // Calculate maximum value of x-axe  and y-axe for inductor plot
+        const ind_max_x = Math.max(...inductor_points.map(p => p.x)) * x_ext_scale;
+        const ind_max_y = Math.max(...inductor_points.map(p => p.y)) * y_ext_scale;
+
+        // Calculate maximum value of x-axe  and y-axe for transformer plot
+        const tr_max_x = Math.max(...transformer_points.map(p => p.x)) * x_ext_scale;
+        const tr_max_y = Math.max(...transformer_points.map(p => p.y)) * y_ext_scale;
+
+
+        // Common configuration for all plots
+        const config = {
+            displayModeBar: true,
+            displaylogo: false
+        };
+
+
+        // Prepare circuit data plot
+        const cir_data = [{
+            x: circuit_points.map(p => p.x),
+            y: circuit_points.map(p => p.y),
+            mode: 'markers',
+            type: 'scatter',
+            marker: {
+                size: 12,
+                color: 'blue'
+            },
+            text: [],
+            hovertemplate: '',
+            name: 'Alle Punkte'
+        }];
+
+        // Configure circuit diagram
+        const cir_layout = {
+            title: 'Circuit design candidates',
+            xaxis: {
+                title: 'ZVS / %',
+                range: [0, cir_max_x]
+            },
+            yaxis: {
+                title: 'I_RMS / I^2',
+                range: [0, cir_max_y]
+            },
+            // hovermode: 'closest',
+            showlegend: false
+        };
+
+        // Prepare inductor data plot
+        const ind_data = [{
+            x: inductor_points.map(p => p.x),
+            y: inductor_points.map(p => p.y),
+            mode: 'markers',
+            type: 'scatter',
+            marker: {
+                size: 12,
+                color: 'blue'
+            },
+            text: [],
+            // hovertemplate: '',
+            name: 'Alle Punkte'
+        }];
+
+        // Configure inductor diagram
+        const ind_layout = {
+            title: 'Inductor design candidates',
+            xaxis: {
+                title: 'Volume / m³',
+                range: [0, ind_max_x]
+            },
+            yaxis: {
+                title: 'P_ind / W',
+                range: [0, ind_max_y]
+            },
+            // hovermode: 'closest',
+            showlegend: false
+        };
+
+        // Prepare transformer data plot
+        const tr_data = [{
+            x: transformer_points.map(p => p.x),
+            y: transformer_points.map(p => p.y),
+            mode: 'markers',
+            type: 'scatter',
+            marker: {
+                size: 12,
+                color: 'blue'
+            },
+            text: [],
+            // hovertemplate: '',
+            name: 'Alle Punkte'
+        }];
+
+        // Configure inductor diagram
+        const tr_layout = {
+            title: 'Inductor design candidates',
+            xaxis: {
+                title: 'Volume / m³',
+                range: [0, tr_max_x]
+            },
+            yaxis: {
+                title: 'P_ind / W',
+                range: [0, tr_max_y]
+            },
+            // hovermode: 'closest',
+            showlegend: false
+        };
+
+        // Create diagrams
+        // Circuit plot
+        const plotDivCir = document.getElementById('plotcircuit');
+        Plotly.newPlot(plotDivCir, cir_data, cir_layout, config);
+
+        // Inductor plot
+        const plotDivInd = document.getElementById('plotinductor');
+        Plotly.newPlot(plotDivInd, ind_data, ind_layout, config);
+
+        // Transformer plot
+        const plotDivTr = document.getElementById('plottransformer');
+        Plotly.newPlot(plotDivTr, tr_data, tr_layout, config);
+
+
+
+        // Request detailed view sheet
+        function open3DView() {
+            window.location.href = "model-view?combination_id=" + DetailedViewCID;
+        }
+
+        // MaximumRequest detailed view sheet
+        function open3DView() {
+            window.location.href = "model-view?combination_id=" + DetailedViewCID;
+        }
+
+    </script>
+</body>
+</html>

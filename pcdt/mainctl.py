@@ -2524,6 +2524,33 @@ class MainCtl:
         # Data generation
         # --------------------------
 
+        ###################################################################################################
+        #### Debug ########################################################################################
+        ###################################################################################################
+
+
+        # --- Candidate browser data generation ---------------------------------------------------
+
+        # Check, if result visualization data generation is to perform
+        if _data_generation_visualization.calculation_mode == CalcModeEnum.new_mode:
+            logger.info("Start result visualization data generation")
+
+            # Init candidate browser with study data
+            self._candidate_browser_gen = CandidateBrowserGen(_data_generation_visualization)
+
+            # Generate html-files and style sheet to visualize the result
+            self._candidate_browser_gen.generate_html_visualization(debug=toml_debug,
+                                                                    circuit_configuration=self._circuit_optimization,
+                                                                    heat_sink_configuration=self._heat_sink_study_data,
+                                                                    inductor_configuration_list=self._inductor_study_configuration_list,
+                                                                    transformer_configuration_list=self._transformer_study_configuration_list,
+                                                                    capacitor_configuration_list=self._capacitor_selection_configuration_list,
+                                                                    summary_data=_summary_data)
+
+        ###################################################################################################
+        ###################################################################################################
+        ###################################################################################################
+
         # --- Manufacture data generation ---------------------------------------------------------
 
         # Check, if manufacture data generation is to perform

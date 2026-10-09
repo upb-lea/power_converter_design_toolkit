@@ -73,7 +73,7 @@
             },
             text: [],
             hovertemplate: '',
-            name: 'Alle Punkte'
+            name: 'All points'
         }];
 
         // Calculate maximum value of y-axe
@@ -81,13 +81,13 @@
 
         // Configure efficiency diagram
         const layout_eff = {
-            title: 'Design candidates (Efficiency)',
+            title: 'Design candidates weighted (Efficiency)',
             xaxis: {
-                title: 'volume / m³',
+                title: 'Volume / m³',
                 range: [0, max_x]
             },
             yaxis: {
-                title: 'efficiency',
+                title: 'Efficiency',
                 range: [0, max_y_eff]
             },
             hovermode: 'closest',
@@ -114,13 +114,13 @@
 
         // Configure diagram
         const layout_loss = {
-            title: 'Design candidates (Power loss)',
+            title: 'Design candidates weighted (Power loss)',
             xaxis: {
-                title: 'volume / m³',
+                title: 'Volume / m³',
                 range: [0, max_x]
             },
             yaxis: {
-                title: 'power loss / W',
+                title: 'Power loss / W',
                 range: [0, max_y_loss]
             },
             hovermode: 'closest',
