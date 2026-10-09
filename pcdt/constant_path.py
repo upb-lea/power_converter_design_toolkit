@@ -68,3 +68,6 @@ PLOT_SUMMARY_MEAN_LOSS = "summary_mean_loss"
 
 # FEMMT fixed folder names, do not change!
 FEMMT_FEM_RESULTS_FOLDER = "02_fem_simulation_results"
+
+#
+CONFIG_FILE_FOLDER = "00_configuration_files"
