@@ -6,7 +6,7 @@ import pickle
 import datetime
 import threading
 import copy
-from typing import Any
+from typing import Any, Literal
 
 # 3rd party libraries
 import optuna
@@ -891,7 +891,7 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
                                  f"Program is terminated.\n"
                                  f"Difference: {difference}")
 
-        directions = ['maximize', 'minimize']
+        directions: list[Literal["minimize", "maximize"]] = ["maximize", "minimize"]
 
         # Calculate the fixed parameters
         self._fixed_parameters = DabCircuitOptimization.calculate_fixed_parameters(self._dab_config)

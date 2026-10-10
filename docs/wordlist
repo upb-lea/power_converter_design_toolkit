@@ -416,6 +416,7 @@ vvp
 InductorSettings
 pq
 py
+glb
 FreeCADCmd
 FreeCAD
 freecad
@@ -443,4 +444,8 @@ struct
 typedef
 DataEntry
 sizeof
+pythontemplates
+pytmpl
+
+
 
