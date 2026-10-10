@@ -132,7 +132,6 @@ async def detailed_view(request: Request, combination_id: int):
 
     # Read csv-files for combination id
     candidate_data, plot_data = read_csv_data(combination_id)
-    # candidate_info = get
 
     return templates.TemplateResponse(request,
         "browser_detailed_page_template.html",
@@ -350,7 +349,7 @@ def open_browser():
 
 if __name__ == "__main__":
     # Initialize path
-    initialize_path("{{ path_info.work_path }}")
+    initialize_path("/home/andreas/Workspace/Projekt/power_converter_design_toolkit/workspace/2026-09-31_ref_example")
 
     # Initialize candidate key list
     candidates_key_list = load_candidates()

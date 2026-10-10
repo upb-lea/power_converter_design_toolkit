@@ -32,7 +32,7 @@
                 <tbody>
                     <tr>
                         <th>Switching frequency[kHz]</th><td>{{ cir_data.fs }}</td>
-                        <th>Inductor values</th><td>L1={{ cir_data.l1}}, l2={{ cir_data.l1}}, Ls={{ cir_data.ls}}</td>
+                        <th>Inductor values</th><td>L<sub>1</sub>={{ cir_data.l1}}, L<sub>2</sub>={{ cir_data.l1}}, L<sub>s</sub>={{ cir_data.ls}}</td>
                    </tr>
                     <tr>
                         <th>Transistor 1</th><td>{{ cir_data.T1_type }}</td>
@@ -295,7 +295,7 @@
 
         // Configure inductor diagram
         const tr_layout = {
-            title: 'Inductor design candidates',
+            title: 'Transformer design candidates',
             xaxis: {
                 title: 'Volume / m³',
                 range: [0, tr_max_x]
