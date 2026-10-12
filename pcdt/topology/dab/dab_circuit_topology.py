@@ -635,7 +635,7 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
                 transistor_2_dto: d_dtos.TransistorDTO = transistor_dto
 
         dab_calc = HandleDabDto.init_config(
-            circuit_id=dab_config.circuit_study_name,
+            circuit_id=trial.number,
             mesh_v1=fixed_parameters.mesh_v1,
             mesh_v2=fixed_parameters.mesh_v2,
             mesh_p=fixed_parameters.mesh_p,
