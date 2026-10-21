@@ -1387,7 +1387,7 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
         if combination_dto.calc_dead_time is None:
             raise TypeError("Incomplete DTO, as dead time is missing.")
 
-        return np.array(combination_dto.input_config.mesh_p).flatten()
+        return np.array(combination_dto.input_config.mesh_p)
 
     def get_weights(self) -> np.ndarray:
         """Get operating point weights."""
@@ -1402,7 +1402,7 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
         if combination_dto.calc_dead_time is None:
             raise TypeError("Incomplete DTO, as dead time is missing.")
 
-        return np.array(combination_dto.input_config.mesh_weights).flatten()
+        return np.array(combination_dto.input_config.mesh_weights)
 
     @staticmethod
     def get_circuit_plot_data(act_study_data: StudyData) -> PlotData:
