@@ -73,10 +73,10 @@ def initialize_path(act_workspace_name: str):
     CAPACITOR_BASE_PATH = os.path.join(PCDT_ROOT, "{{ path_info.capacitor_base_path }}")
     INDUCTOR_BASE_PATH = os.path.join(PCDT_ROOT, "{{ path_info.inductor_base_path }}")
     TRANSFORMER_BASE_PATH = os.path.join(PCDT_ROOT, "{{ path_info.transformer_base_path }}")
-    CAPACITOR0_CSV = "{{ path_info.capacitor0_csv }}"
-    CAPACITOR1_CSV = "{{ path_info.capacitor1_csv }}"
-    INDUCTOR_CSV = "{{ path_info.inductor_csv }}"
-    TRANSFORMER_CSV = "{{ path_info.transformer_csv }}"
+    CAPACITOR0_CSV = "{{ path_info.capacitor_csv0 }}"
+    CAPACITOR1_CSV = "{{ path_info.capacitor_csv1 }}"
+    INDUCTOR_CSV = "{{ path_info.inductor_csv0 }}"
+    TRANSFORMER_CSV = "{{ path_info.transformer_csv0 }}"
     HEAT_SINK_CSV = os.path.join(PCDT_ROOT, "{{ path_info.heat_sink_csv }}")
     VISUALIZATION_BASE_PATH = os.path.join(PCDT_ROOT,"{{ path_info.visualization_base_path }}")
 
