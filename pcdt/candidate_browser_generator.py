@@ -5,12 +5,12 @@ import os
 import logging
 import csv
 import shutil
+import copy
 
 # 3rd party libraries
 from jinja2 import Environment, FileSystemLoader
 
 # own libraries
-import pcdt.toml_checker as tc
 from pcdt import CapacitorConfiguration, InductorConfiguration, TransformerConfiguration, StudyData, CircuitOptimizationBase
 from pcdt.constant_path import (TEMPLATE_FOLDER, HTML_TEMPLATE_FOLDER_NAME, STYLESHEET_FOLDER_NAME, CANDIDATE_BROWSER_HTML,
                                 PYTHON_TEMPLATE_FOLDER_NAME, WEBSERVER_TEMPLATE, VISUALIZATION_TEMPLATE, CB_START_CSS,
@@ -121,17 +121,21 @@ class CandidateBrowserGen:
 
         # Set path values
         server_path_information["work_path"] = act_conf_names["work_path"]
-        server_path_information["summary_data_csv"] = os.path.join("07_summary", act_conf_names["circuit"], "df_final.csv")
-        server_path_information["circuit_data_csv"] = os.path.join("01_circuit", act_conf_names["circuit"], act_conf_names["circuit"] + ".csv")
-        server_path_information["capacitor_base_path"] = os.path.join("02_capacitor", act_conf_names["circuit"])
-        server_path_information["inductor_base_path"] = os.path.join("03_inductor", act_conf_names["circuit"])
-        server_path_information["transformer_base_path"] = os.path.join("04_transformer", act_conf_names["circuit"])
-        server_path_information["capacitor0_csv"] = os.path.join(act_conf_names["capacitor0"], "results.csv")
-        server_path_information["capacitor1_csv"] = os.path.join(act_conf_names["capacitor1"], "results.csv")
-        server_path_information["inductor_csv"] = os.path.join(act_conf_names["inductor0"], act_conf_names["inductor0"] + ".csv")
-        server_path_information["transformer_csv"] = os.path.join(act_conf_names["transformer0"], act_conf_names["transformer0"] + ".csv")
-        server_path_information["heat_sink_csv"] = os.path.join("05_heat_sink", act_conf_names["circuit"], act_conf_names["heat_sink"] + ".csv")
-        server_path_information["visualization_base_path"] = os.path.join("08_data_generation", act_conf_names["circuit"], "visualization_data")
+        server_path_information["summary_data_csv"] = act_conf_names["summary"]
+        server_path_information["circuit_data_csv"] = os.path.join(act_conf_names["circuit_folder"], act_conf_names["circuit"] + ".csv")
+        server_path_information["capacitor_base_path"] = os.path.join(act_conf_names["capacitor"])
+        server_path_information["inductor_base_path"] = os.path.join(act_conf_names["inductor"])
+        server_path_information["transformer_base_path"] = os.path.join(act_conf_names["transformer"])
+        for index, component in enumerate(act_conf_names["capacitor_component"]):
+            server_path_information["capacitor_csv" + str(index)] = os.path.join(component + str(index), "results.csv")
+        for index, component in enumerate(act_conf_names["inductor_component"]):
+            server_path_information["inductor_csv" + str(index)] = os.path.join(component,
+                                                                                component + ".csv")
+        for index, component in enumerate(act_conf_names["transformer_component"]):
+            server_path_information["transformer_csv" + str(index)] = os.path.join(component,
+                                                                                   component + ".csv")
+        server_path_information["heat_sink_csv"] = os.path.join(act_conf_names["heat_sink"], act_conf_names["heat_sink"] + ".csv")
+        server_path_information["visualization_base_path"] = act_conf_names["data_generation"]
 
         # Template are load by data (Special approach of Jinja2 to access the template)
         env = Environment(loader=FileSystemLoader(self.webserver_template_folder))
@@ -153,7 +157,7 @@ class CandidateBrowserGen:
         for template in template_list:
             shutil.copy(f"{self.html_template_folder}/{template}", template_path)
 
-    def generate_html_visualization(self, debug: tc.Debug,
+    def generate_html_visualization(self,
                                     circuit_configuration: CircuitOptimizationBase,
                                     inductor_configuration_list: list[InductorConfiguration],
                                     transformer_configuration_list: list[TransformerConfiguration],
@@ -163,8 +167,6 @@ class CandidateBrowserGen:
         """
         Generate data for all components to enable the manufacturing process.
 
-        :param debug: Debug configuration
-        :type debug: tc.Debug
         :param circuit_configuration: circuit configuration
         :type circuit_configuration:
         :param inductor_configuration_list: inductor configuration list
@@ -182,7 +184,9 @@ class CandidateBrowserGen:
         # List of design candidates information
         candidate_info_list: list[dict]
         # Configuration path dictionary
-        conf_names: dict = {}
+        conf_names: dict[str, str | list] = {}
+        # List for sub path
+        conf_sub_list: list[str] = []
 
         # File path for csv data
         csv_filepath: str = os.path.join(summary_data.optimization_directory, "df_final.csv")
@@ -198,21 +202,48 @@ class CandidateBrowserGen:
 
             # Generate web browser
             conf_names["work_path"] = circuit_configuration.project_directory
+            conf_names["circuit_folder"] = circuit_configuration.circuit_study_data.optimization_directory
             conf_names["circuit"] = circuit_configuration.circuit_study_data.study_name
-            # Add capacitors
-            for index, cap_config in enumerate(capacitor_configuration_list):
-                key = "capacitor" + str(index)
-                conf_names[key] = cap_config.study_data.study_name
-            # Add inductors
-            for index, ind_config in enumerate(inductor_configuration_list):
-                key = "inductor" + str(index)
-                conf_names[key] = ind_config.study_data.study_name
-            # Add transformers
-            for index, tr_config in enumerate(transformer_configuration_list):
-                key = "transformer" + str(index)
-                conf_names[key] = tr_config.study_data.study_name
+            # Check if capacitors are part of the topology
+            if capacitor_configuration_list:
+                # Set base path for capacitor
+                conf_names["capacitor"] = capacitor_configuration_list[0].study_data.optimization_directory
+                # Add capacitors
+                for cap_config in capacitor_configuration_list:
+                    conf_sub_list.append(cap_config.study_data.study_name)
+                # Add list to dictionary and clear list
+                conf_names["capacitor_component"] = copy.deepcopy(conf_sub_list)
+                conf_sub_list = []
+            else:
+                conf_names["capacitor"] = ""
+            # Check if inductors are part of the topology
+            if inductor_configuration_list:
+                # Set base path for inductor
+                conf_names["inductor"] = inductor_configuration_list[0].study_data.optimization_directory
+                # Add inductors
+                for ind_config in inductor_configuration_list:
+                    conf_sub_list.append(ind_config.study_data.study_name)
+                # Add list to dictionary and clear list
+                conf_names["inductor_component"] = copy.deepcopy(conf_sub_list)
+                conf_sub_list = []
+            else:
+                conf_names["inductor"] = ""
+            # Check if inductors are part of the topology
+            if transformer_configuration_list:
+                # Set base path for transformer
+                conf_names["transformer"] = transformer_configuration_list[0].study_data.optimization_directory
+                # Add transformers
+                for tr_config in transformer_configuration_list:
+                    conf_sub_list.append(tr_config.study_data.study_name)
+                # Add list to dictionary
+                conf_names["transformer_component"] = conf_sub_list
+            else:
+                conf_names["transformer"] = ""
             # Add heat sink
-            conf_names["heat_sink"] = heat_sink_configuration.study_name
+            conf_names["heat_sink"] = heat_sink_configuration.optimization_directory
+            # Add summary and data generation
+            conf_names["summary"] = csv_filepath
+            conf_names["data_generation"] = self.candidate_browser_study_data.optimization_directory
 
             # Assemble target name
             webserver_filepath: str = os.path.join(self.candidate_browser_study_data.optimization_directory, WEB_SERVER_PY)
