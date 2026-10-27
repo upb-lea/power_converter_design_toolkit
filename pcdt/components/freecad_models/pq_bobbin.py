@@ -692,6 +692,13 @@ def export_round_bobbin_step(
         document.recompute()
 
         Import.export([bobbin_object], output_step_file)
+        # Export for 3D-visualization
+        filename_no_extension, _ = os.path.splitext(output_step_file)
+        output_glb_file = filename_no_extension + ".glb"
+        # Add arrays to the shape
+        bobbin_object.Shape.tessellate(0.1)
+        # Export glb-file
+        Import.export([bobbin_object], output_glb_file)
 
         if not os.path.isfile(output_step_file):
             raise RuntimeError(

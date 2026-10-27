@@ -2556,8 +2556,7 @@ class MainCtl:
             self._candidate_browser_gen = CandidateBrowserGen(_data_generation_visualization)
 
             # Generate html-files and style sheet to visualize the result
-            self._candidate_browser_gen.generate_html_visualization(debug=toml_debug,
-                                                                    circuit_configuration=self._circuit_optimization,
+            self._candidate_browser_gen.generate_html_visualization(circuit_configuration=self._circuit_optimization,
                                                                     heat_sink_configuration=self._heat_sink_study_data,
                                                                     inductor_configuration_list=self._inductor_study_configuration_list,
                                                                     transformer_configuration_list=self._transformer_study_configuration_list,

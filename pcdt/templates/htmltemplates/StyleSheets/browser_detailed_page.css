@@ -1,23 +1,8 @@
 body {
-    font-family: "Latin Modern Roman", Arial, sans-serif;
+    font-family: Arial, sans-serif;
     margin: 0;
     padding: 20px;
-    /* display: flex;
-    justify-content: left;  */
 }
-
-.tot_time{
-    font-size: 40px;
-    display: flex;
-    margin: 0;
-}
-
-.proc_time{
-    font-size: 30px;
-    display: flex;
-    margin: 0;
-}
-
 
 .container {
     display: grid;
@@ -30,59 +15,6 @@ body {
 .container > h1 {
     grid-column: 1 / -1;
     text-align: center;
-}
-
-/* Debug to visualize container and elements
-.container { outline: 3px solid red; }
-.container > * { outline: 2px solid orange; }
-body { outline: 3px solid blue; }
-*/
-
-
-.row_time {
-    margin: 0;
-    text-align: left;
-}
-
-.row {
-    display: flex;
-    margin-bottom: 10px;
-}
-
-.col {
-    flex: 1;
-    padding: 10px;
-    border: 1px solid black;
-    text-align: center;
-}
-
-.row_legend {
-    display: flex;
-    margin-bottom: 0px; /* less space between the lines*/
-    line-height: 0;
-}
-
-.col_legend {
-    padding: 0px 2px;
-    display: flex;
-    align-items: center;  /* Center content */
-}
-
-.col_legend img {
-    width: 20px;
-    height: 20px;
-    object-fit: contain;
-}
-
-.text-container {
-    flex-grow: 1;
-    text-align: left;
-}
-
-.single {
-    text-align: center;
-    padding: 10px;
-    border: 1px solid black;
 }
 
 /* Graphic properties for efficiency*/
@@ -139,8 +71,16 @@ th, td {
     border: 1px solid black;
     padding: 10px;
     text-align: center;
+    font-size: 16px;
 }
 
+.table-subtitle{
+    font-family: Arial, sans-serif;
+    font-size: 10px;
+    font-weight: normal;
+    display: inline;
+    margin: 0;
+}
 
 button:disabled {
     background-color: #ccc;  /* gray color*/
