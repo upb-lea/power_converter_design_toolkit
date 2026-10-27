@@ -349,6 +349,13 @@ def export_heat_sink_step(
 
         # Export the fused single-solid heat sink.
         Import.export([heat_sink_object], output_step_file)
+        # Export for 3D-visualization
+        filename_no_extension, _ = os.path.splitext(output_step_file)
+        output_glb_file = filename_no_extension + ".glb"
+        # Add arrays to the shape
+        heat_sink_object.Shape.tessellate(0.1)
+        # Export glb-file
+        Import.export([heat_sink_object], output_glb_file)
 
         if save_freecad_file:
             output_freecad_file = (
