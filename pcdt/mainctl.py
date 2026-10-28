@@ -2350,7 +2350,7 @@ class MainCtl:
                                                             self._capacitor_selection_configuration_list,
                                                             self._inductor_study_configuration_list,
                                                             self._transformer_study_configuration_list,
-                                                            df_pareto_front_losses, is_pre_summary=True)
+                                                            df_pareto_front_efficiency, is_pre_summary=True)
 
             ParetoPlots.plot_circuit_results(self._circuit_optimization, _pre_summary_data.optimization_directory)
 
@@ -2519,7 +2519,7 @@ class MainCtl:
                                                             self._capacitor_selection_configuration_list,
                                                             self._inductor_study_configuration_list,
                                                             self._transformer_study_configuration_list,
-                                                            df_pareto_front_losses, is_pre_summary=False)
+                                                            df_pareto_front_efficiency, is_pre_summary=False)
 
             # Set processing complete indicator
             MainCtl._set_presummary_complete(_summary_data.optimization_directory, PROCESSING_COMPLETE_FILE)
