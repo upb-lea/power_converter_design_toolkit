@@ -221,8 +221,8 @@ class SummaryProcessing:
                     f"circuit_t_j_max_{number_in_circuit}": act_circuit_data.t_j_max,
                     f"circuit_r_th_ib_jhs_{number_in_circuit}": act_circuit_data.r_th_jhs,
                     f"circuit_area_{number_in_circuit}": act_circuit_data.area,
-                    f"circuit_loss_array_{number_in_circuit}": np.squeeze(act_circuit_data.loss_array),
-                    f"circuit_temperature_heat_sink_max_array_{number_in_circuit}": np.squeeze(act_circuit_data.temperature_heat_sink_max_array)
+                    f"circuit_loss_array_{number_in_circuit}": act_circuit_data.loss_array,
+                    f"circuit_temperature_heat_sink_max_array_{number_in_circuit}": act_circuit_data.temperature_heat_sink_max_array
                 }
                 # Store capacitor data set
                 circuit_data_list.append(circuit_data)
@@ -268,7 +268,7 @@ class SummaryProcessing:
                         f"capacitor_study_name_{number_in_circuit}": act_capacitor_data.study_data.study_name,
                         f"capacitor_id_{number_in_circuit}": capacitor_id,
                         f"capacitor_volume_{number_in_circuit}": capacitor_dto.volume_total,
-                        f"capacitor_loss_array_{number_in_circuit}": np.squeeze(capacitor_dto.loss_total_array),
+                        f"capacitor_loss_array_{number_in_circuit}": capacitor_dto.loss_total_array,
                         f"capacitor_area_{number_in_circuit}": capacitor_dto.area_total,
                         f"capacitor_n_parallel_{number_in_circuit}": capacitor_dto.n_parallel,
                         f"capacitor_n_series_{number_in_circuit}": capacitor_dto.n_series,
@@ -326,7 +326,7 @@ class SummaryProcessing:
                         f"inductor_study_name_{number_in_circuit}": act_inductor_data.study_data.study_name,
                         f"inductor_id_{number_in_circuit}": inductor_id,
                         f"inductor_volume_{number_in_circuit}": inductor_results_dto.volume,
-                        f"inductor_loss_array_{number_in_circuit}": np.squeeze(inductance_loss_matrix),
+                        f"inductor_loss_array_{number_in_circuit}": inductance_loss_matrix,
                         f"inductor_t_max_{number_in_circuit}": 0,
                         f"inductor_area_{number_in_circuit}": inductor_results_dto.area_to_heat_sink,
                         f"r_th_ind_heat_sink_{number_in_circuit}": inductor_results_dto.r_th_ind_heat_sink
@@ -382,7 +382,7 @@ class SummaryProcessing:
                         f"transformer_study_name_{number_in_circuit}": act_transformer_data.study_data.study_name,
                         f"transformer_id_{number_in_circuit}": transformer_id,
                         f"transformer_volume_{number_in_circuit}": transformer_results_dto.volume,
-                        f"transformer_loss_array_{number_in_circuit}": np.squeeze(transformer_results_dto.loss_array),
+                        f"transformer_loss_array_{number_in_circuit}": transformer_results_dto.loss_array,
                         f"transformer_t_max_{number_in_circuit}": 0,
                         f"transformer_area_{number_in_circuit}": transformer_results_dto.area_to_heat_sink,
                         f"r_th_xfmr_heat_sink_{number_in_circuit}": transformer_results_dto.r_th_xfmr_heat_sink
@@ -828,7 +828,6 @@ class SummaryProcessing:
             control_board_loss)
 
         act_df["efficiency"] = act_df["total_loss_array"].apply(lambda x: (np.abs(output_power) - x) / np.abs(output_power))
-
         act_df["weighted_efficiency"] = act_df["efficiency"].apply(lambda x: np.sum(x * weights))
 
         # generate a new unique index for the combined dataframe
