@@ -127,7 +127,7 @@ class CandidateBrowserGen:
         server_path_information["inductor_base_path"] = os.path.join(act_conf_names["inductor"])
         server_path_information["transformer_base_path"] = os.path.join(act_conf_names["transformer"])
         for index, component in enumerate(act_conf_names["capacitor_component"]):
-            server_path_information["capacitor_csv" + str(index)] = os.path.join(component + str(index), "results.csv")
+            server_path_information["capacitor_csv" + str(index)] = os.path.join(component, "results.csv")
         for index, component in enumerate(act_conf_names["inductor_component"]):
             server_path_information["inductor_csv" + str(index)] = os.path.join(component,
                                                                                 component + ".csv")
