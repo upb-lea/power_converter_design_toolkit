@@ -136,6 +136,7 @@ class CandidateBrowserGen:
                                                                                    component + ".csv")
         server_path_information["heat_sink_csv"] = os.path.join(act_conf_names["heat_sink"], act_conf_names["heat_sink"] + ".csv")
         server_path_information["visualization_base_path"] = act_conf_names["data_generation"]
+        server_path_information["detailed_page_template"] = TMP_DETAILED_HTML
 
         # Template are load by data (Special approach of Jinja2 to access the template)
         env = Environment(loader=FileSystemLoader(self.webserver_template_folder))
