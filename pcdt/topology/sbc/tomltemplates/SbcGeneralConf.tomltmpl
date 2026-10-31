@@ -1,0 +1,17 @@
+[parameter_range]
+    v1_min_max_list =[47, 48]
+    v2_min_max_list =[20, 24]
+    i2_min_max_list =[3,5]
+
+[sampling]
+    sampling_method="dessca"
+    sampling_points=8
+    sampling_random_seed=10
+    v1_additional_user_point_list=[]
+    v2_additional_user_point_list=[]
+    i2_additional_user_point_list=[]
+    additional_user_weighting_point_list=[]
+
+[misc]
+    min_efficiency_percent=70
+    control_board_volume=10e-6

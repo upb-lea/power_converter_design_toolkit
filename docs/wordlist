@@ -446,6 +446,22 @@ DataEntry
 sizeof
 pythontemplates
 pytmpl
+MagNet
+Topology
+tomltemplates
+GeneralConf
+CircuitConf
+HeatSinkConf
+SummaryConf
+tomltmpl
+CapacitorxConf
+InductorxConf
+TransformerxConf
+conftmpl
+TopologyEnum
+TemplateType
+CapacitorSelectionRequirements
+
 
 
 

@@ -1,0 +1,74 @@
+####### 'Start of Description section' #############################
+[Description section]
+# After update this configuration file according your project needs, delete the lines until and including marker 'End of Description section'
+# This will validate the configuration.
+# Update the project directory. This will be create in folder 'workspace'
+# Select the topology by adding the shortcut:
+# 'dab' = dual active bridge, 'sbc' = synchronous buck converter
+# You can stop the program flow at different project progress by enter 'yes' within the breakpoint section at the selected calculation step
+# Conditional breakpoints are currently not supported
+# For each optimization section you can enter the number of trials for the optuna optimizer
+# If an optimization results are available you can delete them and start at the beginning (new) or
+# used them to continue or skip then, if they shall be used for the next optimization step.
+# Attention: If you do not use 'skip' for 'circuit', all component calculation will be started from the scratch.
+# The result base folder name of the different calculation can be set by subdirectory. It is recommended to overtake the current naming.
+# The names of the detailed configuration files for the single component optimization are to enter.
+# Theses files are to store in the folder workspace/default_config/00_configuration_files
+# The configuration for dab will be generated as default configuration
+####### 'End of Description section' #############################
+# Path configuration
+[general]
+    project_directory =  "{{cdata.default_project_name}}"
+    configuration_name = "{{cdata.default_config_name}}"
+    topology = "{{cdata.topology}}" # dab, sbc
+
+[breakpoints]
+    # possible values: no/pause/stop
+    circuit_pareto = "no"  # After Electrical paretofront calculation
+    circuit_filtered = "no"  # After Electrical filtered result calculation
+    capacitor = "no"   # After capacitor selection result calculation
+    inductor = "no"    # After inductor paretofront calculations of for all correspondent electrical points
+    transformer = "no" # After transformer paretofront calculations of for all correspondent electrical points
+    heat_sink = "no"    # After heatsink paretofront calculation
+    pre_summary = "no"    # After pre-summary calculation
+    summary = "no"    # After summary calculation
+
+[conditional_breakpoints] # conditional breakpoints in case of bad definition array (only for experts and currently not implemented)
+    circuit = 1000        # Number of trials with ZVS less than 70%
+    inductor = 1000       # Number of trials which exceed a limit value?
+    transformer = 1000      # Number of trials which exceed a limit value?
+    heat_sink = 1000         # Number of trials which exceed a limit value?
+
+[circuit]
+    number_of_trials = {{cdata.circuit_numbers_of_trials}}
+    calculation_mode = "new" # (new,skip)
+    subdirectory = "01_circuit"
+
+[capacitor]
+    # number of the entries corresponds to the number of required capacitors of the  topology
+    calculation_modes = {{cdata.capacitor_calculation_modes}} # (new,skip)
+    subdirectory = "02_capacitor"
+
+[inductor]
+    numbers_of_trials = {{cdata.inductor_numbers_of_trials}}
+    calculation_modes = {{cdata.inductor_calculation_modes}} # (new,continue,skip)
+    subdirectory = "03_inductor"
+
+[transformer]
+    numbers_of_trials = {{cdata.transformer_numbers_of_trials}}
+    calculation_modes = {{cdata.transformer_calculation_modes}} # (new,continue,skip)
+    subdirectory = "04_transformer"
+
+[heat_sink]
+    number_of_trials = {{cdata.heat_sink_numbers_of_trials}}
+    calculation_mode = "new" # (new,continue,skip)
+    subdirectory = "05_heat_sink"
+
+[pre_summary]
+    calculation_mode = "new" # (new,skip)
+    subdirectory = "06_pre_summary"
+
+[summary]
+    subdirectory = "07_summary"
+
+

@@ -29,7 +29,6 @@ CIRCUIT_WAVEFORMS_FOLDER = "filtered_results_waveforms"
 PARETO_PLOT_PDF_FOLDER = "pareto_plot_pdf"
 PARETO_PLOT_PNG_FOLDER = "pareto_plot_png"
 PARETO_PLOT_PKL_FOLDER = "pareto_plot_pkl"
-HEAT_SINK_DISC_FOLDER = "heat_sink_disc"
 DATA_GENERATION_WAVEFORM_FOLDER = "waveforms"
 DATA_GENERATION_MANUFACTURE = "manufacture_data"
 DATA_GENERATION_VISUALIZATION = "visualization_data"
@@ -37,6 +36,8 @@ TEMPLATE_FOLDER = "templates"
 HTML_TEMPLATE_FOLDER_NAME = "htmltemplates"
 WEBSERVER_TEMPLATE = "web_server.pytmpl"
 PYTHON_TEMPLATE_FOLDER_NAME = "pythontemplates"
+TOMPL_TEMPLATE_FOLDER_NAME = "tomltemplates"
+
 STYLESHEET_FOLDER_NAME = "StyleSheets"
 VISUALIZATION_TEMPLATE = "browser_start_page_template.html"
 CANDIDATE_BROWSER_HTML = "candidate_browser.html"
@@ -55,6 +56,49 @@ PROCESSING_COMPLETE_FILE = "processing_complete.json"
 CAPACITOR_RESULTS = "results.csv"
 CAPACITOR_RESULTS_FILTERED = "results_filtered.csv"
 
+# Topology folders
+DAB_TOPOLOGY_FOLDER = "topology/dab"
+SBC_TOPOLOGY_FOLDER = "topology/sbc"
+
+# Configuration
+PLACE_HOLDER = "?"
+PROG_FLOW_FILE_NAME = "progFlow.toml"
+MISC_CONF_FILE_NAME = "Misc.toml"
+GENERAL_CONF_FILE_NAME = "GeneralConf.toml"
+CIRCUIT_CONF_FILE_NAME = "CircuitConf.toml"
+CAPACITOR_XCONF_FILE_NAME = "Capacitor" + PLACE_HOLDER + "Conf.toml"
+INDUCTOR_XCONF_FILE_NAME = "Inductor" + PLACE_HOLDER + "Conf.toml"
+TRANSFORMER_XCONF_FILE_NAME = "Transformer" + PLACE_HOLDER + "Conf.toml"
+HEAT_SINK_CONF_FILE_NAME = "HeatSinkConf.toml"
+SUMMARY_CONF_FILE_NAME = "SummaryConf.toml"
+LOGGING_CONF_FILE_NAME = "logging.conf"
+
+# Configuration path and template file names
+CONFIG_FILE_FOLDER = "00_configuration_files"
+
+# Configuration template toml file names and logging file names
+PROG_FLOW_CONF_TPL = "progFlow.tomltmpl"
+MISC_CONF_TPL = "Misc.tomltmpl"
+GENERAL_CONF_TPL = "GeneralConf.tomltmpl"
+CIRCUIT_CONF_TPL = "CircuitConf.tomltmpl"
+CAPACITOR_CONF_TPL = "CapacitorxConf.tomltmpl"
+INDUCTOR_CONF_TPL = "InductorxConf.tomltmpl"
+TRANSFORMER_CONF_TPL = "TransformerxConf.tomltmpl"
+HEAT_SINK_CONF_TPL = "HeatSinkConf.tomltmpl"
+SUMMARY_CONF_TPL = "SummaryConf.tomltmpl"
+LOGGING_CONF_TPL = "logging.conftmpl"
+
+# Default folder names
+CIRCUIT_FOLDER = "01_circuit"
+CAPACITOR_FOLDER = "02_capacitor"
+INDUCTOR_FOLDER = "03_inductor"
+TRANSFORMER_FOLDER = "04_transformer"
+HEAT_SINK_FOLDER = "05_heat_sink"
+HEAT_SINK_DISC_FOLDER = "heat_sink_disc"
+PRE_SUMMARY_FOLDER = "06_pre_summary"
+SUMMARY_FOLDER = "07_summary"
+DATA_GENERATION_FOLDER = "08_data_generation"
+
 # result data frames filenames
 DF_SUMMARY_WITHOUT_HEAT_SINK_WITHOUT_OFFSET = "df_wo_hs_wo_offset.csv"
 DF_SUMMARY_WITH_HEAT_SINK_WITHOUT_OFFSET = "df_w_hs_wo_offset.csv"
@@ -68,6 +112,3 @@ PLOT_SUMMARY_MEAN_LOSS = "summary_mean_loss"
 
 # FEMMT fixed folder names, do not change!
 FEMMT_FEM_RESULTS_FOLDER = "02_fem_simulation_results"
-
-#
-CONFIG_FILE_FOLDER = "00_configuration_files"

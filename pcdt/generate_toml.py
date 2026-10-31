@@ -1,378 +1,537 @@
-"""Generate default toml files."""
+"""Generate default toml files and folder structure."""
 # python libraries
 import os
+import shutil
+import logging
+import select
+import sys
 
-def generate_missing_toml_files(working_directory: str) -> None:
-    """
-    Check for missing toml default files. Generate them, if missing.
+# 3rd party libraries
+from jinja2 import Environment
+import json
 
-    :param working_directory: working directory
-    :type working_directory: str
-    """
-    # check for missing component configuration files
-    inductor_filepath = os.path.join(working_directory, "DabInductorConf.toml")
-    if not os.path.isfile(inductor_filepath):
-        generate_default_inductor_toml(inductor_filepath)
-    transformer_filepath = os.path.join(working_directory, "DabTransformerConf.toml")
-    if not os.path.isfile(transformer_filepath):
-        generate_default_transformer_toml(transformer_filepath)
-    heat_sink_filepath = os.path.join(working_directory, "DabHeatSinkConf.toml")
-    if not os.path.isfile(heat_sink_filepath):
-        generate_default_heat_sink_toml(heat_sink_filepath)
-    summary_filepath = os.path.join(working_directory, "DabSummaryConf.toml")
-    if not os.path.isfile(summary_filepath):
-        generate_default_summary_toml(summary_filepath)
-    misc_filepath = os.path.join(working_directory, "Misc.toml")
-    if not os.path.isfile(misc_filepath):
-        generate_default_misc_toml(misc_filepath)
+# own libraries
+from pcdt.circuit_enums import TopologyEnum
+from pcdt.constant_path import LOGGING_CONF_TPL
+from pcdt.topology import dab, sbc
+from pcdt.circuit_enums import TemplateType
+from pcdt import toml_checker as tc
+from pcdt.topology.circuit_optimization_base import CircuitOptimizationBase
+from pcdt.constant_path import (PCDT_ROOT, PROG_FLOW_FILE_NAME, CONFIG_FILE_FOLDER, PROG_FLOW_CONF_TPL, CAPACITOR_CONF_TPL,
+                                INDUCTOR_CONF_TPL, TRANSFORMER_CONF_TPL, HEAT_SINK_DISC_FOLDER, HEAT_SINK_CONF_TPL,
+                                SUMMARY_CONF_TPL, TEMPLATE_FOLDER, TOMPL_TEMPLATE_FOLDER_NAME, GENERAL_CONF_FILE_NAME,
+                                CIRCUIT_CONF_FILE_NAME, CAPACITOR_XCONF_FILE_NAME, INDUCTOR_XCONF_FILE_NAME,
+                                TRANSFORMER_XCONF_FILE_NAME, HEAT_SINK_CONF_FILE_NAME, SUMMARY_CONF_FILE_NAME, PLACE_HOLDER,
+                                FILEPATH_CONFIG_JSON, CIRCUIT_FOLDER, CAPACITOR_FOLDER, INDUCTOR_FOLDER, TRANSFORMER_FOLDER,
+                                HEAT_SINK_FOLDER, PRE_SUMMARY_FOLDER, SUMMARY_FOLDER, DATA_GENERATION_FOLDER)
 
-def generate_default_flow_control_toml(working_directory: str) -> None:
-    """
-    Generate the default progFlow.toml file.
+logger = logging.getLogger(__name__)
 
-    :param working_directory: working directory
-    :type working_directory: str
-    """
-    toml_data = '''
-    [default data] # After update this configuration file according your project delete this line to validate it
-    # Path configuration
-    [general]
-        project_directory = "2026-01-09_example"
-        topology = "dab"
-    
-    [breakpoints]
-        # possible values: no/pause/stop
-        circuit_pareto = "no"  # After Electrical pareto front calculation
-        circuit_filtered = "no"  # After Electrical filtered result calculation
-        capacitor = "no"   # After capacitor selection result calculation
-        inductor = "no"    # After inductor pareto front calculations of for all correspondent electrical points
-        transformer = "no" # After transformer pareto front calculations of for all correspondent electrical points
-        heat_sink = "no"    # After heat sink pareto front calculation
-        pre_summary = "no"    # After pre-summary calculation
-        summary = "no"    # After summary calculation
-    
-    [conditional_breakpoints] # conditional breakpoints in case of bad definition array (only for experts and currently not implemented)
-        circuit = 1000        # Number of trials with ZVS less than 70%
-        inductor = 1000       # Number of trials which exceed a limit value?
-        transformer = 1000      # Number of trials which exceed a limit value?
-        heat_sink = 1000         # Number of trials which exceed a limit value?
-    
-    [circuit]
-        number_of_trials = 100
-        calculation_mode = "new" # (new,continue,skip)
-        subdirectory = "01_circuit"
-    
-    [capacitor]
-        # number of the entries corresponds to the number of required capacitors of the  topology
-        calculation_modes = ["new", "new"] # (new,skip)
-        subdirectory = "02_capacitor"
-    
-    [inductor]
-        numbers_of_trials = [200]
-        calculation_modes = ["new"] # (new,continue,skip)
-        subdirectory = "03_inductor"
-    
-    [transformer]
-        numbers_of_trials = [400]
-        calculation_modes = ["new"] # (new,continue,skip)
-        subdirectory = "04_transformer"
-    
-    [heat_sink]
-        number_of_trials = 500
-        calculation_mode = "new" # (new,continue,skip,disc)
-        subdirectory = "05_heat_sink"
-    
-    [pre_summary]
-        calculation_mode = "new" # (new,skip)
-        subdirectory = "06_pre_summary"
-    
-    [summary]
-        calculation_mode = "new" # (new,skip)
-        subdirectory = "07_summary"
-        
-    [data_generation]
-        calculation_mode_visualization = "new" # (new,skip_purge)
-        calculation_mode_manufacture = "new"   # (new,continue,skip_purge)        
-        subdirectory = "08_data_generation"
-    
-    [configuration_data_files]
-        # General configuration file followed by circuit configuration file
-        topology_files =  ["DabGeneralConf.toml","DabCircuitConf.toml"]
-        # Number of capacitor configuration files corresponds to the required number of capacitors of the topology
-        capacitor_configuration_files = ["DabCapacitor1Conf.toml", "DabCapacitor2Conf.toml"]
-        # Number of capacitor configuration files corresponds to the required number of capacitors of the topology
-        inductor_configuration_files = ["DabInductorConf.toml"]
-        # Number of capacitor configuration files corresponds to the required number of capacitors of the topology
-        transformer_configuration_files = ["DabTransformerConf.toml"]
-        heat_sink_configuration_file = "DabHeatSinkConf.toml"
-        summary_configuration_file = "DabSummaryConf.toml"
-        #    # General configuration file followed by circuit configuration file
-        #    topology_files =  ["SbcGeneralConf.toml","SbcCircuitConf.toml"]
-        #    # Number of capacitor configuration files corresponds to the required number of capacitors of the topology
-        #    capacitor_configuration_files = [""]
-        #    # Number of capacitor configuration files corresponds to the required number of capacitors of the topology
-        #    inductor_configuration_files = ["SbcInductorConf.toml"]
-        #    # Number of capacitor configuration files corresponds to the required number of capacitors of the topology
-        #    transformer_configuration_files = [""]
-        #    heat_sink_configuration_file = "SbcHeatSinkConf.toml"
-    '''
-    with open(f"{working_directory}/progFlow.toml", 'w') as output:
-        output.write(toml_data)
+class GenerateDefaultConfig:
+    """Class to generate configuration files if missing."""
 
-def generate_default_misc_toml(file_path: str) -> None:
-    """
-    Generate the default misc toml file.
+    @staticmethod
+    def generate_default_files(file_path: str) -> None:
+        """
+        Check a default set of all configuration files.
 
-    :param file_path: filename including absolute path
-    :type file_path: str
-    """
-    toml_data = (
-        '[default_data] # After update this configuration file according your project delete this line to validate it\n'
-        'min_efficiency_percent=80\n'
-        'control_board_volume=10e-6\n'
-        'control_board_loss=1')
-    with open(file_path, 'w') as output:
-        output.write(toml_data)
+        :param file_path: file name and path of program flow file
+        :type  file_path: str
+        """
+        # Variable declaration and initialization
+        # Configuration value dictionary
+        conf_dict: dict = {}
+        topology_selection: TopologyEnum
+        default_project_name: str = "_default_project"
+        default_config_name: str = "default_config"
+        folder_dict: dict = {}
+        topology: CircuitOptimizationBase
 
-def generate_default_capacitor_toml(file_path: str) -> None:
-    """
-    Generate the default capacitor selection toml file.
+        # Select the topology for the default configuration
+        topology_selection = GenerateDefaultConfig._select_default_topology()
 
-    :param file_path: filename including absolute path
-    :type file_path: str
-    """
-    toml_data = (
-        '[default_data] # After update this configuration file according your project delete this line to validate it\n'
-        'maximum_peak_to_peak_voltage_ripple = 1\n'
-        'temperature_ambient = 90\n'
-        'voltage_safety_margin_percentage = 10\n'
-        'maximum_number_series_capacitors = 2\n'
-        'lifetime_h = 30_000\n\n'
-        '[filter_distance]\n'
-        '    factor_dc_losses_min_max_list = [0.01, 100]')
-    with open(file_path, 'w') as output:
-        output.write(toml_data)
+        # Add default configuration name
+        conf_dict["default_project_name"] = str(topology_selection.value) + default_project_name
+        conf_dict["default_config_name"] = default_config_name
+        if topology_selection is TopologyEnum.dab:
+            conf_dict["topology"] = "dab"
+            conf_dict["circuit_numbers_of_trials"] = "500"
+            conf_dict["capacitor_calculation_modes"] = "[\"new\",\"new\"]"
+            conf_dict["inductor_numbers_of_trials"] = "500"
+            conf_dict["inductor_calculation_modes"] = "[\"new\"]"
+            conf_dict["transformer_numbers_of_trials"] = "500"
+            conf_dict["transformer_calculation_modes"] = "[\"new\"]"
+            conf_dict["heat_sink_numbers_of_trials"] = "500"
+            # Allocate and initialize topology configuration for dual active bridge
+            topology = dab.DabCircuitOptimization()
+        elif topology_selection is TopologyEnum.sbc:
+            conf_dict["topology"] = "sbc"
+            conf_dict["circuit_numbers_of_trials"] = "500"
+            conf_dict["capacitor_calculation_modes"] = "[\"new\",\"new\"]"
+            conf_dict["inductor_numbers_of_trials"] = "500"
+            conf_dict["inductor_calculation_modes"] = "[\"new\"]"
+            conf_dict["transformer_numbers_of_trials"] = "500"
+            conf_dict["transformer_calculation_modes"] = "[]"
+            conf_dict["heat_sink_numbers_of_trials"] = "500"
+            # Allocate and initialize topology configuration for dual active bridge
+            topology = sbc.SbcCircuitOptimization()
+        else:
+            raise ValueError("Serious programming error in topology selection in file"
+                             f"{__name__}.‑\nPlease write an issue!")
 
-def generate_default_inductor_toml(file_path: str) -> None:
-    """
-    Generate the default inductor  configuration toml file.
+        template_path = str(os.path.join(PCDT_ROOT, TEMPLATE_FOLDER, TOMPL_TEMPLATE_FOLDER_NAME))
+        project_directory = os.path.join(os.path.dirname(file_path), conf_dict["default_project_name"])
 
-    :param file_path: working directory
-    :type file_path: str
-    """
-    toml_data = '''
-    [default_data] # After update this configuration file according your project delete this line to validate it
-    [design_space]
-        core_name_list=["PQ 50/50", "PQ 50/40", "PQ 40/40", "PQ 40/30", "PQ 35/35", "PQ 32/30", "PQ 32/20", "PQ 26/25", "PQ 26/20", "PQ 20/20", "PQ 20/16"]
-        material_name_list=["N49"]
-        litz_wire_name_list=["1.5x105x0.1", "1.4x200x0.071", "1.1x60x0.1"]
-        core_inner_diameter_min_max_list=[]
-        window_h_min_max_list=[]
-        window_w_min_max_list=[]
-    
-    [boundary_conditions]
-        temperature=100
-    
-    [material_data_sources]
-        permeability_datasource="LEA_MTB"
-        permittivity_datasource="LEA_MTB"
-    
-    [insulations]
-        primary_to_primary=0.2e-3
-        core_bot=1e-3
-        core_top=1e-3
-        core_right=1e-3
-        core_left=1e-3
+        # Generate program flow configuration file
+        progflow_file_path = os.path.join(os.path.dirname(file_path), PROG_FLOW_FILE_NAME)
+        template_file_path = os.path.join(template_path, PROG_FLOW_CONF_TPL)
 
-    [thermal_data]
-        # [tim_thickness, tim_conductivity]
-        thermal_cooling = [1e-3,12.0]
-        
-    [settings]
-        fft_filter_value_factor=0.01
-        mesh_accuracy=0.8
-        
-    [filter_distance]
-        factor_dc_losses_min_max_list=[0.01, 100]
-    '''
-    with open(file_path, 'w') as output:
-        output.write(toml_data)
+        # Check if template file is available
+        if os.path.isfile(template_file_path):
+            with open(template_file_path, "r", encoding="utf-8") as f:
+                template_source = f.read()
+        else:
+            logger.error(f"Data corruption: Missing template file {template_file_path}")
+            return
 
-def generate_default_transformer_toml(file_path: str) -> None:
-    """
-    Generate the default transformer configuration toml file.
+        GenerateDefaultConfig._generate_default_toml(progflow_file_path, template_source, conf_dict)
 
-    :param file_path: filename including absolute path
-    :type file_path: str
-    """
-    toml_data = '''
-    [default_data] # After update this configuration file according your project delete this line to validate it
-    [design_space]
-        material_name_list=['N49']
-        core_name_list=["PQ 40/40", "PQ 40/30", "PQ 35/35", "PQ 32/30", "PQ 32/20", "PQ 26/25", "PQ 26/20", "PQ 20/20", "PQ 20/16"]
-        core_inner_diameter_min_max_list=[15e-3, 30e-3]
-        window_w_min_max_list=[10e-3, 40e-3]
-        window_h_bot_min_max_list=[10e-3, 50e-3]
-        primary_litz_wire_list=['1.1x60x0.1']
-        secondary_litz_wire_list=['1.35x200x0.071', '1.1x60x0.1']
-        # sweep parameters: geometry and materials
-        n_p_top_min_max_list=[1, 30]
-        n_p_bot_min_max_list=[10, 80]
-    
-    [boundary_conditions]
-        # maximum limitation for transformer total height and core volume
-        max_transformer_total_height=60e-3
-        max_core_volume=0.007853982  # 50e-3 ** 2 * 3.141593
-        temperature=100
-    
-    [insulation]
-        # insulation for top core window
-        iso_window_top_core_top=1.3e-3
-        iso_window_top_core_bot=1.3e-3
-        iso_window_top_core_left=1.3e-3
-        iso_window_top_core_right=1.3e-3
-        # insulation for bottom core window
-        iso_window_bot_core_top=1.3e-3
-        iso_window_bot_core_bot=1.3e-3
-        iso_window_bot_core_left=1.3e-3
-        iso_window_bot_core_right=1.3e-3
-        # winding-to-winding insulation
-        iso_primary_to_primary=0.2e-3
-        iso_secondary_to_secondary=0.2e-3
-        iso_primary_to_secondary=0.2e-3
-    
-    [material_data_sources]
-        permeability_datasource="LEA_MTB"
-        permittivity_datasource="LEA_MTB"
-        
-    [thermal_data]
-        # [tim_thickness, tim_conductivity]
-        thermal_cooling = [1e-3,12.0]
-            
-    [settings]
-        fft_filter_value_factor=0.01
-        mesh_accuracy=0.8
-    
-    [filter_distance]
-        factor_dc_losses_min_max_list=[0.01, 100]
-    '''
-    with open(file_path, 'w') as output:
-        output.write(toml_data)
+        # Generate configuration files
+        config_path = str(os.path.join(project_directory, CONFIG_FILE_FOLDER, default_config_name))
+        GenerateDefaultConfig.generate_component_toml_files(topology, config_path)
 
-def generate_default_heat_sink_toml(file_path: str) -> None:
-    """
-    Generate the default heat sink configuration toml file.
+        # Set up the dictionary
+        folder_dict["circuit_path"] = os.path.join(project_directory, CIRCUIT_FOLDER)
+        folder_dict["capacitor_path"] = os.path.join(project_directory, CAPACITOR_FOLDER)
+        folder_dict["inductor_path"] = os.path.join(project_directory, INDUCTOR_FOLDER)
+        folder_dict["transformer_path"] = os.path.join(project_directory, TRANSFORMER_FOLDER)
+        folder_dict["heat_sink_path"] = os.path.join(project_directory, HEAT_SINK_FOLDER)
+        folder_dict["heat_sink_disc_path"] = os.path.join(project_directory, HEAT_SINK_DISC_FOLDER)
+        folder_dict["pre_summary_path"] = os.path.join(project_directory, PRE_SUMMARY_FOLDER)
+        folder_dict["summary_path"] = os.path.join(project_directory, SUMMARY_FOLDER)
+        folder_dict["data_generation_path"] = os.path.join(project_directory, DATA_GENERATION_FOLDER)
 
-    :param file_path: filename including absolute path
-    :type file_path: str
-    """
-    toml_data = '''
-    [default_data] # After update this configuration file according your project delete this line to validate it
-    [design_space]
-        height_c_min_max_list=[0.02, 0.08]
-        width_b_min_max_list=[0.02, 0.08]
-        length_l_min_max_list=[0.08, 0.20]
-        height_d_min_max_list=[0.001, 0.003]
-        number_cooling_channels_n_min_max_list=[5, 20]
-        thickness_fin_t_min_max_list=[1e-3, 5e-3]
-    
-    [boundary_conditions]
-        t_ambient=40
-        t_hs_max=95
-        area_min=0.001
-    
-    [settings]
-        number_directions=3
-        factor_pcb_area_copper_coin = 1.42
-        factor_bottom_area_copper_coin = 0.39
-        # W/(m*K)
-        thermal_conductivity_copper = 136
+        # Generate project folder structure
+        GenerateDefaultConfig._set_up_folder_structure(folder_dict)
 
-    '''
-    with open(file_path, 'w') as output:
-        output.write(toml_data)
+    @staticmethod
+    def generate_component_toml_files(topology: CircuitOptimizationBase, config_directory: str) -> None:
+        """
+        Check for missing toml default files and generate them in case of missing.
 
-def generate_default_summary_toml(file_path: str) -> None:
-    """
-    Generate the default summary configuration toml file.
+        :param topology: Topology instance will be overloaded by the derived class
+        :type  topology: CircuitOptimizationBase
+        :param config_directory: Storage location of the configuration file
+        :type  config_directory: str
+        """
+        # Variable declaration and initialization
+        # Path for templates
+        template_path = str(os.path.join(PCDT_ROOT, TEMPLATE_FOLDER, TOMPL_TEMPLATE_FOLDER_NAME))
 
-    :param file_path: filename including absolute path
-    :type file_path: str
-    """
-    toml_data = '''
-    [default_data] # After update this configuration file according your project delete this line to validate it
-    [pre_summary]
-        filter_distance_losses = [0.01, 100]
-        filter_distance_efficiency = [0.03, 0.9]
+        # Read the number of required components
+        number_of_capacitors = topology.get_number_of_required_capacitors()
+        number_of_inductors = topology.get_number_of_required_inductors()
+        number_of_transformers = topology.get_number_of_required_transformers()
 
-    [summary]
-        filter_distance_losses = [0.01, 100]
-        filter_distance_efficiency = [0.03, 0.9]
-    '''
-    with open(file_path, 'w') as output:
-        output.write(toml_data)
+        # Generate the file
+        config_file_path = str(os.path.join(config_directory, GENERAL_CONF_FILE_NAME))
+        GenerateDefaultConfig.generate_general_toml(config_file_path, topology)
 
+        # Generate the file
+        config_file_path = str(os.path.join(config_directory, CIRCUIT_CONF_FILE_NAME))
+        GenerateDefaultConfig.generate_circuit_toml(config_file_path, topology)
 
-def generate_logging_config(working_directory: str) -> None:
-    """
-    Generate the default logging configuration file.
+        # Check for missing capacitor configuration files
+        # Prepare template
+        template_file_path = os.path.join(template_path, CAPACITOR_CONF_TPL)
+        # Read template
+        is_valid, template_source = GenerateDefaultConfig._read_template(template_file_path)
+        if is_valid:
+            for index in range(number_of_capacitors):
+                config_file_path = str(os.path.join(config_directory, CAPACITOR_XCONF_FILE_NAME.replace(PLACE_HOLDER, str(index))))
+                GenerateDefaultConfig.generate_default_capacitor_toml(config_file_path, index, topology.get_topology_type())
 
-    :param working_directory: working directory
-    :type working_directory: str
-    """
-    logging_data_config = '''[loggers]
-keys=root,pcdt,transistordatabase,femmt,hct,uvicorn
+        # Generate the file
+        # Prepare template
+        template_file_path = os.path.join(template_path, INDUCTOR_CONF_TPL)
+        # Read template
+        is_valid, template_source = GenerateDefaultConfig._read_template(template_file_path)
+        if is_valid:
+            for index in range(number_of_inductors):
+                config_file_path = str(os.path.join(config_directory, INDUCTOR_XCONF_FILE_NAME.replace(PLACE_HOLDER, str(index))))
+                GenerateDefaultConfig.generate_default_inductor_toml(config_file_path, index, topology.get_topology_type())
 
-[handlers]
-keys=console
+        # Generate the file
+        # Prepare template
+        template_file_path = os.path.join(template_path, TRANSFORMER_CONF_TPL)
+        # Read template
+        is_valid, template_source = GenerateDefaultConfig._read_template(template_file_path)
+        if is_valid:
+            for index in range(number_of_transformers):
+                config_file_path = str(os.path.join(config_directory, TRANSFORMER_XCONF_FILE_NAME.replace(PLACE_HOLDER, str(index))))
+                GenerateDefaultConfig.generate_default_transformer_toml(config_file_path, index, topology.get_topology_type())
 
-[formatters]
-keys=simple
+        # Generate the file
+        config_file_path = str(os.path.join(config_directory, HEAT_SINK_CONF_FILE_NAME))
+        if not os.path.isfile(config_file_path):
+            # Generate the file
+            GenerateDefaultConfig.generate_default_heat_sink_toml(config_file_path)
 
-[logger_root]
-level=INFO
-handlers=console
-qualname=
+        # Generate the file
+        config_file_path = str(os.path.join(config_directory, SUMMARY_CONF_FILE_NAME))
+        if not os.path.isfile(config_file_path):
+            # Generate the file
+            GenerateDefaultConfig.generate_default_summary_toml(config_file_path)
 
-[logger_pcdt]
-level=INFO
-handlers=console
-qualname=pcdt
-propagate=0
+    @staticmethod
+    def generate_general_toml(general_file_path: str, topology: CircuitOptimizationBase) -> None:
+        """
+        Generate general toml default file if missing.
 
-[logger_transistordatabase]
-level=INFO
-handlers=console
-qualname=transistordatabase
-propagate=0
+        :param general_file_path: Path and filename of general configuration file
+        :type  general_file_path: str
+        :param topology: Topology instance will be overloaded by the derived class
+        :type  topology: CircuitOptimizationBase
+        """
+        # Read template
+        is_valid, template_source = topology.get_template(TemplateType.general)
+        if is_valid:
+            # Prepare configuration dictionary
+            conf_dict: dict = {}
+            # Generate the file
+            GenerateDefaultConfig._generate_default_toml(general_file_path, template_source, conf_dict)
 
-[logger_femmt]
-level=INFO
-handlers=console
-qualname=femmt
-propagate=0
+    @staticmethod
+    def generate_circuit_toml(circuit_file_path: str, topology: CircuitOptimizationBase) -> None:
+        """
+        Generate circuit toml default file if missing.
 
-[logger_hct]
-level=INFO
-handlers=console
-qualname=hct
-propagate=0
+        :param circuit_file_path: Path and filename of circuit configuration file
+        :type  circuit_file_path: str
+        :param topology: Topology instance will be overloaded by the derived class
+        :type  topology: CircuitOptimizationBase
+        """
+        # Read template
+        is_valid, template_source = topology.get_template(TemplateType.circuit)
+        if is_valid:
+            # Prepare configuration dictionary
+            conf_dict: dict = {}
+            # Generate the file
+            GenerateDefaultConfig._generate_default_toml(circuit_file_path, template_source, conf_dict)
 
-[logger_uvicorn]
-level=INFO
-handlers=console
-qualname=uvicorn
-propagate=0
+    @staticmethod
+    def generate_default_capacitor_toml(capacitor_file_path: str, index: int, topology_type: TopologyEnum) -> None:
+        """
+        Generate capacitor toml default file if missing.
 
-[handler_console]
-class=StreamHandler
-level=NOTSET
-formatter=simple
-args=(sys.stdout,)
+        :param capacitor_file_path: Path and filename of capacitor configuration file
+        :type  capacitor_file_path: str
+        :param index: Component index of capacitor component (Used by configuration dictionary)
+        :type  index: int
+        :param topology_type: Type of the topology
+        :type  topology_type: TopologyEnum
+        """
+        # Variable declaration and initialization
+        # Path for templates
+        template_path = str(os.path.join(PCDT_ROOT, TEMPLATE_FOLDER, TOMPL_TEMPLATE_FOLDER_NAME))
 
-[formatter_simple]
-format=%(asctime)s - %(name)s - %(levelname)s - %(message)s
-datefmt=%Y-%m-%d %H:%M:%S
-    '''
-    with open(f"{working_directory}/logging.conf", 'w') as output:
-        output.write(logging_data_config)
+        # Prepare template
+        template_file_path = os.path.join(template_path, CAPACITOR_CONF_TPL)
+        # Read template
+        is_valid, template_source = GenerateDefaultConfig._read_template(template_file_path)
+        if is_valid:
+            # Prepare configuration dictionary
+            conf_dict: dict = {}
+            # Generate the file
+            GenerateDefaultConfig._generate_default_toml(capacitor_file_path, template_source, conf_dict)
+
+    @staticmethod
+    def generate_default_inductor_toml(inductor_file_path: str, index: int, topology_type: TopologyEnum) -> None:
+        """
+        Generate inductor toml default file if missing.
+
+        :param inductor_file_path: Path and filename of inductor configuration file
+        :type  inductor_file_path: str
+        :param index: Component index of capacitor component (Used by configuration dictionary)
+        :type  index: int
+        :param topology_type: Type of the topology
+        :type  topology_type: TopologyEnum
+        """
+        # Variable declaration and initialization
+        conf_dict: dict = {}
+        section_dict: dict = {}
+        # Path for templates
+        template_path = str(os.path.join(PCDT_ROOT, TEMPLATE_FOLDER, TOMPL_TEMPLATE_FOLDER_NAME))
+
+        # Prepare template
+        template_file_path = os.path.join(template_path, INDUCTOR_CONF_TPL)
+        # Read template
+        is_valid, template_source = GenerateDefaultConfig._read_template(template_file_path)
+        if is_valid:
+            if topology_type is TopologyEnum.dab:
+                section_dict["permeability_datasource"] = "LEA_MTB"
+                section_dict["permittivity_datasource"] = "LEA_MTB"
+                conf_dict["material_data_sources"] = section_dict
+            elif topology_type is TopologyEnum.sbc:
+                section_dict["permeability_datasource"] = "MagNet"
+                section_dict["permittivity_datasource"] = "LEA_MTB"
+                conf_dict["material_data_sources"] = section_dict
+            else:
+                raise ValueError("Serious programming error in topology selection in file"
+                                 f"{__name__}.‑\nPlease write an issue!")
+            # Generate the file
+            GenerateDefaultConfig._generate_default_toml(inductor_file_path, template_source, conf_dict)
+
+    @staticmethod
+    def generate_default_transformer_toml(transformer_file_path: str, index: int, topology_type: TopologyEnum) -> None:
+        """
+        Generate transformer toml default file if missing.
+
+        :param transformer_file_path: Path and filename of transformer configuration file
+        :type  transformer_file_path: str
+        :param index: Component index of capacitor component (Used by configuration dictionary)
+        :type  index: int
+        :param topology_type: Type of the topology
+        :type  topology_type: TopologyEnum
+        """
+        # Variable declaration and initialization
+        # Path for templates
+        template_path = str(os.path.join(PCDT_ROOT, TEMPLATE_FOLDER, TOMPL_TEMPLATE_FOLDER_NAME))
+
+        # Prepare template
+        template_file_path = os.path.join(template_path, TRANSFORMER_CONF_TPL)
+        # Read template
+        is_valid, template_source = GenerateDefaultConfig._read_template(template_file_path)
+        if is_valid:
+            # Prepare configuration dictionary
+            conf_dict: dict = {}
+            # Generate the file
+            GenerateDefaultConfig._generate_default_toml(transformer_file_path, template_source, conf_dict)
+
+    @staticmethod
+    def generate_default_heat_sink_toml(heat_sink_file_path: str) -> None:
+        """
+        Generate heat sink toml default file if missing.
+
+        :param heat_sink_file_path: Path and filename of heat sink configuration file
+        :type  heat_sink_file_path: str
+        """
+        # Variable declaration and initialization
+        # Path for templates
+        template_path = str(os.path.join(PCDT_ROOT, TEMPLATE_FOLDER, TOMPL_TEMPLATE_FOLDER_NAME))
+
+        # Prepare template
+        template_file_path = os.path.join(template_path, HEAT_SINK_CONF_TPL)
+        # Read template
+        is_valid, template_source = GenerateDefaultConfig._read_template(template_file_path)
+        if is_valid:
+            # Prepare configuration dictionary
+            conf_dict: dict = {}
+            # Generate the file
+            GenerateDefaultConfig._generate_default_toml(heat_sink_file_path, template_source, conf_dict)
+
+    @staticmethod
+    def generate_default_summary_toml(summary_file_path: str) -> None:
+        """
+        Generate summary toml default file if missing.
+
+        :param summary_file_path: Path and filename of summary configuration file
+        :type  summary_file_path: str
+        """
+        # Variable declaration and initialization
+        # Path for templates
+        template_path = str(os.path.join(PCDT_ROOT, TEMPLATE_FOLDER, TOMPL_TEMPLATE_FOLDER_NAME))
+
+        # Prepare template
+        template_file_path = os.path.join(template_path, SUMMARY_CONF_TPL)
+        # Read template
+        is_valid, template_source = GenerateDefaultConfig._read_template(template_file_path)
+        if is_valid:
+            # Prepare configuration dictionary
+            conf_dict: dict = {}
+            # Generate the file
+            GenerateDefaultConfig._generate_default_toml(summary_file_path, template_source, conf_dict)
+
+    @staticmethod
+    def generate_logging_config(logging_file_path: str) -> None:
+        """
+        Generate the default logging configuration file.
+
+        :param logging_file_path: path and file name of logging configuration file
+        :type  logging_file_path: str
+        """
+        # Variable declaration and initialization
+        conf_dict: dict = {}
+
+        # file path of logging template
+        template_file_path = str(os.path.join(PCDT_ROOT, TEMPLATE_FOLDER, TOMPL_TEMPLATE_FOLDER_NAME, LOGGING_CONF_TPL))
+        # Read template
+        is_valid, template_source = GenerateDefaultConfig._read_template(template_file_path)
+        if is_valid:
+            # Generate the file
+            GenerateDefaultConfig._generate_default_toml(logging_file_path, template_source, conf_dict)
+
+    @staticmethod
+    def _backup_toml_file(file_path: str) -> None:
+        """
+        Generate the default toml file.
+
+        :param target_file_path: filename and path of the file to generate
+        :type  target_file_path: str
+        :param act_template_source: Template source data
+        :type  act_template_source: str
+        :param config_data: Configuration dictionary with data to fill in template
+        :type  config_data: dict
+        """
+        # Check if backup is necessary
+        if os.path.isfile(file_path):
+            file_path_backup = file_path + ".backup"
+            shutil.move(file_path, file_path_backup)
+            logger.info(f"A backup is created: {file_path_backup}.\n")
+
+    @staticmethod
+    def _generate_default_toml(target_file_path: str, act_template_source: str, config_data: dict) -> None:
+        """
+        Generate the default toml file.
+
+        :param target_file_path: filename and path of the file to generate
+        :type  target_file_path: str
+        :param act_template_source: Template source data
+        :type  act_template_source: str
+        :param config_data: Configuration dictionary with data to fill in template
+        :type  config_data: dict
+        """
+        # Backup old file, if it exists
+        GenerateDefaultConfig._backup_toml_file(target_file_path)
+        # Prepare rendering
+        env = Environment(autoescape=False, keep_trailing_newline=True)
+        template = env.from_string(act_template_source)
+        configuration_content = template.render(cdata=config_data)
+
+        target_path = os.path.dirname(target_file_path)
+        # Check if folder exists, if not create it
+        os.makedirs(target_path, exist_ok=True)
+
+        # Create or overwrite file
+        with open(target_file_path, 'w') as output:
+            output.write(configuration_content)
+
+    @staticmethod
+    def _read_template(act_template_file_path: str) -> tuple[bool, str]:
+        """
+        Read template file, if it is available.
+
+        :param timeout: Timeout to select the topology in seconds
+        :type timeout: int
+        :return: validity indicator and template source data
+        :rtype: tuple[bool, str]
+        """
+        # Variable declaration
+        is_valid: bool = True
+        template_source: str = ""
+
+        # Check if template file is available
+        if os.path.isfile(act_template_file_path):
+            with open(act_template_file_path, "r", encoding="utf-8") as f:
+                template_source = f.read()
+        else:
+            is_valid = False
+            logger.error(f"Data corruption: Missing template file {act_template_file_path}")
+
+        return is_valid, template_source
+
+    @staticmethod
+    def _select_default_topology(timeout: float = 5) -> TopologyEnum:
+        """
+        Select the topology for default program flow configuration file.
+
+        If no configuration files exists the user can select the topology, for which the
+        default configuration will be generated. The selection opportunity has got a time limit.
+
+        :param timeout: Timeout to select the topology in seconds
+        :type timeout: int
+        """
+        # Variable declaration
+        configurations: dict = {
+            "1": "Dual active bridge",
+            "2": "Synchronous buck converter",
+        }
+        # Default topology selection and timeout limit calculation
+        selection = TopologyEnum.dab
+
+        # Request to user
+        print("Dual active bridge -> press 1")
+        print("Synchronous buck converter -> press 2")
+        print(f"Confirm selection with 'Enter' ({timeout:g}s).")
+
+        while True:
+            # Request selection
+            print("Selection [1–2]: ", end="", flush=True)
+            result_list, _, _ = select.select([sys.stdin], [], [], timeout)
+
+            # Check for timeout
+            if not result_list:
+                print("\nSelection time is finished. Topology 'Dual active bridge' will be used.")
+                break
+            # Read the input
+            line = sys.stdin.readline()
+            # Check for close terminal
+            if not line:
+                break
+
+            # Extract the input
+            choice = line.strip()
+            if choice == "1":
+                selection = TopologyEnum.dab
+                break
+            elif choice == "2":
+                selection = TopologyEnum.sbc
+                break
+            else:
+                # Notify user and reset timeout
+                print("Invalid input! Please select 1 or 2.\n(Timeout is set again to {timeout:g}s!")
+
+        return selection
+
+    @staticmethod
+    def check_generate_folder_structure(act_toml_prog_flow: tc.FlowControl) -> None:
+        """
+        Check the folder structure and generate all folders, which are missing.
+
+        :param act_toml_prog_flow: Flow control toml file data
+        :type act_toml_prog_flow: tc.FlowControl
+        """
+        # Variable declaration
+        folder_dict: dict = {}
+
+        # Set up the dictionary
+        project_directory = act_toml_prog_flow.general.project_directory
+        folder_dict["circuit_path"] = os.path.join(project_directory, act_toml_prog_flow.circuit.subdirectory)
+        folder_dict["capacitor_path"] = os.path.join(project_directory, act_toml_prog_flow.capacitor.subdirectory)
+        folder_dict["inductor_path"] = os.path.join(project_directory, act_toml_prog_flow.inductor.subdirectory)
+        folder_dict["transformer_path"] = os.path.join(project_directory, act_toml_prog_flow.transformer.subdirectory)
+        folder_dict["heat_sink_path"] = os.path.join(project_directory, act_toml_prog_flow.heat_sink.subdirectory)
+        folder_dict["heat_sink_disc_path"] = os.path.join(project_directory, HEAT_SINK_DISC_FOLDER)
+        folder_dict["pre_summary_path"] = os.path.join(project_directory, act_toml_prog_flow.pre_summary.subdirectory)
+        folder_dict["summary_path"] = os.path.join(project_directory, act_toml_prog_flow.summary.subdirectory)
+        folder_dict["data_generation_path"] = os.path.join(project_directory, act_toml_prog_flow.data_generation.subdirectory)
+
+        # Setup folder structure
+        GenerateDefaultConfig._set_up_folder_structure(folder_dict)
+
+        json_filepath = os.path.join(project_directory, FILEPATH_CONFIG_JSON)
+
+        with open(json_filepath, 'w', encoding='utf8') as json_file:
+            json.dump(folder_dict, json_file, ensure_ascii=False, indent=4)
+
+    @staticmethod
+    def _set_up_folder_structure(act_folder_dict: dict) -> None:
+        """
+        Set up the folder structure for the subprojects.
+
+        :param toml_prog_flow: Flow control toml file
+        :type toml_prog_flow: tc.FlowControl
+        """
+        # Generate folder structure according dictionary
+        for _, value in act_folder_dict.items():
+            os.makedirs(value, exist_ok=True)

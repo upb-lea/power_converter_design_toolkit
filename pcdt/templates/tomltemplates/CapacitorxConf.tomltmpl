@@ -1,0 +1,16 @@
+####### 'Start of Description section' #############################
+[Description section]
+# After update this configuration file according your project needs, delete the lines until and including marker 'End of Description section'
+# This will validate the configuration.
+# For detailed information how to update the capacitor requiremetents and the filter distance data see manual.
+# As example a configuration is entered.
+####### 'End of Description section' #############################
+[capacitor_requirements]
+    maximum_peak_to_peak_voltage_ripple = 1
+    temperature_ambient = 90
+    voltage_safety_margin_percentage = 10
+    maximum_number_series_capacitors = 2
+    lifetime_h = 30_000
+
+[filter_distance]
+    factor_dc_losses_min_max_list = [0.01, 100]

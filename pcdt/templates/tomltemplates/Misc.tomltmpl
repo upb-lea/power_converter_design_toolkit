@@ -1,0 +1,22 @@
+####### 'Start of Description section' #############################
+[Description section]
+# After update this configuration file according your project needs, delete the lines until and including marker 'End of Description section'
+# This will validate the configuration.
+# Update the minimum efficiency of design candidate, you want to consider for the optimization
+# Add the estimated volumen [m³] and power loss [W] of your contol board.elect the topology by adding the shortcut:
+# 'dab' = dual active bridge, 'sbc' = synchronous buck converter
+# You can stop the program flow at different project progress by enter 'yes' within the breakpoint section at the selected calculation step
+# Conditional breakpoints are currently not supported
+# For each optimization section you can enter the number of trials for the optuna optimizer
+# If an optimization results are available you can delete them and start at the beginning (new) or
+# used them to continue or skip then, if they shall be used for the next optimization step.
+# Attention: If you do not use 'skip' for 'circuit', all component calculation will be started from the scratch.
+# The result base folder name of the different calculation can be set by subdirectory. It is recommended to overtake the current naming.
+# The names of the detailed configuration files for the single component optimization are to enter.
+# Theses files are to store in the folder workspace/default_config/00_configuration_files
+# The configuration for dab will be generated as default configuration
+####### 'End of Description section' #############################
+[board_data]
+    min_efficiency_percent=80
+    control_board_volume=10e-6
+    control_board_loss=1

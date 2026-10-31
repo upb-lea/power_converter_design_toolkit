@@ -1,0 +1,14 @@
+####### 'Start of Description section' #############################
+[Description section]
+# After update this configuration file according your project needs, delete the lines until and including marker 'End of Description section'
+# This will validate the configuration.
+# The number of selected design candidate within the pareto front are adjusted by the 2 parameter for each
+# caluclation step.
+####### 'End of Description section' #############################
+[pre_summary]
+    filter_distance_losses = [0.01, 100]
+    filter_distance_efficiency = [0.03, 0.9]
+
+[summary]
+    filter_distance_losses = [0.01, 100]
+    filter_distance_efficiency = [0.03, 0.9]

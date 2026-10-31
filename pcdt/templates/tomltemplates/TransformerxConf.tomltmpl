@@ -1,0 +1,56 @@
+####### 'Start of Description section' #############################
+[Description section]
+# After update this configuration file according your project needs, delete the lines until and including marker 'End of Description section'
+# This will validate the configuration.
+# For detailed information how to update the design space see manual.
+# As example a configuration is entered.
+####### 'End of Description section' #############################
+[design_space]
+    material_name_list=['N49']
+    core_name_list=["PQ 40/40", "PQ 40/30", "PQ 35/35", "PQ 32/30", "PQ 32/20", "PQ 26/25", "PQ 26/20", "PQ 20/20", "PQ 20/16"]
+    core_inner_diameter_min_max_list=[15e-3, 30e-3]
+    window_w_min_max_list=[10e-3, 40e-3]
+    window_h_bot_min_max_list=[10e-3, 50e-3]
+    primary_litz_wire_list=['1.1x60x0.1']
+    secondary_litz_wire_list=['1.35x200x0.071', '1.1x60x0.1']
+    # sweep parameters: geometry and materials
+    n_p_top_min_max_list=[1, 30]
+    n_p_bot_min_max_list=[10, 80]
+
+[boundary_conditions]
+    # maximum limitation for transformer total height and core volume
+    max_transformer_total_height=60e-3
+    max_core_volume=0.007853982  # 50e-3 ** 2 * 3.141593
+    temperature=100
+
+[insulation]
+    # insulation for top core window
+    iso_window_top_core_top=1.3e-3
+    iso_window_top_core_bot=1.3e-3
+    iso_window_top_core_left=1.3e-3
+    iso_window_top_core_right=1.3e-3
+    # insulation for bottom core window
+    iso_window_bot_core_top=1.3e-3
+    iso_window_bot_core_bot=1.3e-3
+    iso_window_bot_core_left=1.3e-3
+    iso_window_bot_core_right=1.3e-3
+    # winding-to-winding insulation
+    iso_primary_to_primary=0.2e-3
+    iso_secondary_to_secondary=0.2e-3
+    iso_primary_to_secondary=0.2e-3
+
+[material_data_sources]
+    permeability_datasource="LEA_MTB"
+    permittivity_datasource="LEA_MTB"
+
+[thermal_data]
+    # [tim_thickness, tim_conductivity]
+    thermal_cooling = [1e-3,12.0]
+
+[settings]
+    fft_filter_value_factor=0.01
+    mesh_accuracy=0.8
+
+[filter_distance]
+    factor_dc_losses_min_max_list=[0.01, 100]
+

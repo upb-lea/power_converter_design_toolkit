@@ -33,14 +33,16 @@ from pcdt.datasets_dtos import (FilterData, StudyData, PlotData, CapacitorConfig
 from pcdt.server_ctl_dtos import ProgressData
 from pcdt.server_ctl_dtos import ProgressStatus
 from pcdt.server_ctl_dtos import RunTimeMeasurement as RunTime
-from pcdt.circuit_enums import SamplingEnum
+from pcdt.circuit_enums import SamplingEnum, TemplateType, TopologyEnum
 from pcdt.topology.circuit_optimization_base import CircuitOptimizationBase
 import pcdt.generalplotsettings as gps
 from pcdt.components.component_dtos import (CapacitorRequirements, InductorRequirements, TransformerRequirements,
                                             ComponentRequirements, ComponentCooling)
 from pcdt.constant_path import (CIRCUIT_INDUCTOR_RELUCTANCE_LOSSES_FOLDER, CIRCUIT_TRANSFORMER_RELUCTANCE_LOSSES_FOLDER,
                                 CIRCUIT_INDUCTOR_FEM_LOSSES_FOLDER, CIRCUIT_TRANSFORMER_FEM_LOSSES_FOLDER,
-                                CIRCUIT_CAPACITOR_LOSS_FOLDER, SUMMARY_COMBINATION_FOLDER)
+                                CIRCUIT_CAPACITOR_LOSS_FOLDER, SUMMARY_COMBINATION_FOLDER, PCDT_ROOT,
+                                TOMPL_TEMPLATE_FOLDER_NAME, SBC_TOPOLOGY_FOLDER, GENERAL_CONF_TPL, CIRCUIT_CONF_TPL)
+
 from pcdt.topology.sbc.sbc_constants import MAX_DUTY_CYCLE
 
 logger = logging.getLogger(__name__)
@@ -84,6 +86,16 @@ class SbcCircuitOptimization(CircuitOptimizationBase[sbc_tc.TomlSbcGeneral, sbc_
         self._toml_general: sbc_tc.TomlSbcGeneral | None = None
         # Circuit optimization parameter
         self._toml_circuit: sbc_tc.TomlSbcCircuitParetoDesign | None = None
+
+    @staticmethod
+    def get_topology_type() -> TopologyEnum:
+        """
+        Provide the topology type.
+
+        :return: Type of the topology
+        :rtype:  TopologyEnum
+        """
+        return TopologyEnum.sbc
 
     def save_config(self) -> None:
         """Save the actual configuration file as pickle file on the disk."""
@@ -1554,83 +1566,6 @@ class SbcCircuitOptimization(CircuitOptimizationBase[sbc_tc.TomlSbcGeneral, sbc_
         """
         return SbcCircuitOptimization._number_of_required_transformers
 
-    @staticmethod
-    def generate_general_toml(file_path: str) -> None:
-        """
-        Generate the default SbcCircuitConf.toml file.
-
-        :param file_path: filename including absolute path
-        :type file_path: str
-        """
-        toml_data = '''
-        [default_data] # After update this configuration file according your project delete this line to validate it
-        [parameter_range]
-            v1_min_max_list=[47, 48]
-            v2_min_max_list=[20, 24]
-            i2_min_max_list=[15.9, 16]
-        
-        [sampling]
-            sampling_method="latin_hypercube"
-            sampling_points=8
-            sampling_random_seed=10
-            v1_additional_user_point_list=[]
-            v2_additional_user_point_list=[]
-            i2_additional_user_point_list=[]
-            additional_user_weighting_point_list=[]
-        
-        [misc]
-            min_efficiency_percent=80
-            control_board_volume=10e-6
-        '''
-        with open(file_path, 'w') as output:
-            output.write(toml_data)
-
-    @staticmethod
-    def generate_circuit_toml(file_path: str) -> None:
-        """Generate the default SbcCircuitConf.toml file.
-
-        :param file_path: filename including absolute path
-        :type file_path: str
-        """
-        toml_data = '''
-        [default_data] # After update this configuration file according your project delete this line to validate it
-        [design_space]
-            f_s_min_max_list=[50e3, 300e3]
-            l_s_min_max_list=[20e-6, 900e-6]
-            l_1_min_max_list=[10e-6, 10e-3]
-            l_2__min_max_list=[10e-6, 1e-3]
-            n_min_max_list=[3, 7]
-            transistor_1_name_list=['CREE_C3M0065100J', 'CREE_C3M0120100J']
-            transistor_2_name_list=['CREE_C3M0060065J', 'CREE_C3M0120065J']
-            c_par_1=16e-12
-            c_par_2=16e-12
-    
-        [output_range]
-            v1_min_max_list=[690, 710]
-            v2_min_max_list=[175, 295]
-            p_min_max_list=[-2000, 2200]
-    
-        [sampling]
-            sampling_method="latin_hypercube"
-            sampling_points=4
-            sampling_random_seed=10
-            v1_additional_user_point_list=[700]
-            v2_additional_user_point_list=[180]
-            p_additional_user_point_list=[2000]
-    
-        [filter_distance]
-            number_filtered_designs = 1
-            difference_percentage = 5
-
-        [thermal_data]
-            # [tim_thickness, tim_conductivity]
-            transistor_hs_cooling = [1e-3,12.0]
-            transistor_ls_cooling = [1e-3,12.0]            
-           
-        '''
-        with open(file_path, 'w') as output:
-            output.write(toml_data)
-
     def generate_result_dtos(self, summary_data: StudyData, capacitor_selection_data_list: list[CapacitorConfiguration],
                              inductor_configuration_list: list[InductorConfiguration],
                              transformer_configuration_list: list[TransformerConfiguration],
@@ -1774,3 +1709,57 @@ class SbcCircuitOptimization(CircuitOptimizationBase[sbc_tc.TomlSbcGeneral, sbc_
         :type combination_id: int
         """
         pass
+
+    @staticmethod
+    def get_inductor_conf_dict(component_id: int = 0) -> dict:
+        """
+        Provide dictionary for inductor default configuration.
+
+        :param component_id: component id
+        :type component_id: int
+        :return: Dictionary of inductor default configuration
+        :rtype:  dict
+        """
+        # Variable declaration
+        inductor_conf_dict: dict = {}
+        material_data_sources: dict = {}
+
+        # Enter configuration values
+        material_data_sources["permeability_datasource"] = "MagNet"
+        material_data_sources["permittivity_datasource"] = "LEA_MTB"
+        # Add to return dictionary
+        inductor_conf_dict["material_data_sources"] = material_data_sources
+
+        return inductor_conf_dict
+
+    @staticmethod
+    def get_template(template_type: TemplateType) -> tuple[bool, str]:
+        """
+        Provide the template source for default configuration of the topology.
+
+        :param template_type: Type of the template (circuit or general)
+        :type  template_type: TemplateType
+        :return: validity indicator and template source data
+        :rtype:  tuple[bool, str]
+        """
+        # Variable declaration
+        template_file_path: str = ""
+        template_source: str = ""
+        is_valid: bool = True
+
+        # Check for template type
+        if template_type is TemplateType.circuit:
+            template_file_path = str(os.path.join(PCDT_ROOT, SBC_TOPOLOGY_FOLDER, TOMPL_TEMPLATE_FOLDER_NAME, "Sbc"+CIRCUIT_CONF_TPL))
+        elif template_type is TemplateType.general:
+            template_file_path = str(os.path.join(PCDT_ROOT, SBC_TOPOLOGY_FOLDER, TOMPL_TEMPLATE_FOLDER_NAME, "Sbc"+GENERAL_CONF_TPL))
+
+        # Load template
+        # Check if template file is available
+        if os.path.isfile(template_file_path):
+            with open(template_file_path, "r", encoding="utf-8") as f:
+                template_source = f.read()
+        else:
+            is_valid = False
+            logger.error(f"Data corruption: Missing template file {template_file_path}")
+
+        return is_valid, template_source

@@ -90,16 +90,16 @@ class CapacitorSelection:
 
                 # generate capacitor requirements from circuit simulation data
                 capacitor_requirements_dto = pecst.CapacitorRequirements(
-                    maximum_peak_to_peak_voltage_ripple=capacitor_toml_data.maximum_peak_to_peak_voltage_ripple,
+                    maximum_peak_to_peak_voltage_ripple=capacitor_toml_data.capacitor_requirements.maximum_peak_to_peak_voltage_ripple,
                     current_waveform_for_op_max_current=np.array([capacitor_requirements.time_vec,
                                                                   capacitor_requirements.current_vec]),
                     v_dc_for_op_max_voltage=capacitor_requirements.v_dc_max,
-                    temperature_ambient=capacitor_toml_data.temperature_ambient,
-                    voltage_safety_margin_percentage=capacitor_toml_data.voltage_safety_margin_percentage,
+                    temperature_ambient=capacitor_toml_data.capacitor_requirements.temperature_ambient,
+                    voltage_safety_margin_percentage=capacitor_toml_data.capacitor_requirements.voltage_safety_margin_percentage,
                     capacitor_type_list=[pecst.CapacitorType.FilmCapacitor],
-                    maximum_number_series_capacitors=capacitor_toml_data.maximum_number_series_capacitors,
+                    maximum_number_series_capacitors=capacitor_toml_data.capacitor_requirements.maximum_number_series_capacitors,
                     capacitor_tolerance_percent=pecst.CapacitanceTolerance.TenPercent,
-                    lifetime_h=capacitor_toml_data.lifetime_h,
+                    lifetime_h=capacitor_toml_data.capacitor_requirements.lifetime_h,
                     results_directory=trial_directory,
                     balancing_discharging_resistors=False)
 

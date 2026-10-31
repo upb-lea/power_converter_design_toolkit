@@ -1,0 +1,40 @@
+####### 'Start of Description section' #############################
+[Description section]
+# After update this configuration file according your project needs, delete the lines until and including marker 'End of Description section'
+# This will validate the configuration.
+# For detailed information how to update the design space see manual.
+# As example a configuration is entered.
+####### 'End of Description section' #############################
+[design_space]
+    core_name_list=["PQ 50/50", "PQ 50/40", "PQ 40/40", "PQ 40/30", "PQ 35/35", "PQ 32/30", "PQ 32/20", "PQ 26/25", "PQ 26/20", "PQ 20/20", "PQ 20/16"]
+    material_name_list=["N49"]
+    litz_wire_name_list=["1.5x105x0.1", "1.4x200x0.071", "1.1x60x0.1"]
+    core_inner_diameter_min_max_list=[]
+    window_h_min_max_list=[]
+    window_w_min_max_list=[]
+
+[boundary_conditions]
+    temperature=100
+
+[material_data_sources]
+    permeability_datasource= "{{cdata.material_data_sources.permeability_datasource}}"
+    permittivity_datasource= "{{cdata.material_data_sources.permittivity_datasource}}"
+
+[insulations]
+    primary_to_primary=0.2e-3
+    core_bot=1e-3
+    core_top=1e-3
+    core_right=1e-3
+    core_left=1e-3
+
+[thermal_data]
+    # [tim_thickness, tim_conductivity]
+    thermal_cooling = [1e-3,12.0]
+
+[settings]
+    fft_filter_value_factor=0.01
+    mesh_accuracy=0.8
+
+[filter_distance]
+    factor_dc_losses_min_max_list = [0.01, 100]
+
