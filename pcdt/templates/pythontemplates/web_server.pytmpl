@@ -134,7 +134,7 @@ async def detailed_view(request: Request, combination_id: int):
     candidate_data, plot_data = read_csv_data(combination_id)
 
     return templates.TemplateResponse(request,
-        "browser_detailed_page_template.html",
+        "{{ path_info.detailed_page_template}}",
          {"plot_data": plot_data, "cir_data": candidate_data["circuit_data"],
           "ind_data": candidate_data["inductor_data"], "tr_data": candidate_data["transformer_data"]}
      )
