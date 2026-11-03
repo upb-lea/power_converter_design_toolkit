@@ -1548,8 +1548,8 @@ class MainCtl:
         is_misc_loaded, dict_misc = self.load_toml_file(file_path)
 
         if not is_misc_loaded:
-            GDefConf.generate_default_summary_toml(file_path)
-            raise ValueError(f"General toml configuration file: {file_path} does not exist\n"
+            GDefConf.generate_default_misc_toml(file_path, self._circuit_optimization)
+            raise ValueError(f"Misc toml configuration file: {file_path} does not exist\n"
                              f"A default file is generated and needs to be updated!")
 
         # Verify toml data and transfer to class
@@ -1655,7 +1655,7 @@ class MainCtl:
 
         if not is_general_toml_loaded:
 
-            GDefConf.generate_general_toml(file_path, self._circuit_optimization)
+            GDefConf.generate_default_general_toml(file_path, self._circuit_optimization)
             raise ValueError(f"General toml configuration file: {file_path} does not exist.\n"
                              f"A default file is generated and needs to be updated!")
 
@@ -1684,7 +1684,7 @@ class MainCtl:
         is_circuit_loaded, dict_circuit = MainCtl.load_toml_file(file_path)
 
         if not is_circuit_loaded:
-            GDefConf.generate_general_toml(file_path, self._circuit_optimization)
+            GDefConf.generate_default_circuit_toml(file_path, self._circuit_optimization)
             raise ValueError(f"Circuit configuration file: {file_path} does not exist.\n"
                              f"A default file is generated and needs to be updated!")
 

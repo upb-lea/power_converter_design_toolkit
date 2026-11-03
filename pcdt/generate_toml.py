@@ -17,13 +17,14 @@ from pcdt.topology import dab, sbc
 from pcdt.circuit_enums import TemplateType
 from pcdt import toml_checker as tc
 from pcdt.topology.circuit_optimization_base import CircuitOptimizationBase
-from pcdt.constant_path import (PCDT_ROOT, PROG_FLOW_FILE_NAME, CONFIG_FILE_FOLDER, PROG_FLOW_CONF_TPL, CAPACITOR_CONF_TPL,
-                                INDUCTOR_CONF_TPL, TRANSFORMER_CONF_TPL, HEAT_SINK_DISC_FOLDER, HEAT_SINK_CONF_TPL,
-                                SUMMARY_CONF_TPL, TEMPLATE_FOLDER, TOMPL_TEMPLATE_FOLDER_NAME, GENERAL_CONF_FILE_NAME,
-                                CIRCUIT_CONF_FILE_NAME, CAPACITOR_XCONF_FILE_NAME, INDUCTOR_XCONF_FILE_NAME,
-                                TRANSFORMER_XCONF_FILE_NAME, HEAT_SINK_CONF_FILE_NAME, SUMMARY_CONF_FILE_NAME, PLACE_HOLDER,
-                                FILEPATH_CONFIG_JSON, CIRCUIT_FOLDER, CAPACITOR_FOLDER, INDUCTOR_FOLDER, TRANSFORMER_FOLDER,
-                                HEAT_SINK_FOLDER, PRE_SUMMARY_FOLDER, SUMMARY_FOLDER, DATA_GENERATION_FOLDER)
+from pcdt.constant_path import (PCDT_ROOT, PROG_FLOW_FILE_NAME, CONFIG_FILE_FOLDER, MISC_CONF_TPL, PROG_FLOW_CONF_TPL,
+                                CAPACITOR_CONF_TPL, INDUCTOR_CONF_TPL, TRANSFORMER_CONF_TPL, HEAT_SINK_DISC_FOLDER,
+                                HEAT_SINK_CONF_TPL, SUMMARY_CONF_TPL, TEMPLATE_FOLDER, TOMPL_TEMPLATE_FOLDER_NAME,
+                                GENERAL_CONF_FILE_NAME, CIRCUIT_CONF_FILE_NAME, CAPACITOR_XCONF_FILE_NAME,
+                                INDUCTOR_XCONF_FILE_NAME, TRANSFORMER_XCONF_FILE_NAME, HEAT_SINK_CONF_FILE_NAME,
+                                SUMMARY_CONF_FILE_NAME, PLACE_HOLDER, FILEPATH_CONFIG_JSON, CIRCUIT_FOLDER,
+                                CAPACITOR_FOLDER, INDUCTOR_FOLDER, TRANSFORMER_FOLDER, HEAT_SINK_FOLDER,
+                                PRE_SUMMARY_FOLDER, SUMMARY_FOLDER, DATA_GENERATION_FOLDER, MISC_CONF_FILE_NAME)
 
 logger = logging.getLogger(__name__)
 
@@ -194,13 +195,17 @@ class GenerateDefaultConfig:
         number_of_inductors = topology.get_number_of_required_inductors()
         number_of_transformers = topology.get_number_of_required_transformers()
 
-        # Generate the file
-        config_file_path = str(os.path.join(config_directory, GENERAL_CONF_FILE_NAME))
-        GenerateDefaultConfig.generate_general_toml(config_file_path, topology)
+        # Generate misc default file
+        config_file_path = str(os.path.join(config_directory, MISC_CONF_FILE_NAME))
+        GenerateDefaultConfig.generate_default_misc_toml(config_file_path, topology)
 
-        # Generate the file
+        # Generate circuit default file
+        config_file_path = str(os.path.join(config_directory, GENERAL_CONF_FILE_NAME))
+        GenerateDefaultConfig.generate_default_general_toml(config_file_path, topology)
+
+        # Generate general default file
         config_file_path = str(os.path.join(config_directory, CIRCUIT_CONF_FILE_NAME))
-        GenerateDefaultConfig.generate_circuit_toml(config_file_path, topology)
+        GenerateDefaultConfig.generate_default_circuit_toml(config_file_path, topology)
 
         # Check for missing capacitor configuration files
         # Prepare template
@@ -245,7 +250,31 @@ class GenerateDefaultConfig:
             GenerateDefaultConfig.generate_default_summary_toml(config_file_path)
 
     @staticmethod
-    def generate_general_toml(general_file_path: str, topology: CircuitOptimizationBase) -> None:
+    def generate_default_misc_toml(misc_file_path: str, topology: CircuitOptimizationBase) -> None:
+        """
+        Generate misc toml default file if missing.
+
+        :param misc_file_path: Path and filename of summary configuration file
+        :type  misc_file_path: str
+        :param topology: Topology instance will be overloaded by the derived class
+        :type  topology: CircuitOptimizationBase
+        """
+        # Variable declaration and initialization
+        # Path for templates
+        template_path = str(os.path.join(PCDT_ROOT, TEMPLATE_FOLDER, TOMPL_TEMPLATE_FOLDER_NAME))
+
+        # Prepare template
+        template_file_path = os.path.join(template_path, MISC_CONF_TPL)
+        # Read template
+        is_valid, template_source = GenerateDefaultConfig._read_template(template_file_path)
+        if is_valid:
+            # Prepare configuration dictionary
+            conf_dict: dict = {}
+            # Generate the file
+            GenerateDefaultConfig._generate_default_toml(misc_file_path, template_source, conf_dict)
+
+    @staticmethod
+    def generate_default_general_toml(general_file_path: str, topology: CircuitOptimizationBase) -> None:
         """
         Generate general toml default file if missing.
 
@@ -263,7 +292,7 @@ class GenerateDefaultConfig:
             GenerateDefaultConfig._generate_default_toml(general_file_path, template_source, conf_dict)
 
     @staticmethod
-    def generate_circuit_toml(circuit_file_path: str, topology: CircuitOptimizationBase) -> None:
+    def generate_default_circuit_toml(circuit_file_path: str, topology: CircuitOptimizationBase) -> None:
         """
         Generate circuit toml default file if missing.
 
