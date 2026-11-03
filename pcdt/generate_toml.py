@@ -41,6 +41,7 @@ class GenerateDefaultConfig:
         # Variable declaration and initialization
         # Configuration value dictionary
         conf_dict: dict = {}
+        section_dict: dict = {}
         topology_selection: TopologyEnum
         default_project_name: str = "_default_project"
         default_config_name: str = "default_config"
@@ -50,29 +51,89 @@ class GenerateDefaultConfig:
         # Select the topology for the default configuration
         topology_selection = GenerateDefaultConfig._select_default_topology()
 
-        # Add default configuration name
         conf_dict["default_project_name"] = str(topology_selection.value) + default_project_name
         conf_dict["default_config_name"] = default_config_name
+        # Add section general
+        section_dict["project_directory"] = str(topology_selection.value) + default_project_name
+        section_dict["configuration_name"] = default_config_name
         if topology_selection is TopologyEnum.dab:
-            conf_dict["topology"] = "dab"
-            conf_dict["circuit_numbers_of_trials"] = "500"
-            conf_dict["capacitor_calculation_modes"] = "[\"new\",\"new\"]"
-            conf_dict["inductor_numbers_of_trials"] = "500"
-            conf_dict["inductor_calculation_modes"] = "[\"new\"]"
-            conf_dict["transformer_numbers_of_trials"] = "500"
-            conf_dict["transformer_calculation_modes"] = "[\"new\"]"
-            conf_dict["heat_sink_numbers_of_trials"] = "500"
+            # Continue add section general
+            section_dict["topology"] = "dab"
+            conf_dict["general"] = section_dict
+            section_dict = {}
+
+            # Add section circuit
+            section_dict["number_of_trials"] = "500"
+            conf_dict["circuit"] = section_dict
+            section_dict = {}
+
+            # Add section capacitor
+            section_dict["calculation_modes"] = "[\"new\",\"new\"]"
+            conf_dict["capacitor"] = section_dict
+            section_dict = {}
+
+            # Add section inductor
+            section_dict["numbers_of_trials"] = "[500]"
+            section_dict["calculation_modes"] = "[\"new\"]"
+            conf_dict["inductor"] = section_dict
+            section_dict = {}
+
+            # Add section transformer
+            section_dict["numbers_of_trials"] = "[500]"
+            section_dict["calculation_modes"] = "[\"new\"]"
+            conf_dict["transformer"] = section_dict
+            section_dict = {}
+
+            # Add section heat sink
+            section_dict["number_of_trials"] = "500"
+            conf_dict["heat_sink"] = section_dict
+            section_dict = {}
+
+            # Add section configuration_data_files
+            section_dict["transformer_configuration_files"] = "[\"Transformer0Conf.toml\"]"
+            conf_dict["configuration_data_files"] = section_dict
+            section_dict = {}
+
             # Allocate and initialize topology configuration for dual active bridge
             topology = dab.DabCircuitOptimization()
         elif topology_selection is TopologyEnum.sbc:
-            conf_dict["topology"] = "sbc"
-            conf_dict["circuit_numbers_of_trials"] = "500"
-            conf_dict["capacitor_calculation_modes"] = "[\"new\",\"new\"]"
-            conf_dict["inductor_numbers_of_trials"] = "500"
-            conf_dict["inductor_calculation_modes"] = "[\"new\"]"
-            conf_dict["transformer_numbers_of_trials"] = "500"
-            conf_dict["transformer_calculation_modes"] = "[]"
-            conf_dict["heat_sink_numbers_of_trials"] = "500"
+            # Continue add section general
+            section_dict["topology"] = "sbc"
+            conf_dict["general"] = section_dict
+            section_dict = {}
+
+            # Add section circuit
+            section_dict["number_of_trials"] = "500"
+            conf_dict["circuit"] = section_dict
+            section_dict = {}
+
+            # Add section capacitor
+            section_dict["calculation_modes"] = "[\"new\",\"new\"]"
+            conf_dict["capacitor"] = section_dict
+            section_dict = {}
+
+            # Add section inductor
+            section_dict["numbers_of_trials"] = "[500]"
+            section_dict["calculation_modes"] = "[\"new\"]"
+            conf_dict["inductor"] = section_dict
+            section_dict = {}
+
+            # Add section transformer
+            section_dict["numbers_of_trials"] = "[]"
+            section_dict["calculation_modes"] = "[]"
+            conf_dict["transformer"] = section_dict
+            section_dict = {}
+
+            # Add section heat sink
+            section_dict["heat_sink_number_of_trials"] = "500"
+            conf_dict["heat_sink"] = section_dict
+            section_dict = {}
+
+            # Add section configuration_data_files
+            section_dict["transformer_configuration_files"] = "[]"
+            conf_dict["configuration_data_files"] = section_dict
+            section_dict = {}
+
             # Allocate and initialize topology configuration for dual active bridge
             topology = sbc.SbcCircuitOptimization()
         else:
@@ -80,7 +141,7 @@ class GenerateDefaultConfig:
                              f"{__name__}.‑\nPlease write an issue!")
 
         template_path = str(os.path.join(PCDT_ROOT, TEMPLATE_FOLDER, TOMPL_TEMPLATE_FOLDER_NAME))
-        project_directory = os.path.join(os.path.dirname(file_path), conf_dict["default_project_name"])
+        project_directory = os.path.join(os.path.dirname(file_path), conf_dict["general"]["project_directory"])
 
         # Generate program flow configuration file
         progflow_file_path = os.path.join(os.path.dirname(file_path), PROG_FLOW_FILE_NAME)

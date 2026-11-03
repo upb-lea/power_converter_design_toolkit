@@ -1545,7 +1545,12 @@ class MainCtl:
         logger.debug("Read misc file")
         # Load the configuration for program flow and check the validity
         file_path = os.path.join(config_path, "Misc.toml")
-        misc_loaded, dict_misc = self.load_toml_file(file_path)
+        is_misc_loaded, dict_misc = self.load_toml_file(file_path)
+
+        if not is_misc_loaded:
+            GDefConf.generate_default_summary_toml(file_path)
+            raise ValueError(f"General toml configuration file: {file_path} does not exist\n"
+                             f"A default file is generated and needs to be updated!")
 
         # Verify toml data and transfer to class
         toml_misc = tc.TomlMisc(**dict_misc)

@@ -18,9 +18,9 @@
 ####### 'End of Description section' #############################
 # Path configuration
 [general]
-    project_directory =  "{{cdata.default_project_name}}"
-    configuration_name = "{{cdata.default_config_name}}"
-    topology = "{{cdata.topology}}" # dab, sbc
+    project_directory =  "{{cdata.general.project_directory}}"
+    configuration_name = "{{cdata.general.configuration_name}}"
+    topology = "{{cdata.general.topology}}" # dab, sbc
 
 [breakpoints]
     # possible values: no/pause/stop
@@ -40,27 +40,27 @@
     heat_sink = 1000         # Number of trials which exceed a limit value?
 
 [circuit]
-    number_of_trials = {{cdata.circuit_numbers_of_trials}}
+    number_of_trials = {{cdata.circuit.number_of_trials}}
     calculation_mode = "new" # (new,skip)
     subdirectory = "01_circuit"
 
 [capacitor]
     # number of the entries corresponds to the number of required capacitors of the  topology
-    calculation_modes = {{cdata.capacitor_calculation_modes}} # (new,skip)
+    calculation_modes = {{cdata.capacitor.calculation_modes}} # (new,skip)
     subdirectory = "02_capacitor"
 
 [inductor]
-    numbers_of_trials = {{cdata.inductor_numbers_of_trials}}
-    calculation_modes = {{cdata.inductor_calculation_modes}} # (new,continue,skip)
+    numbers_of_trials = {{cdata.inductor.numbers_of_trials}}
+    calculation_modes = {{cdata.inductor.calculation_modes}} # (new,continue,skip)
     subdirectory = "03_inductor"
 
 [transformer]
-    numbers_of_trials = {{cdata.transformer_numbers_of_trials}}
-    calculation_modes = {{cdata.transformer_calculation_modes}} # (new,continue,skip)
+    numbers_of_trials = {{cdata.transformer.numbers_of_trials}}
+    calculation_modes = {{cdata.transformer.calculation_modes}} # (new,continue,skip)
     subdirectory = "04_transformer"
 
 [heat_sink]
-    number_of_trials = {{cdata.heat_sink_numbers_of_trials}}
+    number_of_trials = {{cdata.heat_sink.number_of_trials}}
     calculation_mode = "new" # (new,continue,skip)
     subdirectory = "05_heat_sink"
 
@@ -69,6 +69,22 @@
     subdirectory = "06_pre_summary"
 
 [summary]
+    calculation_mode = "skip" # (new,skip)
     subdirectory = "07_summary"
 
+[data_generation]
+    calculation_mode_visualization = "new" # (new,skip_purge)
+    calculation_mode_manufacture = "skip_purge" # (new,continue,skip_purge)
+    subdirectory = "08_data_generation"
 
+[configuration_data_files]
+    # General configuration file followed by circuit configuration file
+    topology_files =  ["GeneralConf.toml","CircuitConf.toml"]
+    # Number of capacitor configuration files corresponds to the required number of capacitors of the topology
+    capacitor_configuration_files = ["Capacitor0Conf.toml", "DabCapacitor1Conf.toml"]
+    # Number of capacitor configuration files corresponds to the required number of capacitors of the topology
+    inductor_configuration_files = ["Inductor0Conf.toml"]
+    # Number of capacitor configuration files corresponds to the required number of capacitors of the topology
+    transformer_configuration_files = {{cdata.configuration_data_files.transformer_configuration_files}}
+    heat_sink_configuration_file = "HeatSinkConf.toml"
+    summary_configuration_file = "SummaryConf.toml"
