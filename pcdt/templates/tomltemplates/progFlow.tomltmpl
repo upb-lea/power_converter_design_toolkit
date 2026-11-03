@@ -8,13 +8,13 @@
 # You can stop the program flow at different project progress by enter 'yes' within the breakpoint section at the selected calculation step
 # Conditional breakpoints are currently not supported
 # For each optimization section you can enter the number of trials for the optuna optimizer
-# If an optimization results are available you can delete them and start at the beginning (new) or
-# used them to continue or skip then, if they shall be used for the next optimization step.
-# Attention: If you do not use 'skip' for 'circuit', all component calculation will be started from the scratch.
+# The possible calculation mode is mentioned in the comment behind.
+# For detailed information how to update the program vlow configuration file use the manual.
+# As example a configuration is entered for the selected topology.
+# Attention: If you do not use 'skip'1 for 'circuit', all component calculation will be started from the scratch.
 # The result base folder name of the different calculation can be set by subdirectory. It is recommended to overtake the current naming.
-# The names of the detailed configuration files for the single component optimization are to enter.
-# Theses files are to store in the folder workspace/default_config/00_configuration_files
-# The configuration for dab will be generated as default configuration
+# The names of the detailed configuration files for the single component optimization are to enter in section 'configuration_data_files'.
+# Theses files are to store in the folder {{cdata.general.project_directory}}/00_configuration_files/{{cdata.general.configuration_name}}.
 ####### 'End of Description section' #############################
 # Path configuration
 [general]
@@ -82,9 +82,10 @@
     topology_files =  ["GeneralConf.toml","CircuitConf.toml"]
     # Number of capacitor configuration files corresponds to the required number of capacitors of the topology
     capacitor_configuration_files = ["Capacitor0Conf.toml", "DabCapacitor1Conf.toml"]
-    # Number of capacitor configuration files corresponds to the required number of capacitors of the topology
+    # Number of inductor configuration files corresponds to the required number of inductors of the topology
     inductor_configuration_files = ["Inductor0Conf.toml"]
-    # Number of capacitor configuration files corresponds to the required number of capacitors of the topology
+    # Number of transformer configuration files corresponds to the required number of transformers of the topology
     transformer_configuration_files = {{cdata.configuration_data_files.transformer_configuration_files}}
+    # heat sink and summary configuration files
     heat_sink_configuration_file = "HeatSinkConf.toml"
     summary_configuration_file = "SummaryConf.toml"

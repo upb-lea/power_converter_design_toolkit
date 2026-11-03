@@ -126,7 +126,7 @@ class GenerateDefaultConfig:
             section_dict = {}
 
             # Add section heat sink
-            section_dict["heat_sink_number_of_trials"] = "500"
+            section_dict["number_of_trials"] = "500"
             conf_dict["heat_sink"] = section_dict
             section_dict = {}
 
@@ -207,7 +207,7 @@ class GenerateDefaultConfig:
         config_file_path = str(os.path.join(config_directory, CIRCUIT_CONF_FILE_NAME))
         GenerateDefaultConfig.generate_default_circuit_toml(config_file_path, topology)
 
-        # Check for missing capacitor configuration files
+        # Generate capacitor default file(s)
         # Prepare template
         template_file_path = os.path.join(template_path, CAPACITOR_CONF_TPL)
         # Read template
@@ -217,7 +217,7 @@ class GenerateDefaultConfig:
                 config_file_path = str(os.path.join(config_directory, CAPACITOR_XCONF_FILE_NAME.replace(PLACE_HOLDER, str(index))))
                 GenerateDefaultConfig.generate_default_capacitor_toml(config_file_path, index, topology.get_topology_type())
 
-        # Generate the file
+        # Generate inductor default file(s)
         # Prepare template
         template_file_path = os.path.join(template_path, INDUCTOR_CONF_TPL)
         # Read template
@@ -227,7 +227,7 @@ class GenerateDefaultConfig:
                 config_file_path = str(os.path.join(config_directory, INDUCTOR_XCONF_FILE_NAME.replace(PLACE_HOLDER, str(index))))
                 GenerateDefaultConfig.generate_default_inductor_toml(config_file_path, index, topology.get_topology_type())
 
-        # Generate the file
+        # Generate transformer default file(s)
         # Prepare template
         template_file_path = os.path.join(template_path, TRANSFORMER_CONF_TPL)
         # Read template
@@ -237,17 +237,13 @@ class GenerateDefaultConfig:
                 config_file_path = str(os.path.join(config_directory, TRANSFORMER_XCONF_FILE_NAME.replace(PLACE_HOLDER, str(index))))
                 GenerateDefaultConfig.generate_default_transformer_toml(config_file_path, index, topology.get_topology_type())
 
-        # Generate the file
+        # Generate heat sink default file
         config_file_path = str(os.path.join(config_directory, HEAT_SINK_CONF_FILE_NAME))
-        if not os.path.isfile(config_file_path):
-            # Generate the file
-            GenerateDefaultConfig.generate_default_heat_sink_toml(config_file_path)
+        GenerateDefaultConfig.generate_default_heat_sink_toml(config_file_path)
 
-        # Generate the file
+        # Generate summary default file
         config_file_path = str(os.path.join(config_directory, SUMMARY_CONF_FILE_NAME))
-        if not os.path.isfile(config_file_path):
-            # Generate the file
-            GenerateDefaultConfig.generate_default_summary_toml(config_file_path)
+        GenerateDefaultConfig.generate_default_summary_toml(config_file_path)
 
     @staticmethod
     def generate_default_misc_toml(misc_file_path: str, topology: CircuitOptimizationBase) -> None:

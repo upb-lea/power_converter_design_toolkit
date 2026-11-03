@@ -1,3 +1,10 @@
+####### 'Start of Description section' #############################
+[Description section]
+# After update this configuration file according your project needs, delete the lines until and including marker 'End of Description section'
+# This will validate the configuration.
+# For detailed instructions on updating the dab general configuration, refer to the manual.
+# As example a configuration is entered.
+####### 'End of Description section' #############################
 [output_range]
     v1_min_max_list=[690, 710]
     v2_min_max_list=[175, 295]
