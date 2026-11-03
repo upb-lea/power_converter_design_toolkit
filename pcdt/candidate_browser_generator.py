@@ -14,7 +14,8 @@ from jinja2 import Environment, FileSystemLoader
 from pcdt import CapacitorConfiguration, InductorConfiguration, TransformerConfiguration, StudyData, CircuitOptimizationBase
 from pcdt.constant_path import (TEMPLATE_FOLDER, HTML_TEMPLATE_FOLDER_NAME, STYLESHEET_FOLDER_NAME, CANDIDATE_BROWSER_HTML,
                                 PYTHON_TEMPLATE_FOLDER_NAME, WEBSERVER_TEMPLATE, VISUALIZATION_TEMPLATE, CB_START_CSS,
-                                CB_DETAIL_CCS, PCDT_ROOT, WEB_SERVER_PY, TMP_DETAILED_HTML, CB_ICON, CB_IDLE_PNG)
+                                CB_DETAIL_CCS, PCDT_ROOT, WEB_SERVER_PY, TMP_DETAILED_HTML, CB_ICON, CB_IDLE_PNG,
+                                CAPACITOR_RESULTS, DF_SUMMARY_FINAL)
 
 logger = logging.getLogger(__name__)
 
@@ -127,13 +128,11 @@ class CandidateBrowserGen:
         server_path_information["inductor_base_path"] = os.path.join(act_conf_names["inductor"])
         server_path_information["transformer_base_path"] = os.path.join(act_conf_names["transformer"])
         for index, component in enumerate(act_conf_names["capacitor_component"]):
-            server_path_information["capacitor_csv" + str(index)] = os.path.join(component + str(index), "results.csv")
+            server_path_information["capacitor_csv" + str(index)] = os.path.join(component, CAPACITOR_RESULTS)
         for index, component in enumerate(act_conf_names["inductor_component"]):
-            server_path_information["inductor_csv" + str(index)] = os.path.join(component,
-                                                                                component + ".csv")
+            server_path_information["inductor_csv" + str(index)] = os.path.join(component, component + ".csv")
         for index, component in enumerate(act_conf_names["transformer_component"]):
-            server_path_information["transformer_csv" + str(index)] = os.path.join(component,
-                                                                                   component + ".csv")
+            server_path_information["transformer_csv" + str(index)] = os.path.join(component, component + ".csv")
         server_path_information["heat_sink_csv"] = os.path.join(act_conf_names["heat_sink"], act_conf_names["heat_sink"] + ".csv")
         server_path_information["visualization_base_path"] = act_conf_names["data_generation"]
         server_path_information["detailed_page_template"] = TMP_DETAILED_HTML
@@ -190,7 +189,7 @@ class CandidateBrowserGen:
         conf_sub_list: list[str] = []
 
         # File path for csv data
-        csv_filepath: str = os.path.join(summary_data.optimization_directory, "df_final.csv")
+        csv_filepath: str = os.path.join(summary_data.optimization_directory, DF_SUMMARY_FINAL)
 
         # Read csv-file
         candidate_info_list = CandidateBrowserGen._read_brief_candidate_data(csv_filepath)
