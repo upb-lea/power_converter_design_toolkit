@@ -186,13 +186,12 @@
 <li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.CircuitOptimizationBase.filter_df_min_max"><code class="docutils literal notranslate"><span class="pre">CircuitOptimizationBase.filter_df_min_max()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.CircuitOptimizationBase.filter_df_min_min"><code class="docutils literal notranslate"><span class="pre">CircuitOptimizationBase.filter_df_min_min()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.CircuitOptimizationBase.filter_study_results"><code class="docutils literal notranslate"><span class="pre">CircuitOptimizationBase.filter_study_results()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.CircuitOptimizationBase.generate_circuit_toml"><code class="docutils literal notranslate"><span class="pre">CircuitOptimizationBase.generate_circuit_toml()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.CircuitOptimizationBase.generate_general_toml"><code class="docutils literal notranslate"><span class="pre">CircuitOptimizationBase.generate_general_toml()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.CircuitOptimizationBase.generate_operating_point_table"><code class="docutils literal notranslate"><span class="pre">CircuitOptimizationBase.generate_operating_point_table()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.CircuitOptimizationBase.generate_result_dtos"><code class="docutils literal notranslate"><span class="pre">CircuitOptimizationBase.generate_result_dtos()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.CircuitOptimizationBase.get_actual_pareto_html"><code class="docutils literal notranslate"><span class="pre">CircuitOptimizationBase.get_actual_pareto_html()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.CircuitOptimizationBase.get_capacitor_requirements"><code class="docutils literal notranslate"><span class="pre">CircuitOptimizationBase.get_capacitor_requirements()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.CircuitOptimizationBase.get_circuit_plot_data"><code class="docutils literal notranslate"><span class="pre">CircuitOptimizationBase.get_circuit_plot_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.CircuitOptimizationBase.get_inductor_conf_dict"><code class="docutils literal notranslate"><span class="pre">CircuitOptimizationBase.get_inductor_conf_dict()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.CircuitOptimizationBase.get_inductor_requirements"><code class="docutils literal notranslate"><span class="pre">CircuitOptimizationBase.get_inductor_requirements()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.CircuitOptimizationBase.get_number_of_required_capacitors"><code class="docutils literal notranslate"><span class="pre">CircuitOptimizationBase.get_number_of_required_capacitors()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.CircuitOptimizationBase.get_number_of_required_inductors"><code class="docutils literal notranslate"><span class="pre">CircuitOptimizationBase.get_number_of_required_inductors()</span></code></a></li>
@@ -200,6 +199,8 @@
 <li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.CircuitOptimizationBase.get_output_power"><code class="docutils literal notranslate"><span class="pre">CircuitOptimizationBase.get_output_power()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.CircuitOptimizationBase.get_pareto_html"><code class="docutils literal notranslate"><span class="pre">CircuitOptimizationBase.get_pareto_html()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.CircuitOptimizationBase.get_progress_data"><code class="docutils literal notranslate"><span class="pre">CircuitOptimizationBase.get_progress_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.CircuitOptimizationBase.get_template"><code class="docutils literal notranslate"><span class="pre">CircuitOptimizationBase.get_template()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.CircuitOptimizationBase.get_topology_type"><code class="docutils literal notranslate"><span class="pre">CircuitOptimizationBase.get_topology_type()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.CircuitOptimizationBase.get_transformer_requirements"><code class="docutils literal notranslate"><span class="pre">CircuitOptimizationBase.get_transformer_requirements()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.CircuitOptimizationBase.get_weights"><code class="docutils literal notranslate"><span class="pre">CircuitOptimizationBase.get_weights()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.CircuitOptimizationBase.init_study_information"><code class="docutils literal notranslate"><span class="pre">CircuitOptimizationBase.init_study_information()</span></code></a></li>
@@ -316,6 +317,40 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="intro.html#pcdt.Enum"><code class="docutils literal notranslate"><span class="pre">Enum</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#pcdt.Environment"><code class="docutils literal notranslate"><span class="pre">Environment</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.Environment.add_extension"><code class="docutils literal notranslate"><span class="pre">Environment.add_extension()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.Environment.call_filter"><code class="docutils literal notranslate"><span class="pre">Environment.call_filter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.Environment.call_test"><code class="docutils literal notranslate"><span class="pre">Environment.call_test()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.Environment.code_generator_class"><code class="docutils literal notranslate"><span class="pre">Environment.code_generator_class</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.Environment.compile"><code class="docutils literal notranslate"><span class="pre">Environment.compile()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.Environment.compile_expression"><code class="docutils literal notranslate"><span class="pre">Environment.compile_expression()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.Environment.compile_templates"><code class="docutils literal notranslate"><span class="pre">Environment.compile_templates()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.Environment.concat"><code class="docutils literal notranslate"><span class="pre">Environment.concat()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.Environment.context_class"><code class="docutils literal notranslate"><span class="pre">Environment.context_class</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.Environment.extend"><code class="docutils literal notranslate"><span class="pre">Environment.extend()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.Environment.from_string"><code class="docutils literal notranslate"><span class="pre">Environment.from_string()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.Environment.get_or_select_template"><code class="docutils literal notranslate"><span class="pre">Environment.get_or_select_template()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.Environment.get_template"><code class="docutils literal notranslate"><span class="pre">Environment.get_template()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.Environment.getattr"><code class="docutils literal notranslate"><span class="pre">Environment.getattr()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.Environment.getitem"><code class="docutils literal notranslate"><span class="pre">Environment.getitem()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.Environment.handle_exception"><code class="docutils literal notranslate"><span class="pre">Environment.handle_exception()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.Environment.iter_extensions"><code class="docutils literal notranslate"><span class="pre">Environment.iter_extensions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.Environment.join_path"><code class="docutils literal notranslate"><span class="pre">Environment.join_path()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.Environment.lex"><code class="docutils literal notranslate"><span class="pre">Environment.lex()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.Environment.lexer"><code class="docutils literal notranslate"><span class="pre">Environment.lexer</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.Environment.linked_to"><code class="docutils literal notranslate"><span class="pre">Environment.linked_to</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.Environment.list_templates"><code class="docutils literal notranslate"><span class="pre">Environment.list_templates()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.Environment.make_globals"><code class="docutils literal notranslate"><span class="pre">Environment.make_globals()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.Environment.overlay"><code class="docutils literal notranslate"><span class="pre">Environment.overlay()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.Environment.overlayed"><code class="docutils literal notranslate"><span class="pre">Environment.overlayed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.Environment.parse"><code class="docutils literal notranslate"><span class="pre">Environment.parse()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.Environment.preprocess"><code class="docutils literal notranslate"><span class="pre">Environment.preprocess()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.Environment.sandboxed"><code class="docutils literal notranslate"><span class="pre">Environment.sandboxed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.Environment.select_template"><code class="docutils literal notranslate"><span class="pre">Environment.select_template()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.Environment.shared"><code class="docutils literal notranslate"><span class="pre">Environment.shared</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.Environment.template_class"><code class="docutils literal notranslate"><span class="pre">Environment.template_class</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="intro.html#pcdt.FastAPI"><code class="docutils literal notranslate"><span class="pre">FastAPI</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.FastAPI.add_api_route"><code class="docutils literal notranslate"><span class="pre">FastAPI.add_api_route()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.FastAPI.add_api_websocket_route"><code class="docutils literal notranslate"><span class="pre">FastAPI.add_api_websocket_route()</span></code></a></li>
@@ -364,9 +399,25 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="intro.html#pcdt.Form"><code class="docutils literal notranslate"><span class="pre">Form()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="intro.html#pcdt.General"><code class="docutils literal notranslate"><span class="pre">General</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.General.configuration_name"><code class="docutils literal notranslate"><span class="pre">General.configuration_name</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.General.model_config"><code class="docutils literal notranslate"><span class="pre">General.model_config</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.General.project_directory"><code class="docutils literal notranslate"><span class="pre">General.project_directory</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.General.topology"><code class="docutils literal notranslate"><span class="pre">General.topology</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#pcdt.GenerateDefaultConfig"><code class="docutils literal notranslate"><span class="pre">GenerateDefaultConfig</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.GenerateDefaultConfig.check_generate_folder_structure"><code class="docutils literal notranslate"><span class="pre">GenerateDefaultConfig.check_generate_folder_structure()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.GenerateDefaultConfig.generate_component_toml_files"><code class="docutils literal notranslate"><span class="pre">GenerateDefaultConfig.generate_component_toml_files()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.GenerateDefaultConfig.generate_default_capacitor_toml"><code class="docutils literal notranslate"><span class="pre">GenerateDefaultConfig.generate_default_capacitor_toml()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.GenerateDefaultConfig.generate_default_circuit_toml"><code class="docutils literal notranslate"><span class="pre">GenerateDefaultConfig.generate_default_circuit_toml()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.GenerateDefaultConfig.generate_default_files"><code class="docutils literal notranslate"><span class="pre">GenerateDefaultConfig.generate_default_files()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.GenerateDefaultConfig.generate_default_general_toml"><code class="docutils literal notranslate"><span class="pre">GenerateDefaultConfig.generate_default_general_toml()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.GenerateDefaultConfig.generate_default_heat_sink_toml"><code class="docutils literal notranslate"><span class="pre">GenerateDefaultConfig.generate_default_heat_sink_toml()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.GenerateDefaultConfig.generate_default_inductor_toml"><code class="docutils literal notranslate"><span class="pre">GenerateDefaultConfig.generate_default_inductor_toml()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.GenerateDefaultConfig.generate_default_misc_toml"><code class="docutils literal notranslate"><span class="pre">GenerateDefaultConfig.generate_default_misc_toml()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.GenerateDefaultConfig.generate_default_summary_toml"><code class="docutils literal notranslate"><span class="pre">GenerateDefaultConfig.generate_default_summary_toml()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.GenerateDefaultConfig.generate_default_transformer_toml"><code class="docutils literal notranslate"><span class="pre">GenerateDefaultConfig.generate_default_transformer_toml()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.GenerateDefaultConfig.generate_logging_config"><code class="docutils literal notranslate"><span class="pre">GenerateDefaultConfig.generate_logging_config()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="intro.html#pcdt.HTMLResponse"><code class="docutils literal notranslate"><span class="pre">HTMLResponse</span></code></a><ul>
@@ -681,19 +732,29 @@
 <li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.SummaryDataEntryDto.progress_data"><code class="docutils literal notranslate"><span class="pre">SummaryDataEntryDto.progress_data</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#pcdt.TemplateType"><code class="docutils literal notranslate"><span class="pre">TemplateType</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.TemplateType.circuit"><code class="docutils literal notranslate"><span class="pre">TemplateType.circuit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.TemplateType.general"><code class="docutils literal notranslate"><span class="pre">TemplateType.general</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="intro.html#pcdt.ThermalCalcSupport"><code class="docutils literal notranslate"><span class="pre">ThermalCalcSupport</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.ThermalCalcSupport.calculate_r_th_copper_coin"><code class="docutils literal notranslate"><span class="pre">ThermalCalcSupport.calculate_r_th_copper_coin()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.ThermalCalcSupport.calculate_r_th_tim"><code class="docutils literal notranslate"><span class="pre">ThermalCalcSupport.calculate_r_th_tim()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="intro.html#pcdt.TomlCapacitorSelection"><code class="docutils literal notranslate"><span class="pre">TomlCapacitorSelection</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.TomlCapacitorSelection.capacitor_requirements"><code class="docutils literal notranslate"><span class="pre">TomlCapacitorSelection.capacitor_requirements</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.TomlCapacitorSelection.filter_distance"><code class="docutils literal notranslate"><span class="pre">TomlCapacitorSelection.filter_distance</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.TomlCapacitorSelection.lifetime_h"><code class="docutils literal notranslate"><span class="pre">TomlCapacitorSelection.lifetime_h</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.TomlCapacitorSelection.maximum_number_series_capacitors"><code class="docutils literal notranslate"><span class="pre">TomlCapacitorSelection.maximum_number_series_capacitors</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.TomlCapacitorSelection.maximum_peak_to_peak_voltage_ripple"><code class="docutils literal notranslate"><span class="pre">TomlCapacitorSelection.maximum_peak_to_peak_voltage_ripple</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.TomlCapacitorSelection.model_config"><code class="docutils literal notranslate"><span class="pre">TomlCapacitorSelection.model_config</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.TomlCapacitorSelection.temperature_ambient"><code class="docutils literal notranslate"><span class="pre">TomlCapacitorSelection.temperature_ambient</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.TomlCapacitorSelection.voltage_safety_margin_percentage"><code class="docutils literal notranslate"><span class="pre">TomlCapacitorSelection.voltage_safety_margin_percentage</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#pcdt.TomlCapacitorSelectionRequirements"><code class="docutils literal notranslate"><span class="pre">TomlCapacitorSelectionRequirements</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.TomlCapacitorSelectionRequirements.lifetime_h"><code class="docutils literal notranslate"><span class="pre">TomlCapacitorSelectionRequirements.lifetime_h</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.TomlCapacitorSelectionRequirements.maximum_number_series_capacitors"><code class="docutils literal notranslate"><span class="pre">TomlCapacitorSelectionRequirements.maximum_number_series_capacitors</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.TomlCapacitorSelectionRequirements.maximum_peak_to_peak_voltage_ripple"><code class="docutils literal notranslate"><span class="pre">TomlCapacitorSelectionRequirements.maximum_peak_to_peak_voltage_ripple</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.TomlCapacitorSelectionRequirements.model_config"><code class="docutils literal notranslate"><span class="pre">TomlCapacitorSelectionRequirements.model_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.TomlCapacitorSelectionRequirements.temperature_ambient"><code class="docutils literal notranslate"><span class="pre">TomlCapacitorSelectionRequirements.temperature_ambient</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.TomlCapacitorSelectionRequirements.voltage_safety_margin_percentage"><code class="docutils literal notranslate"><span class="pre">TomlCapacitorSelectionRequirements.voltage_safety_margin_percentage</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="intro.html#pcdt.TomlFilterDistance"><code class="docutils literal notranslate"><span class="pre">TomlFilterDistance</span></code></a><ul>
@@ -781,10 +842,15 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="intro.html#pcdt.TomlMisc"><code class="docutils literal notranslate"><span class="pre">TomlMisc</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.TomlMisc.control_board_loss"><code class="docutils literal notranslate"><span class="pre">TomlMisc.control_board_loss</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.TomlMisc.control_board_volume"><code class="docutils literal notranslate"><span class="pre">TomlMisc.control_board_volume</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.TomlMisc.min_efficiency_percent"><code class="docutils literal notranslate"><span class="pre">TomlMisc.min_efficiency_percent</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.TomlMisc.board_data"><code class="docutils literal notranslate"><span class="pre">TomlMisc.board_data</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.TomlMisc.model_config"><code class="docutils literal notranslate"><span class="pre">TomlMisc.model_config</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#pcdt.TomlMiscBoardData"><code class="docutils literal notranslate"><span class="pre">TomlMiscBoardData</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.TomlMiscBoardData.control_board_loss"><code class="docutils literal notranslate"><span class="pre">TomlMiscBoardData.control_board_loss</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.TomlMiscBoardData.control_board_volume"><code class="docutils literal notranslate"><span class="pre">TomlMiscBoardData.control_board_volume</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.TomlMiscBoardData.min_efficiency_percent"><code class="docutils literal notranslate"><span class="pre">TomlMiscBoardData.min_efficiency_percent</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.TomlMiscBoardData.model_config"><code class="docutils literal notranslate"><span class="pre">TomlMiscBoardData.model_config</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="intro.html#pcdt.TomlSummary"><code class="docutils literal notranslate"><span class="pre">TomlSummary</span></code></a><ul>
@@ -861,6 +927,11 @@
 <li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.TomlTransformerSettings.model_config"><code class="docutils literal notranslate"><span class="pre">TomlTransformerSettings.model_config</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="intro.html#pcdt.TopologyEnum"><code class="docutils literal notranslate"><span class="pre">TopologyEnum</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.TopologyEnum.dab"><code class="docutils literal notranslate"><span class="pre">TopologyEnum.dab</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.TopologyEnum.sbc"><code class="docutils literal notranslate"><span class="pre">TopologyEnum.sbc</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="intro.html#pcdt.Transformer"><code class="docutils literal notranslate"><span class="pre">Transformer</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.Transformer.calculation_modes"><code class="docutils literal notranslate"><span class="pre">Transformer.calculation_modes</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="intro.html#pcdt.Transformer.model_config"><code class="docutils literal notranslate"><span class="pre">Transformer.model_config</span></code></a></li>
@@ -919,15 +990,6 @@
 <li class="toctree-l2"><a class="reference internal" href="intro.html#pcdt.cpu_count"><code class="docutils literal notranslate"><span class="pre">cpu_count()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="intro.html#pcdt.current_process"><code class="docutils literal notranslate"><span class="pre">current_process()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="intro.html#pcdt.dessca"><code class="docutils literal notranslate"><span class="pre">dessca()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="intro.html#pcdt.generate_default_capacitor_toml"><code class="docutils literal notranslate"><span class="pre">generate_default_capacitor_toml()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="intro.html#pcdt.generate_default_flow_control_toml"><code class="docutils literal notranslate"><span class="pre">generate_default_flow_control_toml()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="intro.html#pcdt.generate_default_heat_sink_toml"><code class="docutils literal notranslate"><span class="pre">generate_default_heat_sink_toml()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="intro.html#pcdt.generate_default_inductor_toml"><code class="docutils literal notranslate"><span class="pre">generate_default_inductor_toml()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="intro.html#pcdt.generate_default_misc_toml"><code class="docutils literal notranslate"><span class="pre">generate_default_misc_toml()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="intro.html#pcdt.generate_default_summary_toml"><code class="docutils literal notranslate"><span class="pre">generate_default_summary_toml()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="intro.html#pcdt.generate_default_transformer_toml"><code class="docutils literal notranslate"><span class="pre">generate_default_transformer_toml()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="intro.html#pcdt.generate_logging_config"><code class="docutils literal notranslate"><span class="pre">generate_logging_config()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="intro.html#pcdt.generate_missing_toml_files"><code class="docutils literal notranslate"><span class="pre">generate_missing_toml_files()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="intro.html#pcdt.global_plot_settings_font_latex"><code class="docutils literal notranslate"><span class="pre">global_plot_settings_font_latex()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="intro.html#pcdt.global_plot_settings_font_sansserif"><code class="docutils literal notranslate"><span class="pre">global_plot_settings_font_sansserif()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="intro.html#pcdt.latin_hypercube"><code class="docutils literal notranslate"><span class="pre">latin_hypercube()</span></code></a></li>
