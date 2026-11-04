@@ -11,7 +11,7 @@
 # The possible calculation mode is mentioned in the comment behind.
 # For detailed information how to update the program vlow configuration file use the manual.
 # As example a configuration is entered for the selected topology.
-# Attention: If you do not use 'skip'1 for 'circuit', all component calculation will be started from the scratch.
+# Attention: If you do not use 'skip' for 'circuit', all component calculation will be started from the scratch.
 # The result base folder name of the different calculation can be set by subdirectory. It is recommended to overtake the current naming.
 # The names of the detailed configuration files for the single component optimization are to enter in section 'configuration_data_files'.
 # Theses files are to store in the folder {{cdata.general.project_directory}}/00_configuration_files/{{cdata.general.configuration_name}}.

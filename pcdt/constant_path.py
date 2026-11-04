@@ -88,7 +88,7 @@ HEAT_SINK_CONF_TPL = "HeatSinkConf.tomltmpl"
 SUMMARY_CONF_TPL = "SummaryConf.tomltmpl"
 LOGGING_CONF_TPL = "logging.conftmpl"
 
-# Default folder names
+# Standard folder names
 CIRCUIT_FOLDER = "01_circuit"
 CAPACITOR_FOLDER = "02_capacitor"
 INDUCTOR_FOLDER = "03_inductor"
