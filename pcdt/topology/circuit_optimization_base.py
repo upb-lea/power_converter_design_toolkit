@@ -16,7 +16,7 @@ from pcdt.datasets_dtos import (FilterData, StudyData, PlotData, CapacitorConfig
                                 InductorConfiguration, TransformerConfiguration)
 from pcdt.server_ctl_dtos import ProgressData
 from pcdt.components.component_dtos import CapacitorRequirements, InductorRequirements, TransformerRequirements
-from pcdt.circuit_enums import CalcModeEnum
+from pcdt.circuit_enums import CalcModeEnum, TemplateType, TopologyEnum
 from pcdt.constant_path import FILTERED_RESULTS_PATH
 
 # Type of general optimization parameter
@@ -269,6 +269,17 @@ class CircuitOptimizationBase(Generic[T_G_D, T_C_D], ABC):
             return is_efficient
 
     # Abstract methods
+    @staticmethod
+    @abstractmethod
+    def get_topology_type() -> TopologyEnum:
+        """
+        Provide the topology type.
+
+        :return: Type of the topology
+        :rtype:  TopologyEnum
+        """
+        pass
+
     @abstractmethod
     def load_and_verify_general_parameters(self, toml_dict: dict[str, Any]) -> tuple[bool, str]:
         """Verify the input parameter ranges.
@@ -463,26 +474,6 @@ class CircuitOptimizationBase(Generic[T_G_D, T_C_D], ABC):
         """
         pass
 
-    @staticmethod
-    @abstractmethod
-    def generate_general_toml(file_path: str) -> None:
-        """Generate the default general configuration file.
-
-        :param file_path: filename including absolute path
-        :type  file_path: str
-        """
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def generate_circuit_toml(file_path: str) -> None:
-        """Generate the default circuit configuration file.
-
-        :param file_path: filename including absolute path
-        :type  file_path: str
-        """
-        pass
-
     @abstractmethod
     def generate_result_dtos(self, summary_data: StudyData, capacitor_selection_data_list: list[CapacitorConfiguration],
                              inductor_configuration_list: list[InductorConfiguration],
@@ -551,5 +542,31 @@ class CircuitOptimizationBase(Generic[T_G_D, T_C_D], ABC):
         :type results_path: str
         :param combination_id: combination ID
         :type combination_id: int
+        """
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def get_inductor_conf_dict(component_id: int = 0) -> dict:
+        """
+        Provide dictionary for inductor default configuration.
+
+        :param component_id: component id
+        :type component_id: int
+        :return: Dictionary of inductor default configuration
+        :rtype:  dict
+        """
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def get_template(template_type: TemplateType) -> tuple[bool, str]:
+        """
+        Provide the template source for default configuration of the topology.
+
+        :param template_type: Type of the template (circuit or general)
+        :type  template_type: TemplateType
+        :return: validity indicator and template source data
+        :rtype:  tuple[bool, str]
         """
         pass

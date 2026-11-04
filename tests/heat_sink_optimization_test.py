@@ -272,6 +272,7 @@ def test_initialize_heat_sink_optimization(test_type: TestCase, is_error: bool) 
         toml_prog_flow = tc.FlowControl(
             general=tc.General(
                 project_directory=tmpdir,
+                configuration_name="test_config",
                 topology="dab",
             ),
             breakpoints=tc.Breakpoints(

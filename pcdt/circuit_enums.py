@@ -18,6 +18,14 @@ class TopologyEnum(enum.Enum):
     sbc = "sbc"
 
 
+class TemplateType(enum.Enum):
+    """Enum for available topologies."""
+
+    # Template for circuit configuration
+    circuit = "circuit"
+    # Template for general configuration
+    general = "general"
+
 class CalcModeEnum(enum.Enum):
     """Enum for calculation mode."""
 

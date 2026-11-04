@@ -62,6 +62,7 @@ class General(BaseModel):
     """General flow control information."""
 
     project_directory: str
+    configuration_name: str
     topology: Literal['dab', 'sbc']
 
 class Breakpoints(BaseModel):
@@ -88,7 +89,7 @@ class Circuit(BaseModel):
     """Flow control for the circuit."""
 
     number_of_trials: int
-    calculation_mode: Literal['new', 'continue', 'skip']
+    calculation_mode: Literal['new', 'skip']
     subdirectory: str
 
 class Capacitor(BaseModel):
@@ -176,14 +177,19 @@ class TomlFilterDistance(BaseModel):
 # capacitor
 # ######################################################
 
-class TomlCapacitorSelection(BaseModel):
-    """Capacitor selection details."""
+class TomlCapacitorSelectionRequirements(BaseModel):
+    """Toml checker class for CapacitorSelectionRequirements."""
 
     maximum_peak_to_peak_voltage_ripple: float
     temperature_ambient: float
     voltage_safety_margin_percentage: float
     maximum_number_series_capacitors: int
     lifetime_h: float
+
+class TomlCapacitorSelection(BaseModel):
+    """Capacitor selection details."""
+
+    capacitor_requirements: TomlCapacitorSelectionRequirements
     filter_distance: TomlFilterDistance
 
 # ######################################################
@@ -351,12 +357,19 @@ class TomlHeatSink(BaseModel):
 # misc
 # ######################################################
 
-class TomlMisc(BaseModel):
-    """Data structure for Misc data."""
+class TomlMiscBoardData(BaseModel):
+    """Data structure for Misc data board data."""
 
     min_efficiency_percent: float
     control_board_volume: float
     control_board_loss: float
+
+
+class TomlMisc(BaseModel):
+    """Data structure for Misc data."""
+
+    board_data: TomlMiscBoardData
+
 
 # ######################################################
 # summary

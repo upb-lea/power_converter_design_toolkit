@@ -344,12 +344,12 @@ def open_browser():
     # Wait a short time until server is started
     import time
     time.sleep(1.0)
-    webbrowser.get('firefox').open("http://127.0.0.1:8000/")   # 👈 Firefox direkt
+    webbrowser.get('firefox').open("http://127.0.0.1:8000/")   # Call firefox browser
     # other browsers: webbrowser.open("http://127.0.0.1:8000/")
 
 if __name__ == "__main__":
     # Initialize path
-    initialize_path("{{path_info.work_path}}")
+    initialize_path("{{ path_info.work_path }}")
 
     # Initialize candidate key list
     candidates_key_list = load_candidates()
