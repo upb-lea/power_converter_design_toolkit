@@ -68,17 +68,17 @@ def initialize_path(act_workspace_name: str):
 
 
     # Directory structure derivate from root directory
-    SUMMARY_DATA_CSV = os.path.join(PCDT_ROOT, "{{ path_info.summary_data_csv }}")
-    CIRCUIT_DATA_CSV = os.path.join(PCDT_ROOT, "{{ path_info.circuit_data_csv }}")
-    CAPACITOR_BASE_PATH = os.path.join(PCDT_ROOT, "{{ path_info.capacitor_base_path }}")
-    INDUCTOR_BASE_PATH = os.path.join(PCDT_ROOT, "{{ path_info.inductor_base_path }}")
-    TRANSFORMER_BASE_PATH = os.path.join(PCDT_ROOT, "{{ path_info.transformer_base_path }}")
+    SUMMARY_DATA_CSV = "{{ path_info.summary_data_csv }}"
+    CIRCUIT_DATA_CSV = "{{ path_info.circuit_data_csv }}"
+    CAPACITOR_BASE_PATH = "{{ path_info.capacitor_base_path }}"
+    INDUCTOR_BASE_PATH = "{{ path_info.inductor_base_path }}"
+    TRANSFORMER_BASE_PATH = "{{ path_info.transformer_base_path }}"
     CAPACITOR0_CSV = "{{ path_info.capacitor_csv0 }}"
     CAPACITOR1_CSV = "{{ path_info.capacitor_csv1 }}"
     INDUCTOR_CSV = "{{ path_info.inductor_csv0 }}"
     TRANSFORMER_CSV = "{{ path_info.transformer_csv0 }}"
-    HEAT_SINK_CSV = os.path.join(PCDT_ROOT, "{{ path_info.heat_sink_csv }}")
-    VISUALIZATION_BASE_PATH = os.path.join(PCDT_ROOT,"{{ path_info.visualization_base_path }}")
+    HEAT_SINK_CSV = "{{ path_info.heat_sink_csv }}"
+    VISUALIZATION_BASE_PATH = "{{ path_info.visualization_base_path }}"
 
     # Register FastAPI
     # app.add_api_route(path="/", methods=["GET"], endpoint=startpage, response_class=HTMLResponse)
@@ -134,7 +134,7 @@ async def detailed_view(request: Request, combination_id: int):
     candidate_data, plot_data = read_csv_data(combination_id)
 
     return templates.TemplateResponse(request,
-        "browser_detailed_page_template.html",
+        "{{ path_info.detailed_page_template}}",
          {"plot_data": plot_data, "cir_data": candidate_data["circuit_data"],
           "ind_data": candidate_data["inductor_data"], "tr_data": candidate_data["transformer_data"]}
      )
@@ -344,12 +344,12 @@ def open_browser():
     # Wait a short time until server is started
     import time
     time.sleep(1.0)
-    webbrowser.get('firefox').open("http://127.0.0.1:8000/")   # 👈 Firefox direkt
+    webbrowser.get('firefox').open("http://127.0.0.1:8000/")   # Call firefox browser
     # other browsers: webbrowser.open("http://127.0.0.1:8000/")
 
 if __name__ == "__main__":
     # Initialize path
-    initialize_path("/home/andreas/Workspace/Projekt/power_converter_design_toolkit/workspace/2026-09-31_ref_example")
+    initialize_path("{{ path_info.work_path }}")
 
     # Initialize candidate key list
     candidates_key_list = load_candidates()
