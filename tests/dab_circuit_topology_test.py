@@ -187,7 +187,8 @@ def test_calculate_fix_parameters(caplog: LogCaptureFixture, sampling_method: Sa
 
     filter = d_dtos.CircuitFilter(
         number_filtered_designs=1,
-        difference_percentage=5)
+        difference_percentage=5,
+        filter_algorithm="sort_lowest")
 
     info_message_dict = {0: "Number of sampling points has been updated from 5 to 8.",
                          1: "Note: meshgrid sampling does not take user-given operating points into account",
@@ -625,7 +626,8 @@ def test_load_and_verify_circuit_parameters(get_transistor_name_list: list[str],
             transistor_b2_cooling=float_value_list_configuration_gt0_le1em2xgt1_le100[test_index]),
         filter_distance=dab_tc.TomlDabCircuitFilterDistance(
             number_filtered_designs=int_value_gt0[test_index],
-            difference_percentage=float_value_gt1em2_le100[test_index])
+            difference_percentage=float_value_gt1em2_le100[test_index],
+            filter_algorithm="sort_lowest")
     )
 
     # Create boundary list from minimum-maximum list with assigned parameters
@@ -825,7 +827,8 @@ def test_initialize_circuit_optimization(get_transistor_name_list: list[str], te
             transistor_b2_cooling=float_value_list_configuration_gt0_le1em2xgt1_le100[test_index]),
         filter_distance=dab_tc.TomlDabCircuitFilterDistance(
             number_filtered_designs=int_value_gt0[test_index],
-            difference_percentage=float_value_gt1em2_le100[test_index])
+            difference_percentage=float_value_gt1em2_le100[test_index],
+            filter_algorithm="sort_lowest")
     )
 
     # at lower boundary | at upper boundary | in between | exceed the upper limit

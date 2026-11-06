@@ -517,7 +517,8 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
 
         filter = circuit_dtos.CircuitFilter(
             number_filtered_designs=self._toml_circuit.filter_distance.number_filtered_designs,
-            difference_percentage=self._toml_circuit.filter_distance.difference_percentage
+            difference_percentage=self._toml_circuit.filter_distance.difference_percentage,
+            filter_algorithm=self._toml_circuit.filter_distance.filter_algorithm,
         )
 
         # None can not be handled by toml correct, so this is a workaround. By default, "random" in toml equals "None"
@@ -1093,17 +1094,17 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
             transistor_dto_2 = HandleDabDto.tdb_to_transistor_dto(str(df.at[index, "params_transistor_2_name_suggest"]))
 
             dab_dto = HandleDabDto.init_config(
-                circuit_id=str(df["number"][index].item()),
+                circuit_id=str(df["number"][index]),
                 mesh_v1=self._fixed_parameters.mesh_v1,
                 mesh_v2=self._fixed_parameters.mesh_v2,
                 mesh_p=self._fixed_parameters.mesh_p,
                 mesh_weights=self._fixed_parameters.mesh_weights,
                 sampling=self._dab_config.sampling,
-                n=df["params_n_suggest"][index].item(),
-                ls=df["params_l_s_suggest"][index].item(),
-                fs=df["params_f_s_suggest"][index].item(),
-                lc1=df["params_l_1_suggest"][index].item(),
-                lc2=df["params_l_2__suggest"][index].item() / df["params_n_suggest"][index].item() ** 2,
+                n=df["params_n_suggest"][index],
+                ls=df["params_l_s_suggest"][index],
+                fs=df["params_f_s_suggest"][index],
+                lc1=df["params_l_1_suggest"][index],
+                lc2=df["params_l_2__suggest"][index] / df["params_n_suggest"][index] ** 2,
                 c_par_1=self._dab_config.design_space.c_par_1,
                 c_par_2=self._dab_config.design_space.c_par_2,
                 transistor_dto_1=transistor_dto_1,
@@ -1243,40 +1244,59 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
         # get 100 percent ZVS coverage designs
         df = df[df["values_0"] == 100]
 
-        smallest_dto_list: list[d_dtos.DabCircuitDTO] = []
-        df_smallest_all = df.nsmallest(n=1, columns=["values_1"])
-        df_smallest = df.nsmallest(n=1, columns=["values_1"])
-
-        smallest_dto_list.append(self.df_to_dab_dto_list(df_smallest)[0])
-
         # Continue time measurement
         with self._c_lock_stat:
             self._progress_run_time.continue_trigger()
 
-        for count in np.arange(0, self._dab_config.filter.number_filtered_designs - 1):
-            logger.info("------------------")
-            logger.info(f"{count=}")
-            n_suggest = df_smallest['params_n_suggest'].item()
-            f_s_suggest = df_smallest['params_f_s_suggest'].item()
-            l_s_suggest = df_smallest['params_l_s_suggest'].item()
-            l_1_suggest = df_smallest['params_l_1_suggest'].item()
-            l_2__suggest = df_smallest['params_l_2__suggest'].item()
-            transistor_1_name_suggest = df_smallest['params_transistor_1_name_suggest'].item()
-            transistor_2_name_suggest = df_smallest['params_transistor_2_name_suggest'].item()
+        smallest_dto_list: list[d_dtos.DabCircuitDTO] = []
 
-            # make sure to use parameters with minimum x % difference.
-            difference = self._dab_config.filter.difference_percentage / 100
+        if self._dab_config.filter.filter_algorithm == "sort_lowest":
 
-            df = df.loc[
-                ~((df["params_n_suggest"].ge(n_suggest * (1 - difference)) & df["params_n_suggest"].le(n_suggest * (1 + difference))) & \
-                  (df["params_f_s_suggest"].ge(f_s_suggest * (1 - difference)) & df["params_f_s_suggest"].le(f_s_suggest * (1 + difference))) & \
-                  (df["params_l_s_suggest"].ge(l_s_suggest * (1 - difference)) & df["params_l_s_suggest"].le(l_s_suggest * (1 + difference))) & \
-                  (df["params_l_1_suggest"].ge(l_1_suggest * (1 - difference)) & df["params_l_1_suggest"].le(l_1_suggest * (1 + difference))) & \
-                  (df["params_l_2__suggest"].ge(l_2__suggest * (1 - difference)) & df["params_l_2__suggest"].le(l_2__suggest * (1 + difference)))
-                  )]
-
+            df_smallest_all = df.nsmallest(n=1, columns=["values_1"])
             df_smallest = df.nsmallest(n=1, columns=["values_1"])
-            df_smallest_all = pd.concat([df_smallest_all, df_smallest], axis=0)
+
+            smallest_dto_list.append(self.df_to_dab_dto_list(df_smallest)[0])
+
+            for count in np.arange(0, self._dab_config.filter.number_filtered_designs - 1):
+                logger.info("------------------")
+                logger.info(f"{count=}")
+                n_suggest = df_smallest['params_n_suggest'].item()
+                f_s_suggest = df_smallest['params_f_s_suggest'].item()
+                l_s_suggest = df_smallest['params_l_s_suggest'].item()
+                l_1_suggest = df_smallest['params_l_1_suggest'].item()
+                l_2__suggest = df_smallest['params_l_2__suggest'].item()
+                transistor_1_name_suggest = df_smallest['params_transistor_1_name_suggest'].item()
+                transistor_2_name_suggest = df_smallest['params_transistor_2_name_suggest'].item()
+
+                # make sure to use parameters with minimum x % difference.
+                difference = self._dab_config.filter.difference_percentage / 100
+
+                df = df.loc[
+                    ~((df["params_n_suggest"].ge(n_suggest * (1 - difference)) & df["params_n_suggest"].le(n_suggest * (1 + difference))) & \
+                      (df["params_f_s_suggest"].ge(f_s_suggest * (1 - difference)) & df["params_f_s_suggest"].le(f_s_suggest * (1 + difference))) & \
+                      (df["params_l_s_suggest"].ge(l_s_suggest * (1 - difference)) & df["params_l_s_suggest"].le(l_s_suggest * (1 + difference))) & \
+                      (df["params_l_1_suggest"].ge(l_1_suggest * (1 - difference)) & df["params_l_1_suggest"].le(l_1_suggest * (1 + difference))) & \
+                      (df["params_l_2__suggest"].ge(l_2__suggest * (1 - difference)) & df["params_l_2__suggest"].le(l_2__suggest * (1 + difference)))
+                      )]
+
+                df_smallest = df.nsmallest(n=1, columns=["values_1"])
+                df_smallest_all = pd.concat([df_smallest_all, df_smallest], axis=0)
+        elif self._dab_config.filter.filter_algorithm == "sort_frequency":
+            f_min = df['params_f_s_suggest'].min()
+            f_max = df['params_f_s_suggest'].max()
+            df_smallest_all = pd.DataFrame(columns=df.columns)
+            frequency = df["params_f_s_suggest"]
+            selected_positions = []
+            frequency_sweep_list = np.linspace(f_min, f_max, self._dab_config.filter.number_filtered_designs)
+            delta_frequency = self._dab_config.filter.difference_percentage / 100 * ((frequency_sweep_list[1] - frequency_sweep_list[0]) / 2)
+            for target_frequency in frequency_sweep_list:
+                interval = frequency.between(target_frequency - delta_frequency, target_frequency + delta_frequency)
+                candidates = df.loc[interval, "values_1"].dropna()
+                if not candidates.empty:
+                    selected_positions.append(candidates.idxmin())
+                    print(f"{df_smallest_all.head()=}")
+                    print(f"{df.loc[[candidates.idxmin()]]=}")
+                    df_smallest_all = pd.concat([df_smallest_all, df.loc[[candidates.idxmin()]]], axis=0)
 
         smallest_dto_list = self.df_to_dab_dto_list(df_smallest_all)
         logger.info("Save filtered circuit results into csv file.")
