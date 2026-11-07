@@ -17,14 +17,14 @@ from pcdt.topology import dab, sbc
 from pcdt.circuit_enums import TemplateType
 from pcdt import toml_checker as tc
 from pcdt.topology.circuit_optimization_base import CircuitOptimizationBase
-from pcdt.constant_path import (PCDT_ROOT, PROG_FLOW_FILE_NAME, CONFIG_FILE_FOLDER, MISC_CONF_TPL, PROG_FLOW_CONF_TPL,
+from pcdt.constant_path import (PCDT_ROOT, PROG_FLOW_CONF_TOML, CONFIG_FILE_FOLDER, MISC_CONF_TPL, PROG_FLOW_CONF_TPL,
                                 CAPACITOR_CONF_TPL, INDUCTOR_CONF_TPL, TRANSFORMER_CONF_TPL, HEAT_SINK_DISC_FOLDER,
                                 HEAT_SINK_CONF_TPL, SUMMARY_CONF_TPL, TEMPLATE_FOLDER, TOMPL_TEMPLATE_FOLDER_NAME,
-                                GENERAL_CONF_FILE_NAME, CIRCUIT_CONF_FILE_NAME, CAPACITOR_XCONF_FILE_NAME,
-                                INDUCTOR_XCONF_FILE_NAME, TRANSFORMER_XCONF_FILE_NAME, HEAT_SINK_CONF_FILE_NAME,
-                                SUMMARY_CONF_FILE_NAME, PLACE_HOLDER, FILEPATH_CONFIG_JSON, CIRCUIT_FOLDER,
+                                GENERAL_CONF_TOML, CIRCUIT_CONF_TOML, CAPACITOR_XCONF_TOML,
+                                INDUCTOR_XCONF_TOML, TRANSFORMER_XCONF_TOML, HEAT_SINK_CONF_TOML,
+                                SUMMARY_CONF_TOML, PLACE_HOLDER, FILEPATH_CONFIG_JSON, CIRCUIT_FOLDER,
                                 CAPACITOR_FOLDER, INDUCTOR_FOLDER, TRANSFORMER_FOLDER, HEAT_SINK_FOLDER,
-                                PRE_SUMMARY_FOLDER, SUMMARY_FOLDER, DATA_GENERATION_FOLDER, MISC_CONF_FILE_NAME)
+                                PRE_SUMMARY_FOLDER, SUMMARY_FOLDER, DATA_GENERATION_FOLDER, MISC_CONF_TOML)
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +45,6 @@ class GenerateDefaultConfig:
         section_dict: dict = {}
         topology_selection: TopologyEnum
         default_project_name: str = "_default_project"
-        default_config_name: str = "default_config"
         folder_dict: dict = {}
         topology: CircuitOptimizationBase
 
@@ -53,10 +52,8 @@ class GenerateDefaultConfig:
         topology_selection = GenerateDefaultConfig._select_default_topology()
 
         conf_dict["default_project_name"] = str(topology_selection.value) + default_project_name
-        conf_dict["default_config_name"] = default_config_name
         # Add section general
         section_dict["project_directory"] = str(topology_selection.value) + default_project_name
-        section_dict["configuration_name"] = default_config_name
         if topology_selection is TopologyEnum.dab:
             # Continue add section general
             section_dict["topology"] = "dab"
@@ -88,11 +85,6 @@ class GenerateDefaultConfig:
             # Add section heat sink
             section_dict["number_of_trials"] = "500"
             conf_dict["heat_sink"] = section_dict
-            section_dict = {}
-
-            # Add section configuration_data_files
-            section_dict["transformer_configuration_files"] = "[\"Transformer0Conf.toml\"]"
-            conf_dict["configuration_data_files"] = section_dict
             section_dict = {}
 
             # Allocate and initialize topology configuration for dual active bridge
@@ -130,11 +122,6 @@ class GenerateDefaultConfig:
             conf_dict["heat_sink"] = section_dict
             section_dict = {}
 
-            # Add section configuration_data_files
-            section_dict["transformer_configuration_files"] = "[]"
-            conf_dict["configuration_data_files"] = section_dict
-            section_dict = {}
-
             # Allocate and initialize topology configuration for dual active bridge
             topology = sbc.SbcCircuitOptimization()
         else:
@@ -145,7 +132,7 @@ class GenerateDefaultConfig:
         project_directory = os.path.join(os.path.dirname(file_path), conf_dict["general"]["project_directory"])
 
         # Generate program flow configuration file
-        progflow_file_path = os.path.join(os.path.dirname(file_path), PROG_FLOW_FILE_NAME)
+        progflow_file_path = os.path.join(os.path.dirname(file_path), PROG_FLOW_CONF_TOML)
         template_file_path = os.path.join(template_path, PROG_FLOW_CONF_TPL)
 
         # Check if template file is available
@@ -159,7 +146,7 @@ class GenerateDefaultConfig:
         GenerateDefaultConfig._generate_default_toml(progflow_file_path, template_source, conf_dict)
 
         # Generate configuration files
-        config_path = str(os.path.join(project_directory, CONFIG_FILE_FOLDER, default_config_name))
+        config_path = str(os.path.join(project_directory, CONFIG_FILE_FOLDER))
         GenerateDefaultConfig.generate_component_toml_files(topology, config_path)
 
         # Set up the dictionary
@@ -196,15 +183,15 @@ class GenerateDefaultConfig:
         number_of_transformers = topology.get_number_of_required_transformers()
 
         # Generate misc default file
-        config_file_path = str(os.path.join(config_directory, MISC_CONF_FILE_NAME))
+        config_file_path = str(os.path.join(config_directory, MISC_CONF_TOML))
         GenerateDefaultConfig.generate_default_misc_toml(config_file_path, topology)
 
         # Generate circuit default file
-        config_file_path = str(os.path.join(config_directory, GENERAL_CONF_FILE_NAME))
+        config_file_path = str(os.path.join(config_directory, GENERAL_CONF_TOML))
         GenerateDefaultConfig.generate_default_general_toml(config_file_path, topology)
 
         # Generate general default file
-        config_file_path = str(os.path.join(config_directory, CIRCUIT_CONF_FILE_NAME))
+        config_file_path = str(os.path.join(config_directory, CIRCUIT_CONF_TOML))
         GenerateDefaultConfig.generate_default_circuit_toml(config_file_path, topology)
 
         # Generate capacitor default file(s)
@@ -214,7 +201,7 @@ class GenerateDefaultConfig:
         is_valid, template_source = GenerateDefaultConfig._read_template(template_file_path)
         if is_valid:
             for index in range(number_of_capacitors):
-                config_file_path = str(os.path.join(config_directory, CAPACITOR_XCONF_FILE_NAME.replace(PLACE_HOLDER, str(index))))
+                config_file_path = str(os.path.join(config_directory, CAPACITOR_XCONF_TOML.replace(PLACE_HOLDER, str(index))))
                 GenerateDefaultConfig.generate_default_capacitor_toml(config_file_path, index, topology.get_topology_type())
 
         # Generate inductor default file(s)
@@ -224,7 +211,7 @@ class GenerateDefaultConfig:
         is_valid, template_source = GenerateDefaultConfig._read_template(template_file_path)
         if is_valid:
             for index in range(number_of_inductors):
-                config_file_path = str(os.path.join(config_directory, INDUCTOR_XCONF_FILE_NAME.replace(PLACE_HOLDER, str(index))))
+                config_file_path = str(os.path.join(config_directory, INDUCTOR_XCONF_TOML.replace(PLACE_HOLDER, str(index))))
                 GenerateDefaultConfig.generate_default_inductor_toml(config_file_path, index, topology.get_topology_type())
 
         # Generate transformer default file(s)
@@ -234,15 +221,15 @@ class GenerateDefaultConfig:
         is_valid, template_source = GenerateDefaultConfig._read_template(template_file_path)
         if is_valid:
             for index in range(number_of_transformers):
-                config_file_path = str(os.path.join(config_directory, TRANSFORMER_XCONF_FILE_NAME.replace(PLACE_HOLDER, str(index))))
+                config_file_path = str(os.path.join(config_directory, TRANSFORMER_XCONF_TOML.replace(PLACE_HOLDER, str(index))))
                 GenerateDefaultConfig.generate_default_transformer_toml(config_file_path, index, topology.get_topology_type())
 
         # Generate heat sink default file
-        config_file_path = str(os.path.join(config_directory, HEAT_SINK_CONF_FILE_NAME))
+        config_file_path = str(os.path.join(config_directory, HEAT_SINK_CONF_TOML))
         GenerateDefaultConfig.generate_default_heat_sink_toml(config_file_path)
 
         # Generate summary default file
-        config_file_path = str(os.path.join(config_directory, SUMMARY_CONF_FILE_NAME))
+        config_file_path = str(os.path.join(config_directory, SUMMARY_CONF_TOML))
         GenerateDefaultConfig.generate_default_summary_toml(config_file_path)
 
     @staticmethod

@@ -19,7 +19,6 @@
 # Path configuration
 [general]
     project_directory =  "{{cdata.general.project_directory}}"
-    configuration_name = "{{cdata.general.configuration_name}}"
     topology = "{{cdata.general.topology}}" # dab, sbc
 
 [breakpoints]
@@ -77,15 +76,4 @@
     calculation_mode_manufacture = "skip_purge" # (new,continue,skip_purge)
     subdirectory = "08_data_generation"
 
-[configuration_data_files]
-    # General configuration file followed by circuit configuration file
-    topology_files =  ["GeneralConf.toml","CircuitConf.toml"]
-    # Number of capacitor configuration files corresponds to the required number of capacitors of the topology
-    capacitor_configuration_files = ["Capacitor0Conf.toml", "DabCapacitor1Conf.toml"]
-    # Number of inductor configuration files corresponds to the required number of inductors of the topology
-    inductor_configuration_files = ["Inductor0Conf.toml"]
-    # Number of transformer configuration files corresponds to the required number of transformers of the topology
-    transformer_configuration_files = {{cdata.configuration_data_files.transformer_configuration_files}}
-    # heat sink and summary configuration files
-    heat_sink_configuration_file = "HeatSinkConf.toml"
-    summary_configuration_file = "SummaryConf.toml"
+
