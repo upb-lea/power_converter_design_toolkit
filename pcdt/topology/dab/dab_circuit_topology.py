@@ -1294,8 +1294,6 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
                 candidates = df.loc[interval, "values_1"].dropna()
                 if not candidates.empty:
                     selected_positions.append(candidates.idxmin())
-                    print(f"{df_smallest_all.head()=}")
-                    print(f"{df.loc[[candidates.idxmin()]]=}")
                     df_smallest_all = pd.concat([df_smallest_all, df.loc[[candidates.idxmin()]]], axis=0)
 
         smallest_dto_list = self.df_to_dab_dto_list(df_smallest_all)
