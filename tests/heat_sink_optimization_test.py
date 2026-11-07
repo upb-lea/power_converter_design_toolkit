@@ -237,7 +237,7 @@ def test_initialize_heat_sink_optimization(test_type: TestCase, is_error: bool) 
     """
     # Test value tables - The values here should be within valid ranges except the last entry
     # Normal values for the parameters
-    float_min_max_geometr1y: list[float] = [0.05, 0.05] if not is_error else [-0.1, 0.05]
+    float_min_max_geometry: list[float] = [0.05, 0.05] if not is_error else [-0.1, 0.05]
     int_min_max_cooling_channels: list[int] = [3, 6] if not is_error else [-1, 5]
  
     study_filename = HEAT_SINK_CONF_TOML
