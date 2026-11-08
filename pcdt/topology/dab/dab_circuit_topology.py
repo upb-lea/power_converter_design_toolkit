@@ -1260,11 +1260,11 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
             for count in np.arange(0, self._dab_config.filter.number_filtered_designs - 1):
                 logger.info("------------------")
                 logger.info(f"{count=}")
-                n_suggest = df_smallest['params_n_suggest'].item()
-                f_s_suggest = df_smallest['params_f_s_suggest'].item()
-                l_s_suggest = df_smallest['params_l_s_suggest'].item()
-                l_1_suggest = df_smallest['params_l_1_suggest'].item()
-                l_2__suggest = df_smallest['params_l_2__suggest'].item()
+                n_suggest = df_smallest['params_n_suggest']
+                f_s_suggest = df_smallest['params_f_s_suggest']
+                l_s_suggest = df_smallest['params_l_s_suggest']
+                l_1_suggest = df_smallest['params_l_1_suggest']
+                l_2__suggest = df_smallest['params_l_2__suggest']
                 transistor_1_name_suggest = df_smallest['params_transistor_1_name_suggest'].item()
                 transistor_2_name_suggest = df_smallest['params_transistor_2_name_suggest'].item()
 
