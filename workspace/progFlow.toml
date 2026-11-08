@@ -1,7 +1,6 @@
 # Path configuration
 [general]
     project_directory = "2026-09-31_ref_example"
-    configuration_name = "ref_conf"
     topology = "dab"  # dab, sbc
 
 [breakpoints]
@@ -59,24 +58,4 @@
     calculation_mode_manufacture = "skip_purge" # (new,continue,skip_purge)
     subdirectory = "08_data_generation"
 
-[configuration_data_files]
-    # General configuration file followed by circuit configuration file
-    topology_files =  ["DabGeneralConf.toml","DabCircuitConf.toml"]
-    # Number of capacitor configuration files corresponds to the required number of capacitors of the topology
-    capacitor_configuration_files = ["DabCapacitor1Conf.toml", "DabCapacitor2Conf.toml"]
-    # Number of capacitor configuration files corresponds to the required number of capacitors of the topology
-    inductor_configuration_files = ["DabInductorConf.toml"]
-    # Number of capacitor configuration files corresponds to the required number of capacitors of the topology
-    transformer_configuration_files = ["DabTransformerConf.toml"]
-    heat_sink_configuration_file = "DabHeatSinkConf.toml"
-    summary_configuration_file = "DabSummaryConf.toml"
-    #    # General configuration file followed by circuit configuration file
-    #    topology_files =  ["SbcGeneralConf.toml","SbcCircuitConf.toml"]
-    #    # Number of capacitor configuration files corresponds to the required number of capacitors of the topology
-    #    capacitor_configuration_files = ["SbcCapacitor1Conf.toml", "SbcCapacitor2Conf.toml"]
-    #    # Number of capacitor configuration files corresponds to the required number of capacitors of the topology
-    #    inductor_configuration_files = ["SbcInductorConf.toml"]
-    #    # Number of capacitor configuration files corresponds to the required number of capacitors of the topology
-    #    transformer_configuration_files = []
-    #    heat_sink_configuration_file = "SbcHeatSinkConf.toml"
 
