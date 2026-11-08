@@ -16,6 +16,7 @@ from pcdt.server_ctl_dtos import ProgressStatus
 from pcdt.server_ctl_dtos import RunTimeMeasurement as RunTime
 from pcdt.components.component_dtos import ComponentCooling
 from pcdt.components.heat_sink_dtos import *
+from pcdt.constant_path import HEAT_SINK_CONF_TOML
 
 logger = logging.getLogger(__name__)
 
@@ -174,14 +175,14 @@ class HeatSinkOptimization:
         if not fan_list:
             logger.info(f"No fan design data found in path {heat_sink_fan_datapath}!")
 
-        heat_sink_study_name = toml_prog_flow.configuration_data_files.heat_sink_configuration_file.replace(".toml", "")
+        heat_sink_study_name = HEAT_SINK_CONF_TOML.replace(".toml", "")
 
         self._hct_config = hct.OptimizationParameters(
 
             # general parameters
             heat_sink_study_name=heat_sink_study_name,
             heat_sink_optimization_directory=os.path.join(toml_prog_flow.general.project_directory, toml_prog_flow.heat_sink.subdirectory,
-                                                          toml_prog_flow.configuration_data_files.heat_sink_configuration_file.replace(".toml", "")),
+                                                          HEAT_SINK_CONF_TOML.replace(".toml", "")),
 
             # geometry parameters
             height_c_min_max_list=toml_heat_sink.design_space.height_c_min_max_list,

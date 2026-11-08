@@ -14,6 +14,7 @@ import pcdt.components.heat_sink_optimization as test_circuit
 import pcdt.toml_checker as tc
 import pcdt.server_ctl_dtos
 from pcdt.components.heat_sink_optimization import HeatSinkOptimization
+from pcdt.constant_path import HEAT_SINK_CONF_TOML
 
 # Enable logger
 pytestlogger = logging.getLogger(__name__)
@@ -239,7 +240,7 @@ def test_initialize_heat_sink_optimization(test_type: TestCase, is_error: bool) 
     float_min_max_geometry: list[float] = [0.05, 0.05] if not is_error else [-0.1, 0.05]
     int_min_max_cooling_channels: list[int] = [3, 6] if not is_error else [-1, 5]
  
-    study_filename = f"hs_study_{test_type.name}.toml"
+    study_filename = HEAT_SINK_CONF_TOML
     sub_dir_name = f"hs_sub_dir_{test_type.name}"
 
     # Build Toml Heat Sink
@@ -272,7 +273,6 @@ def test_initialize_heat_sink_optimization(test_type: TestCase, is_error: bool) 
         toml_prog_flow = tc.FlowControl(
             general=tc.General(
                 project_directory=tmpdir,
-                configuration_name="test_config",
                 topology="dab",
             ),
             breakpoints=tc.Breakpoints(
@@ -323,17 +323,11 @@ def test_initialize_heat_sink_optimization(test_type: TestCase, is_error: bool) 
                 calculation_mode="new",
                 subdirectory="summary",
             ),
-            data_generation=tc.DataGeneration(calculation_mode_visualization="new",
-                                              calculation_mode_manufacture="new",
-                                              subdirectory="dummy"),
-            configuration_data_files=tc.ConfigurationDataFiles(
-                topology_files=["topology.toml"],
-                capacitor_configuration_files=["capacitor.toml"],
-                inductor_configuration_files=["inductor.toml"],
-                transformer_configuration_files=["transformer.toml"],
-                heat_sink_configuration_file=study_filename,
-                summary_configuration_file="summary.toml"
-            ),
+            data_generation=tc.DataGeneration(
+                calculation_mode_visualization="new",
+                calculation_mode_manufacture="new",
+                subdirectory="dummy"
+            )
         )
 
         # Create the object under test

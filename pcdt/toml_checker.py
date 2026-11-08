@@ -62,7 +62,6 @@ class General(BaseModel):
     """General flow control information."""
 
     project_directory: str
-    configuration_name: str
     topology: Literal['dab', 'sbc']
 
 class Breakpoints(BaseModel):
@@ -138,16 +137,6 @@ class DataGeneration(BaseModel):
     calculation_mode_visualization: Literal['new', 'skip_purge']
     subdirectory: str
 
-class ConfigurationDataFiles(BaseModel):
-    """File paths to the configuration files."""
-
-    topology_files: list[str]
-    capacitor_configuration_files: list[str]
-    inductor_configuration_files: list[str]
-    transformer_configuration_files: list[str]
-    heat_sink_configuration_file: str
-    summary_configuration_file: str
-
 class FlowControl(BaseModel):
     """General flow control class."""
 
@@ -162,7 +151,6 @@ class FlowControl(BaseModel):
     pre_summary: PreSummary
     summary: Summary
     data_generation: DataGeneration
-    configuration_data_files: ConfigurationDataFiles
 
 # ######################################################
 # used by multiple components

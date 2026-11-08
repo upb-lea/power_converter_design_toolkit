@@ -49,9 +49,10 @@ from pcdt.constant_path import (CIRCUIT_INDUCTOR_RELUCTANCE_LOSSES_FOLDER, CIRCU
                                 CIRCUIT_TRANSFORMER_RELUCTANCE_LOSSES_FOLDER, CIRCUIT_TRANSFORMER_FEM_LOSSES_FOLDER,
                                 FILTERED_RESULTS_PATH, RELUCTANCE_COMPLETE_FILE, CIRCUIT_CAPACITOR_LOSS_FOLDER,
                                 FEM_COMPLETE_FILE, PROCESSING_COMPLETE_FILE, SUMMARY_COMBINATION_FOLDER, HEAT_SINK_DISC_FOLDER,
-                                PARETO_PLOT_PKL_FOLDER, PARETO_PLOT_PDF_FOLDER, PARETO_PLOT_PNG_FOLDER, FILEPATH_CONFIG_JSON,
-                                DATA_GENERATION_VISUALIZATION, DATA_GENERATION_MANUFACTURE, CONFIG_FILE_FOLDER,
-                                PROG_FLOW_FILE_NAME, LOGGING_CONF_FILE_NAME)
+                                PARETO_PLOT_PKL_FOLDER, PARETO_PLOT_PDF_FOLDER, PARETO_PLOT_PNG_FOLDER, CONFIG_FILE_FOLDER,
+                                DATA_GENERATION_VISUALIZATION, DATA_GENERATION_MANUFACTURE, PLACE_HOLDER, PROG_FLOW_CONF_TOML,
+                                LOGGING_CONF_FILE_NAME, GENERAL_CONF_TOML, CIRCUIT_CONF_TOML, CAPACITOR_XCONF_TOML,
+                                INDUCTOR_XCONF_TOML, TRANSFORMER_XCONF_TOML, HEAT_SINK_CONF_TOML, SUMMARY_CONF_TOML)
 
 logger = logging.getLogger(__name__)
 
@@ -160,44 +161,6 @@ class MainCtl:
                 f'matplotlib=={version("matplotlib")}\n')
 
     @staticmethod
-    def set_up_folder_structure(toml_prog_flow: tc.FlowControl) -> None:
-        """
-        Set up the folder structure for the subprojects.
-
-        :param toml_prog_flow: Flow control toml file
-        :type toml_prog_flow: tc.FlowControl
-        """
-        # Convert relative  paths to absolute paths
-        project_directory = os.path.abspath(toml_prog_flow.general.project_directory)
-        circuit_path = os.path.join(project_directory, toml_prog_flow.circuit.subdirectory)
-        capacitor_path = os.path.join(project_directory, toml_prog_flow.capacitor.subdirectory)
-        inductor_path = os.path.join(project_directory, toml_prog_flow.inductor.subdirectory)
-        transformer_path = os.path.join(project_directory, toml_prog_flow.transformer.subdirectory)
-        heat_sink_path = os.path.join(project_directory, toml_prog_flow.heat_sink.subdirectory)
-        heat_sink_disc_path = os.path.join(project_directory, HEAT_SINK_DISC_FOLDER)
-        pre_summary_path = os.path.join(project_directory, toml_prog_flow.pre_summary.subdirectory)
-        summary_path = os.path.join(project_directory, toml_prog_flow.summary.subdirectory)
-        data_generation_path = os.path.join(project_directory, toml_prog_flow.data_generation.subdirectory)
-
-        path_dict = {'circuit': circuit_path,
-                     'capacitor': capacitor_path,
-                     'inductor': inductor_path,
-                     'transformer': transformer_path,
-                     'heat_sink': heat_sink_path,
-                     'heat_sink_disc': heat_sink_disc_path,
-                     'pre_summary': pre_summary_path,
-                     'summary': summary_path,
-                     'data_generation': data_generation_path}
-
-        for _, value in path_dict.items():
-            os.makedirs(value, exist_ok=True)
-
-        json_filepath = os.path.join(project_directory, FILEPATH_CONFIG_JSON)
-
-        with open(json_filepath, 'w', encoding='utf8') as json_file:
-            json.dump(path_dict, json_file, ensure_ascii=False, indent=4)
-
-    @staticmethod
     def load_toml_file(toml_file: str) -> tuple[bool, dict[str, Any]]:
         """
         Load the toml configuration data to a dictionary.
@@ -254,35 +217,22 @@ class MainCtl:
         else:
             raise ValueError("Serious programming error in topology selection in verification. Please write an issue!")
 
-        # Check the number of entries within parameter topology files: 2 entries are expected (general and circuit)
-        issue_report = MainCtl._check_list_entries("configuration_data_files", "topology_files", 2,
-                                                   len(act_toml_prog_flow.configuration_data_files.topology_files))
-
         # Read the number of required components
         number_of_capacitors = topology_optimization.get_number_of_required_capacitors()
         number_of_inductors = topology_optimization.get_number_of_required_inductors()
         number_of_transformers = topology_optimization.get_number_of_required_transformers()
 
         # Check numbers of trials, calculation modes and configuration files
-        issue_report = issue_report + MainCtl._check_list_entries("capacitor", "calculation_modes", number_of_capacitors,
-                                                                  len(act_toml_prog_flow.capacitor.calculation_modes))
-        issue_report = issue_report + MainCtl._check_list_entries(
-            "configuration_data_files", "capacitor_configuration_files", number_of_capacitors,
-            len(act_toml_prog_flow.configuration_data_files.capacitor_configuration_files))
+        issue_report = MainCtl._check_list_entries("capacitor", "calculation_modes", number_of_capacitors,
+                                                   len(act_toml_prog_flow.capacitor.calculation_modes))
         issue_report = issue_report + MainCtl._check_list_entries(
             "inductor", "numbers_of_trials", number_of_inductors, len(act_toml_prog_flow.inductor.numbers_of_trials))
         issue_report = issue_report + MainCtl._check_list_entries(
             "inductor", "calculation_modes", number_of_inductors, len(act_toml_prog_flow.inductor.calculation_modes))
-        issue_report = issue_report + MainCtl._check_list_entries(
-            "configuration_data_files", "inductor_configuration_files",
-            number_of_inductors, len(act_toml_prog_flow.configuration_data_files.inductor_configuration_files))
         issue_report = issue_report + MainCtl._check_list_entries("transformer", "numbers_of_trials", number_of_transformers,
                                                                   len(act_toml_prog_flow.transformer.numbers_of_trials))
         issue_report = issue_report + MainCtl._check_list_entries("transformer", "calculation_modes", number_of_transformers,
                                                                   len(act_toml_prog_flow.transformer.calculation_modes))
-        issue_report = issue_report + MainCtl._check_list_entries(
-            "configuration_data_files", "transformer_configuration_files",
-            number_of_transformers, len(act_toml_prog_flow.configuration_data_files.transformer_configuration_files))
 
         if len(issue_report) != 0:
             is_consistent = False
@@ -961,14 +911,16 @@ class MainCtl:
         return result_enum
 
     @staticmethod
-    def get_initialization_queue_data(act_toml_prog_flow: tc.FlowControl) \
+    def get_initialization_queue_data(act_topology: CircuitOptimizationBase, act_toml_prog_flow: tc.FlowControl) \
         -> tuple[list[ConfigurationDataEntryDto], list[srv_ctl_dtos.MagneticDataEntryDto], list[ConfigurationDataEntryDto],
                  list[srv_ctl_dtos.MagneticDataEntryDto], list[ConfigurationDataEntryDto],
                  list[ConfigurationDataEntryDto], list[SummaryDataEntryDto]]:
         """Initialize the lists of configuration data.
 
-        :param act_toml_prog_flow: Flow control toml file (reference)
-        :type act_toml_prog_flow: tc.FlowControl
+        :param act_topology: Actual topology to get the number of components
+        :type  act_topology: CircuitOptimizationBase
+        :param act_toml_prog_flow: Flow control toml file
+        :type  act_toml_prog_flow: tc.FlowControl
         :return: List of configuration data for data transfer: circuit, transformer, inductor, heat sink and summary.
                  Each configuration gets one entry of the list.
         :rtype: list[ConfigurationDataEntryDto], list[srv_ctl_dtos.MagneticDataEntryDto], list[ConfigurationDataEntryDto],
@@ -985,7 +937,7 @@ class MainCtl:
         # Circuit
         circuit_list: list[srv_ctl_dtos.ConfigurationDataEntryDto] = []
         # Workaround until circuit_configuration_file is a list
-        configuration_file_list = [act_toml_prog_flow.configuration_data_files.topology_files[1]]
+        configuration_file_list = [CIRCUIT_CONF_TOML]
         # Add entries per configuration
         for entry in configuration_file_list:
             circuit_main_entry = srv_ctl_dtos.ConfigurationDataEntryDto(
@@ -1002,10 +954,9 @@ class MainCtl:
         inductor_main_list: list[srv_ctl_dtos.MagneticDataEntryDto] = []
         # Inductor list (entry per configuration)
         inductor_list: list[srv_ctl_dtos.ConfigurationDataEntryDto] = []
-        # Workaround until inductor_configuration_file is no list
-        configuration_file_list = act_toml_prog_flow.configuration_data_files.inductor_configuration_files
         # Add entries per configuration
-        for index, entry in enumerate(configuration_file_list):
+        for index in range(act_topology.get_number_of_required_inductors()):
+            entry = INDUCTOR_XCONF_TOML.replace(PLACE_HOLDER, str(index))
             # Update dependent magnetic lists (homepage 1)
             inductor_main_entry = srv_ctl_dtos.MagneticDataEntryDto(
                 magnetic_configuration_name=entry,
@@ -1029,10 +980,10 @@ class MainCtl:
         transformer_main_list: list[srv_ctl_dtos.MagneticDataEntryDto] = []
         # Transformer data (List per configuration)
         transformer_list: list[srv_ctl_dtos.ConfigurationDataEntryDto] = []
-        # Workaround until transformer_configuration_file is no list
-        configuration_file_list = act_toml_prog_flow.configuration_data_files.transformer_configuration_files
+
         # Add entries per configuration
-        for index, entry in enumerate(configuration_file_list):
+        for index in range(act_topology.get_number_of_required_transformers()):
+            entry = TRANSFORMER_XCONF_TOML.replace(PLACE_HOLDER, str(index))
             # Update dependent magnetic lists (homepage 1)
             transformer_main_entry = srv_ctl_dtos.MagneticDataEntryDto(
                 magnetic_configuration_name=entry,
@@ -1055,7 +1006,7 @@ class MainCtl:
         # Heat_sink data (List per configuration)
         heat_sink_list: list[srv_ctl_dtos.ConfigurationDataEntryDto] = []
         # Workaround until transformer_configuration_file is no list
-        configuration_file_list = [act_toml_prog_flow.configuration_data_files.heat_sink_configuration_file]
+        configuration_file_list = [HEAT_SINK_CONF_TOML]
         # Add entries per configuration
         for entry in configuration_file_list:
             heat_sink_data = srv_ctl_dtos.ConfigurationDataEntryDto(
@@ -1070,7 +1021,7 @@ class MainCtl:
         # Summary data (List per circuit configuration)
         summary_list: list[srv_ctl_dtos.SummaryDataEntryDto] = []
         # Workaround until summary_configuration_file is no list
-        configuration_file_list = [act_toml_prog_flow.configuration_data_files.topology_files[1]]
+        configuration_file_list = [CIRCUIT_CONF_TOML]
         # Add entries per configuration
         for entry in configuration_file_list:
             summary_data = srv_ctl_dtos.SummaryDataEntryDto(
@@ -1484,7 +1435,7 @@ class MainCtl:
 
         logger.debug("Read flow control file")
         # Load the configuration for program flow and check the validity
-        file_path = os.path.join(workspace_path, PROG_FLOW_FILE_NAME)
+        file_path = os.path.join(workspace_path, PROG_FLOW_CONF_TOML)
         is_flow_control_loaded, dict_prog_flow = self.load_toml_file(file_path)
 
         #  Check if toml-file is not loaded
@@ -1511,7 +1462,7 @@ class MainCtl:
             raise ValueError("Serious programming error in topology selection. Please write an issue!")
 
         config_path = os.path.join(workspace_path, toml_prog_flow.general.project_directory,
-                                   CONFIG_FILE_FOLDER, toml_prog_flow.general.configuration_name)
+                                   CONFIG_FILE_FOLDER)
 
         if not os.path.exists(config_path):
             os.makedirs(config_path)
@@ -1536,8 +1487,8 @@ class MainCtl:
         MainCtl.log_software_versions(os.path.join(os.path.abspath(toml_prog_flow.general.project_directory), "software_versions.txt"))
 
         # Extract topology dependent configuration files (0 = general file, 1 = circuit file)
-        general_configuration_file: str = toml_prog_flow.configuration_data_files.topology_files[0]
-        circuit_configuration_file: str = toml_prog_flow.configuration_data_files.topology_files[1]
+        general_configuration_file: str = GENERAL_CONF_TOML
+        circuit_configuration_file: str = CIRCUIT_CONF_TOML
 
         # --------------------------
         # Misc
@@ -1558,7 +1509,7 @@ class MainCtl:
         # -----------------------------
         # summary configuration
         # -----------------------------
-        summary_toml_file_path = os.path.join(config_path, toml_prog_flow.configuration_data_files.summary_configuration_file)
+        summary_toml_file_path = os.path.join(config_path, SUMMARY_CONF_TOML)
         is_summary_loaded, dict_summary_toml = self.load_toml_file(summary_toml_file_path)
 
         if not is_summary_loaded:
@@ -1575,18 +1526,20 @@ class MainCtl:
 
         project_directory = os.path.abspath(toml_prog_flow.general.project_directory)
 
-        for index, capacitor_entry in enumerate(toml_prog_flow.configuration_data_files.capacitor_configuration_files):
+        for index in range(self._circuit_optimization.get_number_of_required_capacitors()):
+            capacitor_toml_name = CAPACITOR_XCONF_TOML.replace(PLACE_HOLDER, str(index))
             capacitor_selection_study_data = StudyData(
-                study_name=f"cap_{index}_" + capacitor_entry.replace(".toml", ""),
+                study_name=f"cap_{index}_" + capacitor_toml_name.replace(".toml", ""),
                 optimization_directory=os.path.join(project_directory, toml_prog_flow.capacitor.subdirectory,
                                                     circuit_configuration_file.replace(".toml", "")),
                 calculation_mode=MainCtl._get_calculation_mode(toml_prog_flow.capacitor.calculation_modes[index]))
             # Add component to list
             self._capacitor_selection_configuration_list.append(CapacitorConfiguration(study_data=capacitor_selection_study_data))
 
-        for index, inductor_entry in enumerate(toml_prog_flow.configuration_data_files.inductor_configuration_files):
+        for index in range(self._circuit_optimization.get_number_of_required_inductors()):
+            inductor_toml_name = INDUCTOR_XCONF_TOML.replace(PLACE_HOLDER, str(index))
             inductor_study_data = StudyData(
-                study_name=f"ind_{index}_" + inductor_entry.replace(".toml", ""),
+                study_name=f"ind_{index}_" + inductor_toml_name.replace(".toml", ""),
                 optimization_directory=os.path.join(project_directory, toml_prog_flow.inductor.subdirectory,
                                                     circuit_configuration_file.replace(".toml", "")),
                 number_of_trials=toml_prog_flow.inductor.numbers_of_trials[index],
@@ -1595,9 +1548,10 @@ class MainCtl:
             self._inductor_study_configuration_list.append(InductorConfiguration(
                 study_data=inductor_study_data, simulation_calculation_mode=inductor_study_data.calculation_mode))
 
-        for index, transformer_entry in enumerate(toml_prog_flow.configuration_data_files.transformer_configuration_files):
+        for index in range(self._circuit_optimization.get_number_of_required_transformers()):
+            transformer_toml_name = TRANSFORMER_XCONF_TOML.replace(PLACE_HOLDER, str(index))
             transformer_study_data = StudyData(
-                study_name=f"it_f_{index}_" + transformer_entry.replace(".toml", ""),
+                study_name=f"it_f_{index}_" + transformer_toml_name.replace(".toml", ""),
                 optimization_directory=os.path.join(project_directory, toml_prog_flow.transformer.subdirectory,
                                                     circuit_configuration_file.replace(".toml", "")),
                 number_of_trials=toml_prog_flow.transformer.numbers_of_trials[index],
@@ -1607,9 +1561,9 @@ class MainCtl:
                 study_data=transformer_study_data, simulation_calculation_mode=transformer_study_data.calculation_mode))
 
         self._heat_sink_study_data = StudyData(
-            study_name=toml_prog_flow.configuration_data_files.heat_sink_configuration_file.replace(".toml", ""),
+            study_name=HEAT_SINK_CONF_TOML.replace(".toml", ""),
             optimization_directory=os.path.join(project_directory, toml_prog_flow.heat_sink.subdirectory,
-                                                toml_prog_flow.configuration_data_files.heat_sink_configuration_file.replace(".toml", "")),
+                                                HEAT_SINK_CONF_TOML.replace(".toml", "")),
             number_of_trials=toml_prog_flow.heat_sink.number_of_trials,
             calculation_mode=MainCtl._get_calculation_mode(toml_prog_flow.heat_sink.calculation_mode)
         )
@@ -1643,7 +1597,7 @@ class MainCtl:
 
         # Initialize the data for server monitoring (Only 1 circuit configuration is used, later to change)
         (self._circuit_list, self._inductor_main_list, self._inductor_list, self._transformer_main_list,
-         self._transformer_list, self._heat_sink_list, self._summary_list) = self.get_initialization_queue_data(toml_prog_flow)
+         self._transformer_list, self._heat_sink_list, self._summary_list) = self.get_initialization_queue_data(self._circuit_optimization, toml_prog_flow)
 
         # -----------------------------
         # General toml control
@@ -1726,9 +1680,9 @@ class MainCtl:
         logger.debug("Read capacitor 1 flow control")
 
         # Check if capacitor components are required
-        for index, configuration_file in enumerate(toml_prog_flow.configuration_data_files.capacitor_configuration_files):
+        for index in range(self._circuit_optimization.get_number_of_required_capacitors()):
             # Init capacitor configuration
-            file_path = os.path.join(config_path, configuration_file)
+            file_path = os.path.join(config_path, CAPACITOR_XCONF_TOML.replace(PLACE_HOLDER, str(index)))
             is_capacitor_loaded, dict_capacitor = self.load_toml_file(file_path)
 
             if not is_capacitor_loaded:
@@ -1744,7 +1698,7 @@ class MainCtl:
             is_consistent, issue_report = pcdt.CapacitorSelection.verify_optimization_parameter(toml_capacitor)
             if not is_consistent:
                 raise ValueError(f"Capacitor {index}: Optimization parameter in file ",
-                                 f"{configuration_file} are inconsistent!\n", issue_report)
+                                 f"{file_path} are inconsistent!\n", issue_report)
             # Overtake the data
             self._capacitor_selection_configuration_list[index].capacitor_toml_data = toml_capacitor
 
@@ -1786,9 +1740,9 @@ class MainCtl:
         inductor_sim_calculation_mode_list: list[CalcModeEnum] = []
 
         # Load required configuration files
-        for index, configuration_file in enumerate(toml_prog_flow.configuration_data_files.inductor_configuration_files):
+        for index in range(self._circuit_optimization.get_number_of_required_inductors()):
             # Load the inductor-configuration parameter
-            file_path = os.path.join(config_path, configuration_file)
+            file_path = os.path.join(config_path, INDUCTOR_XCONF_TOML.replace(PLACE_HOLDER, str(index)))
             is_inductor_loaded, inductor_dict = self.load_toml_file(file_path)
 
             if not is_inductor_loaded:
@@ -1804,7 +1758,7 @@ class MainCtl:
             is_consistent, issue_report = InductorOptimization.verify_optimization_parameter(toml_inductor)
             if not is_consistent:
                 raise ValueError(f"Inductor {index}: Optimization parameter in file ",
-                                 f"{configuration_file} are inconsistent!\n", issue_report)
+                                 f"{file_path} are inconsistent!\n", issue_report)
 
             # Overtake the data
             self._inductor_study_configuration_list[index].inductor_toml_data = toml_inductor
@@ -1870,9 +1824,9 @@ class MainCtl:
         transformer_sim_calculation_mode_list: list[CalcModeEnum] = []
 
         # Load required configuration files
-        for index, configuration_file in enumerate(toml_prog_flow.configuration_data_files.transformer_configuration_files):
+        for index in range(self._circuit_optimization.get_number_of_required_transformers()):
             # Load the transformer-configuration parameter
-            file_path = os.path.join(config_path, configuration_file)
+            file_path = os.path.join(config_path, TRANSFORMER_XCONF_TOML.replace(PLACE_HOLDER, str(index)))
             is_transformer_loaded, transformer_dict = self.load_toml_file(file_path)
 
             if not is_transformer_loaded:
@@ -1888,7 +1842,7 @@ class MainCtl:
             is_consistent, issue_report = TransformerOptimization.verify_optimization_parameter(toml_transformer)
             if not is_consistent:
                 raise ValueError(f"transformer {index}: Optimization parameter in file ",
-                                 f"{configuration_file} are inconsistent!\n", issue_report)
+                                 f"{file_path} are inconsistent!\n", issue_report)
 
             # Overtake the data
             self._transformer_study_configuration_list[index].transformer_toml_data = toml_transformer
@@ -1951,7 +1905,7 @@ class MainCtl:
         # Heat sink flow control
         # -----------------------------
 
-        heat_sink_toml_filepath = toml_prog_flow.configuration_data_files.heat_sink_configuration_file
+        heat_sink_toml_filepath = HEAT_SINK_CONF_TOML
         file_path = os.path.join(config_path, heat_sink_toml_filepath)
         is_heat_sink_loaded, heat_sink_dict = self.load_toml_file(file_path)
 
@@ -1966,7 +1920,7 @@ class MainCtl:
         is_consistent, issue_report = pcdt.HeatSinkOptimization.verify_optimization_parameter(toml_heat_sink)
         if not is_consistent:
             raise ValueError("Heat sink optimization parameter in file "
-                             f"{toml_prog_flow.configuration_data_files.heat_sink_configuration_file} are inconsistent!\n", issue_report)
+                             f"{HEAT_SINK_CONF_TOML} are inconsistent!\n", issue_report)
 
         # Check, if heat sink optimization is to skip
         if self._heat_sink_study_data.calculation_mode == CalcModeEnum.skip_mode:

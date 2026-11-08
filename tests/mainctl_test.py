@@ -32,6 +32,9 @@ from pcdt.server_ctl_dtos import RunTimeMeasurement as RunTime
 from pcdt.mainctl import MainCtl
 import pcdt.datasets_dtos as d_dtos
 from pcdt.circuit_enums import CalcModeEnum
+from pcdt.constant_path import (CIRCUIT_CONF_TOML, INDUCTOR_XCONF_TOML, TRANSFORMER_XCONF_TOML,
+                                HEAT_SINK_CONF_TOML, PLACE_HOLDER)
+
 
 # Enable logger
 pytestlogger = logging.getLogger(__name__)
@@ -58,7 +61,6 @@ class TestCase(Enum):
 # FlowControl base parameter set
 test_FlowControl_base: tc.FlowControl = tc.FlowControl(
     general=tc.General(project_directory="Hallo",
-                       configuration_name="Test_Config",
                        topology="dab"),
     breakpoints=tc.Breakpoints(circuit_pareto="no",
                                circuit_filtered="no",
@@ -95,14 +97,6 @@ test_FlowControl_base: tc.FlowControl = tc.FlowControl(
     data_generation=tc.DataGeneration(calculation_mode_visualization="new",
                                       calculation_mode_manufacture="new",
                                       subdirectory="dummy"),
-
-    configuration_data_files=tc.ConfigurationDataFiles(
-        topology_files=["dummy1", "dummy2"],
-        capacitor_configuration_files=["dummy1", "dummy2"],
-        inductor_configuration_files=["dummy", "dummy2"],
-        transformer_configuration_files=["dummy", "dummy2"],
-        heat_sink_configuration_file="dummy",
-        summary_configuration_file="dummy")
 )
 
 #########################################################################################################
@@ -1524,63 +1518,40 @@ def test__get_page_main_data(test_index: int) -> None:
 
     # Initialize test_parameter 1 and expected results
     # Circuit
-    test_parameter_1.configuration_data_files.topology_files[1] = string_test_values[test_index % str_test_len]
     test_parameter_1.circuit.number_of_trials = int_test_values[test_index % int_test_len]
     exp_result_circuit: list[srv_ctl_dtos.ConfigurationDataEntryDto] = [srv_ctl_dtos.ConfigurationDataEntryDto(
-        configuration_name=string_test_values[test_index % str_test_len],
+        configuration_name=CIRCUIT_CONF_TOML,
         number_of_trials=int_test_values[test_index % int_test_len],
         progress_data=copy.deepcopy(start_progress_data))]
 
     # Inductor
-    test_parameter_1.configuration_data_files.inductor_configuration_files[0] = string_test_values[(test_index + 1) % str_test_len]
     test_parameter_1.inductor.numbers_of_trials[0] = int_test_values[(test_index + 1) % int_test_len]
     exp_result_inductor_main: list[srv_ctl_dtos.MagneticDataEntryDto] = [srv_ctl_dtos.MagneticDataEntryDto(
-        magnetic_configuration_name=string_test_values[(test_index + 1) % str_test_len],
+        magnetic_configuration_name=INDUCTOR_XCONF_TOML.replace(PLACE_HOLDER, "0"),
         number_calculations=0, number_performed_calculations=0,
         progress_data=copy.deepcopy(start_progress_data))]
-    test_parameter_1.configuration_data_files.inductor_configuration_files[1] = string_test_values[(test_index + 2) % str_test_len]
     test_parameter_1.inductor.numbers_of_trials[1] = int_test_values[(test_index + 2) % int_test_len]
-    exp_result_inductor_main.append(srv_ctl_dtos.MagneticDataEntryDto(
-        magnetic_configuration_name=string_test_values[(test_index + 2) % str_test_len],
-        number_calculations=0, number_performed_calculations=0,
-        progress_data=copy.deepcopy(start_progress_data)))
     # Inductor list (entry per configuration)
     exp_result_inductor: list[srv_ctl_dtos.ConfigurationDataEntryDto] = [srv_ctl_dtos.ConfigurationDataEntryDto(
-        configuration_name=string_test_values[(test_index + 1) % str_test_len],
+        configuration_name=INDUCTOR_XCONF_TOML.replace(PLACE_HOLDER, "0"),
         number_of_trials=int_test_values[(test_index + 1) % int_test_len],
         progress_data=copy.deepcopy(start_progress_data))]
-    exp_result_inductor.append(srv_ctl_dtos.ConfigurationDataEntryDto(
-        configuration_name=string_test_values[(test_index + 2) % str_test_len],
-        number_of_trials=int_test_values[(test_index + 2) % int_test_len],
-        progress_data=copy.deepcopy(start_progress_data)))
     # Transformer
-    test_parameter_1.configuration_data_files.transformer_configuration_files[0] = string_test_values[(test_index + 2) % str_test_len]
     test_parameter_1.transformer.numbers_of_trials[0] = int_test_values[(test_index + 2) % int_test_len]
     exp_result_transformer_main: list[srv_ctl_dtos.MagneticDataEntryDto] = [srv_ctl_dtos.MagneticDataEntryDto(
-        magnetic_configuration_name=string_test_values[(test_index + 2) % str_test_len],
+        magnetic_configuration_name=TRANSFORMER_XCONF_TOML.replace(PLACE_HOLDER, "0"),
         number_calculations=0, number_performed_calculations=0,
         progress_data=copy.deepcopy(start_progress_data))]
-    test_parameter_1.configuration_data_files.transformer_configuration_files[1] = string_test_values[(test_index + 3) % str_test_len]
     test_parameter_1.transformer.numbers_of_trials[1] = int_test_values[(test_index + 3) % int_test_len]
-    exp_result_transformer_main.append(srv_ctl_dtos.MagneticDataEntryDto(
-        magnetic_configuration_name=string_test_values[(test_index + 3) % str_test_len],
-        number_calculations=0, number_performed_calculations=0,
-        progress_data=copy.deepcopy(start_progress_data)))
-    # Transformer data (List per configuration)
+    # # Transformer data (List per configuration)
     exp_result_transformer: list[srv_ctl_dtos.ConfigurationDataEntryDto] = [srv_ctl_dtos.ConfigurationDataEntryDto(
-        configuration_name=string_test_values[(test_index + 2) % str_test_len],
+        configuration_name=TRANSFORMER_XCONF_TOML.replace(PLACE_HOLDER, "0"),
         number_of_trials=int_test_values[(test_index + 2) % int_test_len],
         progress_data=copy.deepcopy(start_progress_data))]
-    exp_result_transformer.append(srv_ctl_dtos.ConfigurationDataEntryDto(
-        configuration_name=string_test_values[(test_index + 3) % str_test_len],
-        number_of_trials=int_test_values[(test_index + 3) % int_test_len],
-        progress_data=copy.deepcopy(start_progress_data)))
-
     # Heat_sink data (List per configuration)
-    test_parameter_1.configuration_data_files.heat_sink_configuration_file = string_test_values[(test_index + 3) % str_test_len]
     test_parameter_1.heat_sink.number_of_trials = int_test_values[(test_index + 3) % int_test_len]
     exp_result_heat_sink: list[srv_ctl_dtos.ConfigurationDataEntryDto] = [srv_ctl_dtos.ConfigurationDataEntryDto(
-        configuration_name=string_test_values[(test_index + 3) % str_test_len],
+        configuration_name=HEAT_SINK_CONF_TOML,
         number_of_trials=int_test_values[(test_index + 3) % int_test_len],
         progress_data=copy.deepcopy(start_progress_data))]
 
@@ -1638,7 +1609,8 @@ def test__get_page_main_data(test_index: int) -> None:
     test_pcdt._summary_processing = SummaryProcessing()
     # Perform the test of get_initialization_queue_data
     (test_pcdt._circuit_list, test_pcdt._inductor_main_list, test_pcdt._inductor_list, test_pcdt._transformer_main_list,
-     test_pcdt._transformer_list, test_pcdt._heat_sink_list, test_pcdt._summary_list) = test_pcdt.get_initialization_queue_data(test_parameter_1)
+     test_pcdt._transformer_list, test_pcdt._heat_sink_list, test_pcdt._summary_list) \
+        = test_pcdt.get_initialization_queue_data(test_pcdt._circuit_optimization, test_parameter_1)
 
     # Set circuit- and heat sink optimization progress data and summary progress data
     test_pcdt._circuit_optimization._progress_data = progress_data_circuit
