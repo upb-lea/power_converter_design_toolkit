@@ -417,7 +417,8 @@ class TransformerOptimization:
         # Filter reluctance model results
         df_transformer = fmt.optimization.StackedTransformerOptimization.ReluctanceModel.study_to_df(act_sto_config)
         df_transformer_pareto = fmt.optimization.StackedTransformerOptimization.ReluctanceModel.filter_loss_list_df(
-            df_transformer, factor_min_dc_losses=factor_dc_losses_min_max_list[0], factor_max_dc_losses=factor_dc_losses_min_max_list[1])
+            df_transformer, factor_min_dc_losses=factor_dc_losses_min_max_list[0], factor_max_dc_losses=factor_dc_losses_min_max_list[1],
+            filter_saturation=True)
         if debug.general.is_debug:
             # reduce dataset to the given number from the debug configuration
             df_transformer_pareto = df_transformer_pareto.iloc[:debug.transformer.number_reluctance_working_point_max]
@@ -614,7 +615,7 @@ class TransformerOptimization:
         # Filter study. Use same filter as in the reluctance model
         df = fmt.optimization.StackedTransformerOptimization.ReluctanceModel.study_to_df(act_sto_config)
         df_transformer_pareto = fmt.optimization.StackedTransformerOptimization.ReluctanceModel.filter_loss_list_df(
-            df, factor_min_dc_losses=factor_dc_losses_min_max_list[0], factor_max_dc_losses=factor_dc_losses_min_max_list[1])
+            df, factor_min_dc_losses=factor_dc_losses_min_max_list[0], factor_max_dc_losses=factor_dc_losses_min_max_list[1], filter_saturation=True)
         if debug.general.is_debug:
             # reduce dataset to the given number from the debug configuration
             df_transformer_pareto = df_transformer_pareto.iloc[:debug.transformer.number_fem_working_point_max]
