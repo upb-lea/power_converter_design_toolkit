@@ -48,6 +48,7 @@ class CircuitSampling:
 class CircuitFilter:
     """Filter the results."""
 
+    filter_algorithm: str
     number_filtered_designs: int
     difference_percentage: float
 

@@ -362,6 +362,10 @@ class InductorOptimization:
 
         logger.info(f"Full-operating point simulation list with {len(inductor_id_list_pareto)} designs: {inductor_id_list_pareto}")
 
+        new_circuit_dto_directory = os.path.join(act_io_config.inductor_optimization_directory, CIRCUIT_INDUCTOR_RELUCTANCE_LOSSES_FOLDER)
+        if not os.path.exists(new_circuit_dto_directory):
+            os.makedirs(new_circuit_dto_directory)
+
         # simulate all operating points
         for inductor_id in tqdm.tqdm(inductor_id_list_pareto):
             df_inductor_id = df_inductor_pareto[df_inductor_pareto["number"] == float(inductor_id)]
@@ -373,10 +377,6 @@ class InductorOptimization:
             combined_loss_array = np.full_like(inductor_requirements.time_array[..., 0], np.nan)
             core_loss_array = np.full_like(inductor_requirements.time_array[..., 0], np.nan)
             winding_loss_array = np.full_like(inductor_requirements.time_array[..., 0], np.nan)
-
-            new_circuit_dto_directory = os.path.join(act_io_config.inductor_optimization_directory, CIRCUIT_INDUCTOR_RELUCTANCE_LOSSES_FOLDER)
-            if not os.path.exists(new_circuit_dto_directory):
-                os.makedirs(new_circuit_dto_directory)
 
             if os.path.exists(os.path.join(new_circuit_dto_directory, f"{inductor_id}.pkl")):
                 logger.info(f"All-operating point simulation of circuit {circuit_id} with inductor {inductor_id} already exists. Skip.")
@@ -543,10 +543,13 @@ class InductorOptimization:
 
         logger.info(f"Full-operating point simulation list with {len(inductor_id_list_pareto)} designs: {inductor_id_list_pareto}")
 
+        new_circuit_dto_directory = os.path.join(act_io_config.inductor_optimization_directory, CIRCUIT_INDUCTOR_FEM_LOSSES_FOLDER)
+        if not os.path.exists(new_circuit_dto_directory):
+            os.makedirs(new_circuit_dto_directory)
+
         # simulate all operating points
         for inductor_id in tqdm.tqdm(inductor_id_list_pareto):
-            new_circuit_dto_directory = os.path.join(act_io_config.inductor_optimization_directory,
-                                                     CIRCUIT_INDUCTOR_FEM_LOSSES_FOLDER)
+                                            
             try:
                 # generate a new df with only a single entry (with the geometry data)
                 df_geometry_re_simulation_number = df_inductor_pareto[df_inductor_pareto["number"] == float(inductor_id)]
@@ -557,9 +560,6 @@ class InductorOptimization:
                 combined_loss_array = np.full_like(inductor_requirements.time_array[..., 0], np.nan)
                 winding_loss_array = np.full_like(inductor_requirements.time_array[..., 0], np.nan)
                 core_loss_array = np.full_like(inductor_requirements.time_array[..., 0], np.nan)
-
-                if not os.path.exists(new_circuit_dto_directory):
-                    os.makedirs(new_circuit_dto_directory)
 
                 # check if simulation already exists or has already failed in the past
                 if (os.path.exists(os.path.join(new_circuit_dto_directory, f"{inductor_id}.pkl")) \

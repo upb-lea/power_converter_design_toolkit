@@ -19,7 +19,7 @@
     t_dead_2_max = 500e-9
 
 [filter_distance]
-    filter_algorithm = "sort_frequency"
+    filter_algorithm = "sort_frequency"  # "sort_frequency" or "sort_lowest"
     number_filtered_designs = 2
     difference_percentage = 5
 

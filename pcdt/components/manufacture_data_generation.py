@@ -13,7 +13,7 @@ import femmt as fmt
 # own libraries
 import pcdt.toml_checker as tc
 from pcdt import CapacitorConfiguration, InductorConfiguration, TransformerConfiguration, StudyData, CircuitOptimizationBase
-from pcdt.constant_path import (DF_SUMMARY_FINAL_FILTERED_MEAN_LOSS, FILTERED_RESULTS_PATH, SUMMARY_COMBINATION_FOLDER,
+from pcdt.constant_path import (DF_SUMMARY_FINAL_FILTERED_WEIGHTED_EFFICIENCY, FILTERED_RESULTS_PATH, SUMMARY_COMBINATION_FOLDER,
                                 CIRCUIT_INDUCTOR_FEM_LOSSES_FOLDER, CIRCUIT_TRANSFORMER_FEM_LOSSES_FOLDER, CAPACITOR_RESULTS,
                                 DATA_GENERATION_WAVEFORM_FOLDER)
 from pcdt.constants import FACTOR_M_TO_MM
@@ -689,7 +689,7 @@ class ManufactureDataGeneration:
         :type data_generation_data: StudyData
         """
         # read summary parameters
-        summary_filepath = os.path.join(summary_data.optimization_directory, DF_SUMMARY_FINAL_FILTERED_MEAN_LOSS)
+        summary_filepath = os.path.join(summary_data.optimization_directory, DF_SUMMARY_FINAL_FILTERED_WEIGHTED_EFFICIENCY)
 
         df_summary = pd.read_csv(summary_filepath)
 
