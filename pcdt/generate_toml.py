@@ -164,7 +164,8 @@ class GenerateDefaultConfig:
         GenerateDefaultConfig._set_up_folder_structure(folder_dict)
 
     @staticmethod
-    def generate_component_toml_files(topology: CircuitOptimizationBase, config_directory: str) -> None:
+    def generate_component_toml_files(topology: CircuitOptimizationBase, config_directory: str,
+                                      is_to_overwrite: bool = True) -> tuple[bool, str]:
         """
         Check for missing toml default files and generate them in case of missing.
 
@@ -172,8 +173,16 @@ class GenerateDefaultConfig:
         :type  topology: CircuitOptimizationBase
         :param config_directory: Storage location of the configuration file
         :type  config_directory: str
+        :param is_to_overwrite: Indicates, if the file is to overwrites if it exists
+        :type  is_to_overwrite: bool
+        :return: Boolean variable indicates, if minimum one file was overwritten and correspondent report.
+        :rtype:  tuple[bool, str]
         """
         # Variable declaration and initialization
+        # Generator report
+        report: str = ""
+        # Generation flag
+        is_generated: bool = False
         # Path for templates
         template_path = str(os.path.join(PCDT_ROOT, TEMPLATE_FOLDER, TOMPL_TEMPLATE_FOLDER_NAME))
 
@@ -184,15 +193,27 @@ class GenerateDefaultConfig:
 
         # Generate misc default file
         config_file_path = str(os.path.join(config_directory, MISC_CONF_TOML))
-        GenerateDefaultConfig.generate_default_misc_toml(config_file_path, topology)
+        if is_to_overwrite or not os.path.isfile(config_file_path):
+            GenerateDefaultConfig.generate_default_misc_toml(config_file_path, topology)
+            # Add item to report and set flag
+            report = f"File '{config_file_path}' did not exist and has been generated.\n"
+            is_generated = True
 
         # Generate circuit default file
         config_file_path = str(os.path.join(config_directory, GENERAL_CONF_TOML))
-        GenerateDefaultConfig.generate_default_general_toml(config_file_path, topology)
+        if is_to_overwrite or not os.path.isfile(config_file_path):
+            GenerateDefaultConfig.generate_default_general_toml(config_file_path, topology)
+            # Add item to report and set flag
+            report = report + f"File '{config_file_path}' did not exist and has been generated.\n"
+            is_generated = True
 
         # Generate general default file
         config_file_path = str(os.path.join(config_directory, CIRCUIT_CONF_TOML))
-        GenerateDefaultConfig.generate_default_circuit_toml(config_file_path, topology)
+        if is_to_overwrite or not os.path.isfile(config_file_path):
+            GenerateDefaultConfig.generate_default_circuit_toml(config_file_path, topology)
+            # Add item to report and set flag
+            report = report + f"File '{config_file_path}' did not exist and has been generated.\n"
+            is_generated = True
 
         # Generate capacitor default file(s)
         # Prepare template
@@ -202,7 +223,11 @@ class GenerateDefaultConfig:
         if is_valid:
             for index in range(number_of_capacitors):
                 config_file_path = str(os.path.join(config_directory, CAPACITOR_XCONF_TOML.replace(PLACE_HOLDER, str(index))))
-                GenerateDefaultConfig.generate_default_capacitor_toml(config_file_path, index, topology.get_topology_type())
+                if is_to_overwrite or not os.path.isfile(config_file_path):
+                    GenerateDefaultConfig.generate_default_capacitor_toml(config_file_path, index, topology.get_topology_type())
+                    # Add item to report and set flag
+                    report = report + f"File '{config_file_path}' did not exist and has been generated.\n"
+                    is_generated = True
 
         # Generate inductor default file(s)
         # Prepare template
@@ -212,7 +237,11 @@ class GenerateDefaultConfig:
         if is_valid:
             for index in range(number_of_inductors):
                 config_file_path = str(os.path.join(config_directory, INDUCTOR_XCONF_TOML.replace(PLACE_HOLDER, str(index))))
-                GenerateDefaultConfig.generate_default_inductor_toml(config_file_path, index, topology.get_topology_type())
+                if is_to_overwrite or not os.path.isfile(config_file_path):
+                    GenerateDefaultConfig.generate_default_inductor_toml(config_file_path, index, topology.get_topology_type())
+                    # Add item to report and set flag
+                    report = report + f"File '{config_file_path}' did not exist and has been generated.\n"
+                    is_generated = True
 
         # Generate transformer default file(s)
         # Prepare template
@@ -222,15 +251,29 @@ class GenerateDefaultConfig:
         if is_valid:
             for index in range(number_of_transformers):
                 config_file_path = str(os.path.join(config_directory, TRANSFORMER_XCONF_TOML.replace(PLACE_HOLDER, str(index))))
-                GenerateDefaultConfig.generate_default_transformer_toml(config_file_path, index, topology.get_topology_type())
+                if is_to_overwrite or not os.path.isfile(config_file_path):
+                    GenerateDefaultConfig.generate_default_transformer_toml(config_file_path, index, topology.get_topology_type())
+                    # Add item to report and set flag
+                    report = report + f"File '{config_file_path}' did not exist and has been generated.\n"
+                    is_generated = True
 
         # Generate heat sink default file
         config_file_path = str(os.path.join(config_directory, HEAT_SINK_CONF_TOML))
-        GenerateDefaultConfig.generate_default_heat_sink_toml(config_file_path)
+        if is_to_overwrite or not os.path.isfile(config_file_path):
+            GenerateDefaultConfig.generate_default_heat_sink_toml(config_file_path)
+            # Add item to report and set flag
+            report = report + f"File '{config_file_path}' did not exist and has been generated.\n"
+            is_generated = True
 
         # Generate summary default file
         config_file_path = str(os.path.join(config_directory, SUMMARY_CONF_TOML))
-        GenerateDefaultConfig.generate_default_summary_toml(config_file_path)
+        if is_to_overwrite or not os.path.isfile(config_file_path):
+            GenerateDefaultConfig.generate_default_summary_toml(config_file_path)
+            # Add item to report and set flag
+            report = report + f"File '{config_file_path}' did not exist and has been generated.\n"
+            is_generated = True
+
+        return is_generated, report
 
     @staticmethod
     def generate_default_misc_toml(misc_file_path: str, topology: CircuitOptimizationBase) -> None:
