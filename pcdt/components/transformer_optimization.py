@@ -434,6 +434,10 @@ class TransformerOptimization:
 
         logger.info(f"Full-operating point simulation list with {len(transformer_id_list_pareto)} designs: {transformer_id_list_pareto}")
 
+        new_circuit_dto_directory = os.path.join(act_sto_config.stacked_transformer_optimization_directory, CIRCUIT_TRANSFORMER_RELUCTANCE_LOSSES_FOLDER)
+        if not os.path.exists(new_circuit_dto_directory):
+            os.makedirs(new_circuit_dto_directory)
+
         for transformer_id in tqdm.tqdm(transformer_id_list_pareto):
             df_transformer_id = df_transformer_pareto[df_transformer_pareto["number"] == transformer_id]
 
@@ -441,11 +445,6 @@ class TransformerOptimization:
             winding_1_loss_array = np.full_like(transformer_requirements.time_array[..., 0], np.nan)
             winding_2_loss_array = np.full_like(transformer_requirements.time_array[..., 0], np.nan)
             core_loss_array = np.full_like(transformer_requirements.time_array[..., 0], np.nan)
-
-            new_circuit_dto_directory = os.path.join(act_sto_config.stacked_transformer_optimization_directory,
-                                                     CIRCUIT_TRANSFORMER_RELUCTANCE_LOSSES_FOLDER)
-            if not os.path.exists(new_circuit_dto_directory):
-                os.makedirs(new_circuit_dto_directory)
 
             if os.path.exists(os.path.join(new_circuit_dto_directory, f"{transformer_id}.pkl")):
                 logger.info(f"All-operating point simulation of circuit {circuit_id} with transformer {transformer_id} already exists. Skip.")
@@ -628,19 +627,19 @@ class TransformerOptimization:
 
         logger.info(f"Full-operating point simulation list with {len(transformer_id_list_pareto)} designs: {transformer_id_list_pareto}")
 
+        new_circuit_dto_directory = os.path.join(act_sto_config.stacked_transformer_optimization_directory,
+                                                 CIRCUIT_TRANSFORMER_FEM_LOSSES_FOLDER)
+
+        if not os.path.exists(new_circuit_dto_directory):
+            os.makedirs(new_circuit_dto_directory)
+
         for transformer_id in tqdm.tqdm(transformer_id_list_pareto):
             df_geometry_re_simulation_number = df_transformer_pareto[df_transformer_pareto["number"] == transformer_id]
-
-            new_circuit_dto_directory = os.path.join(act_sto_config.stacked_transformer_optimization_directory,
-                                                     CIRCUIT_TRANSFORMER_FEM_LOSSES_FOLDER)
 
             result_array = np.full_like(transformer_requirements.time_array[..., 0], np.nan)
             winding_1_loss_array = np.full_like(transformer_requirements.time_array[..., 0], np.nan)
             winding_2_loss_array = np.full_like(transformer_requirements.time_array[..., 0], np.nan)
             core_loss_array = np.full_like(transformer_requirements.time_array[..., 0], np.nan)
-
-            if not os.path.exists(new_circuit_dto_directory):
-                os.makedirs(new_circuit_dto_directory)
 
             # check if simulation already exists or has already failed in the past
             if (os.path.exists(os.path.join(new_circuit_dto_directory, f"{transformer_id}.pkl")) \
