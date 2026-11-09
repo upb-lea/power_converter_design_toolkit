@@ -1441,9 +1441,9 @@ class MainCtl:
         #  Check if toml-file is not loaded
         if not is_flow_control_loaded:
             GDefConf.generate_default_files(file_path)
-            raise ValueError(f"Program flow toml file '{file_path}' does not exist or is not consistent!\n"
+            raise ValueError(f"Program flow toml file '{file_path}' does not exist or is corrupt!\n"
                              "A default program flow toml file and corresponding default configuration files are generated.\n"
-                             "In case of inconsistency a backup of inconsistent file will be created.\n"
+                             "If the file exists it is backed up.\n"
                              "All generated default files needs to be updated before using.")
 
         # Verify toml data and transfer to class
@@ -1467,11 +1467,11 @@ class MainCtl:
         if not os.path.exists(config_path):
             os.makedirs(config_path)
 
-            # Generate missing component default files
-            GDefConf.generate_component_toml_files(self._circuit_optimization, config_path)
-            raise ValueError(f"Configuration path  {config_path} does not exist.\n"
-                             f"The path {config_path} and default configuration files are generated.\n"
-                             "All generated default files needs to be updated before using.")
+        # Generate missing component default files
+        is_generated, report = GDefConf.generate_component_toml_files(self._circuit_optimization, config_path, False)
+        # If minimum 1 file is generated raise value error
+        if is_generated:
+            raise ValueError(report)
 
         # Verify program flow configuration
         is_consistent, issue_report = self._verify_program_flow_parameter(toml_prog_flow)
@@ -1500,8 +1500,8 @@ class MainCtl:
 
         if not is_misc_loaded:
             GDefConf.generate_default_misc_toml(file_path, self._circuit_optimization)
-            raise ValueError(f"Misc toml configuration file: {file_path} does not exist\n"
-                             f"A default file is generated and needs to be updated!")
+            raise ValueError(f"Misc toml configuration file: {file_path} is corrupt.\n"
+                             f"A default file is generated and needs to be updated and the corrupt file was being backed up!")
 
         # Verify toml data and transfer to class
         toml_misc = tc.TomlMisc(**dict_misc)
@@ -1514,8 +1514,8 @@ class MainCtl:
 
         if not is_summary_loaded:
             GDefConf.generate_default_summary_toml(summary_toml_file_path)
-            raise ValueError(f"General toml configuration file: {summary_toml_file_path} does not exist\n"
-                             f"A default file is generated and needs to be updated!")
+            raise ValueError(f"General toml configuration file: {summary_toml_file_path} is corrupt.\n"
+                             f"A default file is generated and needs to be updated and the old file was being backed up!!")
 
         # Verify toml data and transfer to class
         toml_summary = tc.TomlSummary(**dict_summary_toml)
@@ -1610,8 +1610,8 @@ class MainCtl:
         if not is_general_toml_loaded:
 
             GDefConf.generate_default_general_toml(file_path, self._circuit_optimization)
-            raise ValueError(f"General toml configuration file: {file_path} does not exist.\n"
-                             f"A default file is generated and needs to be updated!")
+            raise ValueError(f"General toml configuration file: {file_path} is corrupt.\n"
+                             f"A default file is generated and needs to be updated and the corrupt file was being backed up!")
 
         is_general_toml_consistent, general_issue_report = self._circuit_optimization.load_and_verify_general_parameters(dict_general_toml)
 
@@ -1639,7 +1639,7 @@ class MainCtl:
 
         if not is_circuit_loaded:
             GDefConf.generate_default_circuit_toml(file_path, self._circuit_optimization)
-            raise ValueError(f"Circuit configuration file: {file_path} does not exist.\n"
+            raise ValueError(f"Circuit configuration file: {file_path} is corrupt.\n"
                              f"A default file is generated and needs to be updated!")
 
         is_consistent, issue_report = self._circuit_optimization.load_and_verify_circuit_parameters(dict_circuit)
@@ -1687,9 +1687,9 @@ class MainCtl:
 
             if not is_capacitor_loaded:
                 GDefConf.generate_default_capacitor_toml(file_path, index, self._circuit_optimization.get_topology_type())
-                raise ValueError(f"General toml configuration file: {file_path} does not exist\n"
+                raise ValueError(f"General toml configuration file: {file_path} is corrupt.\n"
                                  f"for the required capacitor {index}\n"
-                                 f"A default file is generated and needs to be updated!")
+                                 f"A default file is generated and needs to be updated and the corrupt file was being backed up!")
 
             # Verify toml data and transfer to class
             toml_capacitor = tc.TomlCapacitorSelection(**dict_capacitor)
@@ -1747,9 +1747,9 @@ class MainCtl:
 
             if not is_inductor_loaded:
                 GDefConf.generate_default_inductor_toml(file_path, index, self._circuit_optimization.get_topology_type())
-                raise ValueError(f"General toml configuration file: {file_path} does not exist\n"
+                raise ValueError(f"General toml configuration file: {file_path} is corrupt.\n"
                                  f"for the required inductor {index}\n"
-                                 f"A default file is generated and needs to be updated!")
+                                 f"A default file is generated and needs to be updated and the corrupt file was being backed up!")
 
             # Verify toml data and transfer to class
             toml_inductor = pcdt.TomlInductor(**inductor_dict)
@@ -1831,9 +1831,9 @@ class MainCtl:
 
             if not is_transformer_loaded:
                 GDefConf.generate_default_transformer_toml(file_path, index, self._circuit_optimization.get_topology_type())
-                raise ValueError(f"General toml configuration file: {file_path} does not exist\n"
+                raise ValueError(f"General toml configuration file: {file_path} is corrupt.\n"
                                  f"for the required transformer {index}\n"
-                                 f"A default file is generated and needs to be updated!")
+                                 f"A default file is generated and needs to be updated and the corrupt file was being backed up!")
 
             # Verify toml data and transfer to class
             toml_transformer = pcdt.TomlTransformer(**transformer_dict)
@@ -1911,8 +1911,8 @@ class MainCtl:
 
         if not is_heat_sink_loaded:
             GDefConf.generate_default_heat_sink_toml(file_path)
-            raise ValueError(f"Heat sink toml configuration file: {file_path} does not exist.\n"
-                             f"A default file is generated and needs to be updated!")
+            raise ValueError(f"Heat sink toml configuration file: {file_path} is corrupt.\n"
+                             f"A default file is generated and needs to be updated and the corrupt file was being backed up!")
 
         toml_heat_sink = pcdt.TomlHeatSink(**heat_sink_dict)
 
