@@ -376,6 +376,7 @@ class InductorOptimization:
             # Fill dimensional matrix and remove last dimension (which is the exact time/current value)
             combined_loss_array = np.full_like(inductor_requirements.time_array[..., 0], np.nan)
             core_loss_array = np.full_like(inductor_requirements.time_array[..., 0], np.nan)
+            b_max_array = np.full_like(inductor_requirements.time_array[..., 0], np.nan)
             winding_loss_array = np.full_like(inductor_requirements.time_array[..., 0], np.nan)
 
             if os.path.exists(os.path.join(new_circuit_dto_directory, f"{inductor_id}.pkl")):
@@ -393,11 +394,13 @@ class InductorOptimization:
                     logger.debug(f"   * Inductor study: {act_io_config.inductor_study_name}")
                     logger.debug(f"   * Inductor ID: {inductor_id}")
 
-                    inductor_volume, combined_losses, area_to_heat_sink, winding_loss, core_loss = fmt.InductorOptimization.ReluctanceModel.full_simulation(
+                    inductor_volume, combined_losses, area_to_heat_sink, winding_loss, core_loss, b_max = (
+                        fmt.InductorOptimization.ReluctanceModel.full_simulation(
                         df_inductor_id, current_waveform=current_waveform,
-                        inductor_config_filepath=config_filepath)
+                        inductor_config_filepath=config_filepath))
                     combined_loss_array[vec_vvp] = combined_losses
                     core_loss_array[vec_vvp] = core_loss
+                    b_max_array[vec_vvp] = b_max
                     winding_loss_array[vec_vvp] = winding_loss
 
                 # Calculate thermal resistance
@@ -408,6 +411,7 @@ class InductorOptimization:
                     loss_array=combined_loss_array,
                     winding_loss_array=winding_loss_array,
                     core_loss_array=core_loss_array,
+                    b_max_array=b_max_array,
                     volume=inductor_volume,
                     area_to_heat_sink=area_to_heat_sink,
                     r_th_ind_heat_sink=r_th_ind_heat_sink,
