@@ -617,6 +617,94 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
         return pareto_html
 
     @staticmethod
+    def _objective_pareto(trial: optuna.Trial, dab_config: circuit_dtos.CircuitParetoDabDesign, fixed_parameters: d_dtos.FixedParameters) -> tuple:
+        """
+        Objective function to optimize as a pareto plane with maximizing weighted efficiency and minimizing weighted bridge RMS current.
+
+        :param dab_config: DAB optimization configuration file
+        :type dab_config: circuit_dtos.CircuitParetoDabDesign
+        :param trial: optuna trial
+        :type trial: optuna.Trial
+        :param fixed_parameters: fixed parameters (loaded transistor DTOs)
+        :type fixed_parameters: d_dtos.FixedParameters
+
+        :return:
+        """
+        f_s_suggest = trial.suggest_int('f_s_suggest', dab_config.design_space.f_s_min_max_list[0], dab_config.design_space.f_s_min_max_list[1])
+        l_s_suggest = trial.suggest_float('l_s_suggest', dab_config.design_space.l_s_min_max_list[0], dab_config.design_space.l_s_min_max_list[1])
+        l_1_suggest = trial.suggest_float('l_1_suggest', dab_config.design_space.l_1_min_max_list[0], dab_config.design_space.l_1_min_max_list[1])
+        l_2__suggest = trial.suggest_float('l_2__suggest', dab_config.design_space.l_2__min_max_list[0], dab_config.design_space.l_2__min_max_list[1])
+        n_suggest = trial.suggest_float('n_suggest', dab_config.design_space.n_min_max_list[0], dab_config.design_space.n_min_max_list[1])
+        transistor_1_name_suggest = trial.suggest_categorical('transistor_1_name_suggest', dab_config.design_space.transistor_1_name_list)
+        transistor_2_name_suggest = trial.suggest_categorical('transistor_2_name_suggest', dab_config.design_space.transistor_2_name_list)
+
+        for _, transistor_dto in enumerate(fixed_parameters.transistor_1_dto_list):
+            if transistor_dto.name == transistor_1_name_suggest:
+                transistor_1_dto: d_dtos.TransistorDTO = transistor_dto
+
+        for _, transistor_dto in enumerate(fixed_parameters.transistor_2_dto_list):
+            if transistor_dto.name == transistor_2_name_suggest:
+                transistor_2_dto: d_dtos.TransistorDTO = transistor_dto
+
+        dab_calc = HandleDabDto.init_config(
+            circuit_id=str(trial.number),
+            mesh_v1=fixed_parameters.mesh_v1,
+            mesh_v2=fixed_parameters.mesh_v2,
+            mesh_p=fixed_parameters.mesh_p,
+            mesh_weights=fixed_parameters.mesh_weights,
+            sampling=dab_config.sampling,
+            n=n_suggest,
+            ls=l_s_suggest,
+            fs=f_s_suggest,
+            lc1=l_1_suggest,
+            lc2=l_2__suggest / n_suggest ** 2,
+            lossfilepath=fixed_parameters.transistorlosses_filepath,
+            c_par_1=dab_config.design_space.c_par_1,
+            c_par_2=dab_config.design_space.c_par_2,
+            transistor_dto_1=transistor_1_dto,
+            transistor_dto_2=transistor_2_dto,
+            t_dead_1_max=dab_config.design_space.t_dead_1_max,
+            t_dead_2_max=dab_config.design_space.t_dead_2_max
+        )
+
+        if (np.any(np.isnan(dab_calc.calc_modulation.phi)) or np.any(np.isnan(dab_calc.calc_modulation.tau1)) \
+                or np.any(np.isnan(dab_calc.calc_modulation.tau2))):
+            return float('nan'), float('nan')
+
+        if dab_calc.calc_dead_time is None:
+            raise ValueError("Incomplete calculation, as dead time is missing.")
+
+        # check if the minimum dead time in all operating points is less equal than the maximum allowed dead time
+        dead_time_1_less_maximum = np.less_equal(dab_calc.calc_dead_time.t_dead_1, dab_calc.input_config.t_dead_1_max)
+        dead_time_2_less_maximum = np.less_equal(dab_calc.calc_dead_time.t_dead_2, dab_calc.input_config.t_dead_2_max)
+
+        if not np.all(dead_time_1_less_maximum):
+            logger.info(f"Needed dead time of bridge 1 exceeds maximum dead time of {dab_calc.input_config.t_dead_1_max}.")
+            return float('nan'), float('nan')
+        if not np.all(dead_time_2_less_maximum):
+            logger.info(f"Needed dead time of bridge 2 exceeds maximum dead time of {dab_calc.input_config.t_dead_2_max}.")
+            return float('nan'), float('nan')
+
+        # Calculate the cost function.
+        i_cost_matrix = dab_calc.calc_currents.i_hf_1_rms ** 2 + dab_calc.calc_currents.i_hf_2_rms ** 2
+        # consider weighting
+        i_cost_matrix_weighted = i_cost_matrix * fixed_parameters.mesh_weights
+
+        # Sum for not-NaN values, as there will be too many NaN results.
+        i_cost = np.sum(i_cost_matrix_weighted[~np.isnan(i_cost_matrix_weighted)])
+
+        trial.set_user_attr('dead_time_zvs_coverage', dab_calc.calc_dead_time.zvs_coverage * 100)
+        trial.set_user_attr('zvs_coverage', dab_calc.calc_modulation.zvs_coverage * 100)
+
+        # add transistor losses
+        dab_calc = HandleDabDto.add_transistor_turn_off_currents_losses(dab_calc)
+
+        transistor_efficiency = (np.abs(fixed_parameters.mesh_p) - dab_calc.calc_losses.p_dab) / np.abs(fixed_parameters.mesh_p)
+
+        weighted_transistor_efficiency = np.sum(transistor_efficiency * fixed_parameters.mesh_weights)
+        return weighted_transistor_efficiency, i_cost
+
+    @staticmethod
     def _objective(trial: optuna.Trial, dab_config: circuit_dtos.CircuitParetoDabDesign, fixed_parameters: d_dtos.FixedParameters) -> tuple:
         """
         Objective function to optimize.
@@ -816,7 +904,10 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
             return
 
         # Function to execute
-        func = lambda trial: DabCircuitOptimization._objective(trial, self._dab_config, self._fixed_parameters)
+        if self._dab_config.filter.filter_algorithm == "sort_pareto":
+            func = lambda trial: DabCircuitOptimization._objective_pareto(trial, self._dab_config, self._fixed_parameters)
+        else:
+            func = lambda trial: DabCircuitOptimization._objective(trial, self._dab_config, self._fixed_parameters)
 
         try:
             self._study_in_memory.optimize(func, n_trials=act_number_trials, n_jobs=1, show_progress_bar=True)
@@ -1212,6 +1303,111 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
         pd.read_csv(csv_filepath, header=0, index_col=0, delimiter=';')
         return df
 
+    @staticmethod
+    def find_pareto_front(dataframe: pd.DataFrame) -> pd.DataFrame:
+        """
+        Return rows that maximize values_0 and minimize values_1.
+
+        :param dataframe: Dataframe
+        :type dataframe: pandas.DataFrame
+        """
+        valid_points = dataframe.dropna(subset=["values_0", "values_1"])
+        ordered_points = valid_points.sort_values("values_0", ascending=False)
+        pareto_indices = []
+        best_y_value = float("inf")
+
+        for _, same_x_points in ordered_points.groupby("values_0", sort=False):
+            minimum_y_value = same_x_points["values_1"].min()
+            if minimum_y_value < best_y_value:
+                pareto_indices.extend(
+                    same_x_points.index[same_x_points["values_1"].eq(minimum_y_value)].tolist()
+                )
+                best_y_value = minimum_y_value
+
+        return ordered_points.loc[pareto_indices].sort_values("values_0")
+
+    @staticmethod
+    def sample_pareto_front_by_number_points(
+            pareto_front: pd.DataFrame,
+            number_of_points: int,
+            tolerance_percent: float = 100.0,
+    ) -> pd.DataFrame:
+        """Select a fixed number of Pareto points spaced across its frequency range.
+
+        The tolerance is a percentage of half the spacing between target frequencies.
+        At 100 percent, a selected point may therefore differ from its target by up to
+        half the distance to the adjacent target. If no point is within tolerance, the
+        nearest unused point is returned so the requested number of points is retained.
+
+        :param pareto_front: dataframe with pareto front
+        :type pareto_front: pandas.DataFrame
+        :param number_of_points: Number of points to select from the Pareto front
+        :type number_of_points: int
+        :param tolerance_percent: tolerance in percent, defaults to 100
+        :type tolerance_percent: float
+        """
+        frequency_column = "params_f_s_suggest"
+        if number_of_points <= 0:
+            raise ValueError("number_of_points must be greater than zero")
+        if not 0 <= tolerance_percent <= 100:
+            raise ValueError("tolerance_percent must be between 0 and 100")
+
+        frequency_points = pareto_front.dropna(subset=[frequency_column]).copy()
+        if len(frequency_points) < number_of_points:
+            raise ValueError(
+                f"Cannot select {number_of_points} unique points from only {len(frequency_points)} "
+                "Pareto points with a frequency value"
+            )
+
+        frequency_points["source_index"] = frequency_points.index
+        frequency_points = frequency_points.reset_index(drop=True)
+        minimum_frequency = float(frequency_points[frequency_column].min())
+        maximum_frequency = float(frequency_points[frequency_column].max())
+        if number_of_points == 1:
+            target_frequencies = [minimum_frequency]
+            target_spacing = 0.0
+        else:
+            target_spacing = (maximum_frequency - minimum_frequency) / (number_of_points - 1)
+            target_frequencies = [
+                minimum_frequency + i * target_spacing
+                for i in range(number_of_points)
+            ]
+        tolerance_hz = target_spacing * 0.5 * tolerance_percent / 100
+
+        selected_rows = []
+        selected_positions = set()
+        for sample_number, target_hz in enumerate(target_frequencies, start=1):
+            candidates = frequency_points.loc[~frequency_points.index.isin(selected_positions)].copy()
+            candidates["_frequency_deviation_hz"] = (candidates[frequency_column] - target_hz).abs()
+            within_tolerance = candidates["_frequency_deviation_hz"] <= tolerance_hz
+            if within_tolerance.any():
+                candidates = candidates.loc[within_tolerance]
+
+            selected_point = candidates.sort_values(
+                ["_frequency_deviation_hz", "values_0", "values_1"],
+                ascending=[True, False, True],
+            ).iloc[0]
+            selected_positions.add(selected_point.name)
+            selected_rows.append(
+                {
+                    "sample_number": sample_number,
+                    **selected_point.drop(labels="_frequency_deviation_hz").to_dict(),
+                    "target_frequency_hz": target_hz,
+                    "frequency_deviation_hz": selected_point["_frequency_deviation_hz"],
+                    "frequency_within_tolerance": bool(within_tolerance.loc[selected_point.name]),
+                }
+            )
+
+        output_columns = [
+            "sample_number",
+            "source_index",
+            *pareto_front.columns,
+            "target_frequency_hz",
+            "frequency_deviation_hz",
+            "frequency_within_tolerance",
+        ]
+        return pd.DataFrame(selected_rows, columns=output_columns)
+
     def filter_study_results(self) -> tuple[bool, str]:
         """Filter the study result and use GeckoCIRCUITS for detailed calculation."""
         # Variable initialization
@@ -1241,8 +1437,13 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
         df = self._study_in_storage.trials_dataframe()
         df.to_csv(f'{self.circuit_study_data.optimization_directory}/{self._dab_config.circuit_study_name}.csv')
 
-        # get 100 percent ZVS coverage designs
-        df = df[df["values_0"] == 100]
+        if self._dab_config.filter.filter_algorithm == "sort_pareto":
+            df = df.loc[df["user_attrs_dead_time_zvs_coverage"].eq(100)]
+        else:
+            # get 100 percent ZVS coverage designs
+            df = df[df["values_0"] == 100]
+
+        print(df.head())
 
         # Continue time measurement
         with self._c_lock_stat:
@@ -1295,6 +1496,12 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
                 if not candidates.empty:
                     selected_positions.append(candidates.idxmin())
                     df_smallest_all = pd.concat([df_smallest_all, df.loc[[candidates.idxmin()]]], axis=0)
+
+        elif self._dab_config.filter.filter_algorithm == "sort_pareto":
+            pareto_front = DabCircuitOptimization.find_pareto_front(df)
+            print(f"{pareto_front=}")
+            df_smallest_all = DabCircuitOptimization.sample_pareto_front_by_number_points(
+                pareto_front, number_of_points=self._dab_config.filter.number_filtered_designs, tolerance_percent=self._dab_config.filter.difference_percentage)
 
         smallest_dto_list = self.df_to_dab_dto_list(df_smallest_all)
         logger.info("Save filtered circuit results into csv file.")

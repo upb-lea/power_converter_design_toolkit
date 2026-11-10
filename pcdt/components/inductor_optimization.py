@@ -396,16 +396,15 @@ class InductorOptimization:
 
                     inductor_volume, combined_losses, area_to_heat_sink, winding_loss, core_loss, b_max = (
                         fmt.InductorOptimization.ReluctanceModel.full_simulation(
-                        df_inductor_id, current_waveform=current_waveform,
-                        inductor_config_filepath=config_filepath))
+                            df_inductor_id, current_waveform=current_waveform,
+                            inductor_config_filepath=config_filepath))
                     combined_loss_array[vec_vvp] = combined_losses
                     core_loss_array[vec_vvp] = core_loss
                     b_max_array[vec_vvp] = b_max
                     winding_loss_array[vec_vvp] = winding_loss
 
                 # Calculate thermal resistance
-                r_th_ind_heat_sink = ThermalCalcSupport.calculate_r_th_tim(
-                    area_to_heat_sink, thermal_data)
+                r_th_ind_heat_sink = ThermalCalcSupport.calculate_r_th_tim(area_to_heat_sink, thermal_data)
 
                 reluctance_inductor_results = InductorResults(
                     loss_array=combined_loss_array,
