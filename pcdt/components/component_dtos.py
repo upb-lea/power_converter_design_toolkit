@@ -183,6 +183,7 @@ class StackedTransformerResults:
     # pareto
     loss_array: np.ndarray
     core_loss_array: np.ndarray
+    b_max_array: np.ndarray
     winding_1_loss_array: np.ndarray
     winding_2_loss_array: np.ndarray
     volume: float

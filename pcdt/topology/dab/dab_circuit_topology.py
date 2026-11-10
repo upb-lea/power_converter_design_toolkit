@@ -1521,10 +1521,10 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
             inductor_study_name = row['inductor_study_name_0']
             transformer_id = row['transformer_id_0']
             transformer_study_name = row['transformer_study_name_0']
-            capacitor_1_id = row['capacitor_id_0']
-            capacitor_1_study_name = row['capacitor_study_name_0']
-            capacitor_2_id = row['capacitor_id_1']
-            capacitor_2_study_name = row['capacitor_study_name_1']
+            capacitor_0_id = row['capacitor_id_0']
+            capacitor_0_study_name = row['capacitor_study_name_0']
+            capacitor_1_id = row['capacitor_id_1']
+            capacitor_1_study_name = row['capacitor_study_name_1']
 
             # load circuit DTO
             circuit_id_filepath = os.path.join(self.filter_data.filtered_list_pathname, f"{circuit_id}.pkl")
@@ -1550,8 +1550,17 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
             with open(transformer_id_filepath, 'rb') as pickle_file_data:
                 transformer_results = pickle.load(pickle_file_data)
 
-            # load capacitor 1 DTO
+            # load capacitor 0 DTO
             study_data = capacitor_selection_data_list[0].study_data
+            capacitor_0_study_results_filepath = os.path.join(study_data.optimization_directory, circuit_id,
+                                                              capacitor_0_study_name, CIRCUIT_CAPACITOR_LOSS_FOLDER)
+
+            capacitor_0_id_filepath = os.path.join(capacitor_0_study_results_filepath, f"{capacitor_0_id}.pkl")
+            with open(capacitor_0_id_filepath, 'rb') as pickle_file_data:
+                capacitor_0_results = pickle.load(pickle_file_data)
+
+            # load capacitor 1 DTO
+            study_data = capacitor_selection_data_list[1].study_data
             capacitor_1_study_results_filepath = os.path.join(study_data.optimization_directory, circuit_id,
                                                               capacitor_1_study_name, CIRCUIT_CAPACITOR_LOSS_FOLDER)
 
@@ -1559,19 +1568,10 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
             with open(capacitor_1_id_filepath, 'rb') as pickle_file_data:
                 capacitor_1_results = pickle.load(pickle_file_data)
 
-            # load capacitor 1 DTO
-            study_data = capacitor_selection_data_list[1].study_data
-            capacitor_2_study_results_filepath = os.path.join(study_data.optimization_directory, circuit_id,
-                                                              capacitor_2_study_name, CIRCUIT_CAPACITOR_LOSS_FOLDER)
-
-            capacitor_2_id_filepath = os.path.join(capacitor_2_study_results_filepath, f"{capacitor_2_id}.pkl")
-            with open(capacitor_2_id_filepath, 'rb') as pickle_file_data:
-                capacitor_2_results = pickle.load(pickle_file_data)
-
             circuit_dto.inductor_results = inductor_results
             circuit_dto.stacked_transformer_results = transformer_results
+            circuit_dto.capacitor_0_results = capacitor_0_results
             circuit_dto.capacitor_1_results = capacitor_1_results
-            circuit_dto.capacitor_2_results = capacitor_2_results
 
             results_folder = os.path.join(summary_data.optimization_directory, SUMMARY_COMBINATION_FOLDER)
             if not os.path.exists(results_folder):
@@ -1678,9 +1678,9 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
 
         if combination_dto.calc_losses is None:
             raise ValueError("Incomplete dataset.")
-        if combination_dto.capacitor_1_results is None:
+        if combination_dto.capacitor_0_results is None:
             raise ValueError("Incomplete dataset.")
-        if combination_dto.capacitor_2_results is None:
+        if combination_dto.capacitor_1_results is None:
             raise ValueError("Incomplete dataset.")
         if combination_dto.inductor_results is None:
             raise ValueError("Incomplete dataset.")
@@ -1690,8 +1690,8 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
         data = {
             "circuit b1": combination_dto.calc_losses.p_m1_conduction.flatten(),
             "circuit b2": combination_dto.calc_losses.p_m2_conduction.flatten(),
-            "capacitor b1": combination_dto.capacitor_1_results.loss_total_array.flatten(),
-            "capacitor b2": combination_dto.capacitor_2_results.loss_total_array.flatten(),
+            "capacitor b1": combination_dto.capacitor_0_results.loss_total_array.flatten(),
+            "capacitor b2": combination_dto.capacitor_1_results.loss_total_array.flatten(),
             "inductor winding": combination_dto.inductor_results.winding_loss_array.flatten(),
             "inductor core": combination_dto.inductor_results.core_loss_array.flatten(),
             "transformer winding 1": combination_dto.stacked_transformer_results.winding_1_loss_array.flatten(),
