@@ -19,6 +19,8 @@ from pcdt.toml_checker import TomlHeatSink
 from pcdt.datasets_dtos import (FilterData, StudyData, CapacitorConfiguration, InductorConfiguration,
                                 TransformerConfiguration, SummaryConfiguration)
 from pcdt.topology.circuit_optimization_base import CircuitOptimizationBase
+from pcdt.components.component_dtos import InductorResults, StackedTransformerResults
+from pcdt.constants import SATURATION_THRESHOLD
 import hct
 from pcdt.server_ctl_dtos import ProgressData
 from pcdt.server_ctl_dtos import RunTimeMeasurement as RunTime
@@ -306,7 +308,7 @@ class SummaryProcessing:
 
                     # Get inductor results
                     with open(inductor_id_filepath, 'rb') as pickle_file_data:
-                        inductor_results_dto = pickle.load(pickle_file_data)
+                        inductor_results_dto: InductorResults = pickle.load(pickle_file_data)
 
                     if inductor_results_dto.circuit_id != circuit_id:
                         raise ValueError(f"{inductor_results_dto.circuit_id=} != {circuit_id}")
@@ -334,8 +336,9 @@ class SummaryProcessing:
                     # Store inductor data set
                     inductors.append(inductor_data)
 
-                # Add to inductor component list
-                inductor_data_list.append(inductors)
+                if np.all(inductor_results_dto.b_max_array < SATURATION_THRESHOLD):
+                    # Add to inductor component list
+                    inductor_data_list.append(inductors)
 
             # iterate transformer study
             for act_transformer_data in act_transformer_data_list:
@@ -365,7 +368,7 @@ class SummaryProcessing:
 
                     # get transformer results
                     with open(transformer_id_filepath, 'rb') as pickle_file_data:
-                        transformer_results_dto = pickle.load(pickle_file_data)
+                        transformer_results_dto: StackedTransformerResults = pickle.load(pickle_file_data)
 
                     if transformer_results_dto.circuit_id != circuit_id:
                         raise ValueError(f"{transformer_results_dto.circuit_id=} != {circuit_id}")
@@ -388,8 +391,9 @@ class SummaryProcessing:
                         f"r_th_xfmr_heat_sink_{number_in_circuit}": transformer_results_dto.r_th_xfmr_heat_sink
                     }
 
-                    # Store transformer data set
-                    transformers.append(transformer_data)
+                    if np.all(transformer_results_dto.b_max_array < SATURATION_THRESHOLD):
+                        # Store transformer data set
+                        transformers.append(transformer_data)
 
                 # Add to inductor component list
                 transformer_data_list.append(transformers)
