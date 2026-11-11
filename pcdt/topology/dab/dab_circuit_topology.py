@@ -702,7 +702,7 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
         transistor_efficiency = (np.abs(fixed_parameters.mesh_p) - dab_calc.calc_losses.p_dab) / np.abs(fixed_parameters.mesh_p)
 
         weighted_transistor_efficiency = np.sum(transistor_efficiency * fixed_parameters.mesh_weights)
-        return weighted_transistor_efficiency, i_cost
+        return weighted_transistor_efficiency, i_cost, dab_calc.calc_dead_time.zvs_coverage * 100
 
     @staticmethod
     def _objective(trial: optuna.Trial, dab_config: circuit_dtos.CircuitParetoDabDesign, fixed_parameters: d_dtos.FixedParameters) -> tuple:
@@ -994,7 +994,10 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
                                  f"Program is terminated.\n"
                                  f"Difference: {difference}")
 
-        directions: list[Literal["minimize", "maximize"]] = ["maximize", "minimize"]
+        if self._dab_config.filter.filter_algorithm == "sort_pareto":
+            directions: list[Literal["minimize", "maximize"]] = ["maximize", "minimize", "maximize"]
+        else:
+            directions: list[Literal["minimize", "maximize"]] = ["maximize", "minimize"]
 
         # Calculate the fixed parameters
         self._fixed_parameters = DabCircuitOptimization.calculate_fixed_parameters(self._dab_config)
@@ -1101,7 +1104,11 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
             logger.warning("Circuit configuration is not initialized!")
             return
 
-        fig = optuna.visualization.plot_pareto_front(self._study_in_storage, target_names=["ZVS coverage / %", r"i_\mathrm{cost}"])
+        if self._dab_config.filter.filter_algorithm == "sort_pareto":
+            target_names = ["Weighted efficiency / %", r"i_\mathrm{cost}", "ZVS coverage"]
+        else:
+            target_names = ["ZVS coverage / %", r"i_\mathrm{cost}"]
+        fig = optuna.visualization.plot_pareto_front(self._study_in_storage, target_names=target_names)
         fig.update_layout(title=f"{self._dab_config.circuit_study_name} <br><sup>{self._dab_config.project_directory}</sup>")
         fig.write_html(
             f"{self.circuit_study_data.optimization_directory}"
