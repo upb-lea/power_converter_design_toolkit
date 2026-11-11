@@ -15,7 +15,7 @@ from pcdt import CapacitorConfiguration, InductorConfiguration, TransformerConfi
 from pcdt.constant_path import (TEMPLATE_FOLDER, HTML_TEMPLATE_FOLDER_NAME, STYLESHEET_FOLDER_NAME, CANDIDATE_BROWSER_HTML,
                                 PYTHON_TEMPLATE_FOLDER_NAME, WEBSERVER_TEMPLATE, VISUALIZATION_TEMPLATE, CB_START_CSS,
                                 CB_DETAIL_CCS, PCDT_ROOT, WEB_SERVER_PY, TMP_DETAILED_HTML, CB_ICON, CB_IDLE_PNG,
-                                CAPACITOR_RESULTS, DF_SUMMARY_FINAL)
+                                CAPACITOR_RESULTS, DF_SUMMARY_FINAL, TARGET_TMP_DETAILED_HTML)
 
 logger = logging.getLogger(__name__)
 
@@ -104,7 +104,7 @@ class CandidateBrowserGen:
         for stylesheet in stylesheet_list:
             shutil.copy(f"{style_sheet_source_path}/{stylesheet}", style_sheet_path)
 
-    def _generate_webbrowser(self, act_conf_names: dict, act_destination_file_path: str) -> None:
+    def _generate_webbrowser(self, act_conf_names: dict, act_destination_file_path: str, number_of_components: dict) -> None:
         """
         Generate html file.
 
@@ -115,10 +115,9 @@ class CandidateBrowserGen:
         """
         # Variable declaration and initialization
         server_path_information: dict = {}
+
         # Destination path for template
         template_path: str
-        # Template list
-        template_list: list[str] = [TMP_DETAILED_HTML]
 
         # Set path values
         server_path_information["work_path"] = act_conf_names["work_path"]
@@ -135,12 +134,12 @@ class CandidateBrowserGen:
             server_path_information["transformer_csv" + str(index)] = os.path.join(component, component + ".csv")
         server_path_information["heat_sink_csv"] = os.path.join(act_conf_names["heat_sink"], act_conf_names["heat_sink"] + ".csv")
         server_path_information["visualization_base_path"] = act_conf_names["data_generation"]
-        server_path_information["detailed_page_template"] = TMP_DETAILED_HTML
+        server_path_information["detailed_page_template"] = TARGET_TMP_DETAILED_HTML
 
         # Template are load by data (Special approach of Jinja2 to access the template)
         env = Environment(loader=FileSystemLoader(self.webserver_template_folder))
         web_template = env.get_template(WEBSERVER_TEMPLATE)
-        webserver_app = web_template.render(path_info=server_path_information)
+        webserver_app = web_template.render(path_info=server_path_information, component=number_of_components)
 
         # Get folder name
         destination_path = os.path.dirname(act_destination_file_path)
@@ -153,9 +152,36 @@ class CandidateBrowserGen:
         with open(act_destination_file_path, 'w') as f:
             f.write(webserver_app)
 
-        # Copy template to target location
-        for template in template_list:
-            shutil.copy(f"{self.html_template_folder}/{template}", template_path)
+    def _generate_detailed_page_template(self, act_destination_file_path: str, number_of_components: dict) -> None:
+        """
+        Generate html file.
+
+        :param act_candidate_list: List with design candidate information
+        :type  act_candidate_list: list[dict]
+        :param act_destination_path: storage location of the html-file
+        :type  act_destination_path: str
+        """
+        # Variable declaration and initialization
+        server_path_information: dict = {}
+        # Destination path for template
+        template_path: str
+        # Template list
+        template_list: list[str] = [TMP_DETAILED_HTML]
+
+        # Template are load by data (Special approach of Jinja2 to access the template)
+        env = Environment(loader=FileSystemLoader(self.html_template_folder))
+        detailes_page_template = env.get_template(TMP_DETAILED_HTML)
+        detailes_page_tmpl = detailes_page_template.render(component=number_of_components)
+
+        # Get folder name
+        destination_path = os.path.dirname(act_destination_file_path)
+
+        # Check if folder exists, if not create it
+        os.makedirs(destination_path, exist_ok=True)
+
+        # Create or overwrite file
+        with open(act_destination_file_path, 'w') as f:
+            f.write(detailes_page_tmpl)
 
     def generate_html_visualization(self,
                                     circuit_configuration: CircuitOptimizationBase,
@@ -187,7 +213,10 @@ class CandidateBrowserGen:
         conf_names: dict[str, str | list] = {}
         # List for sub path
         conf_sub_list: list[str] = []
-
+        # Numbers of components
+        number_of_components: dict = {}
+        # Debug Test
+        number_of_components["nr_of_caps"] = 2
         # File path for csv data
         csv_filepath: str = os.path.join(summary_data.optimization_directory, DF_SUMMARY_FINAL)
 
@@ -247,5 +276,8 @@ class CandidateBrowserGen:
 
             # Assemble target name
             webserver_filepath: str = os.path.join(self.candidate_browser_study_data.optimization_directory, WEB_SERVER_PY)
-            # Generate html-file
-            self._generate_webbrowser(conf_names, webserver_filepath)
+            template_file_path = os.path.join(self.candidate_browser_study_data.optimization_directory, HTML_TEMPLATE_FOLDER_NAME, TARGET_TMP_DETAILED_HTML)
+            # Generate webbrowser-file
+            self._generate_webbrowser(conf_names, webserver_filepath, number_of_components)
+            # Generate Detailed page template
+            self._generate_detailed_page_template(template_file_path, number_of_components)

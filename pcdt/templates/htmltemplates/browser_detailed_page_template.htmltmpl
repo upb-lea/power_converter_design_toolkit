@@ -22,6 +22,7 @@
             <div id="plottransformer"></div>
         </div>
         <div class="data-column">
+            {% raw %}
             <!-- Detailed data -->
             <table>
                 <thead>
@@ -40,7 +41,36 @@
                    </tr>
                 </tbody>
             </table>
+            {% endraw %}
 
+            {% for index in range(component.nr_of_caps) %}
+            <table>
+                <thead>
+                    <tr>
+                    {% raw %}<th colspan="6">Capacitor{% endraw %}{{index}}{% raw %} parameter</th>{% endraw %}
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th>Volume</th><td>{% raw %}{{ cap{% endraw %}{{index}}{% raw %}_data.cap_vol }}{% endraw %}</td>
+                        <th>Ordering name</th><td>{% raw %}{{ cap{% endraw %}{{index}}{% raw %}_data.cap_order }}{% endraw %}</td>
+                        <th>Capacitance</th><td>{% raw %}{{ cap{% endraw %}{{index}}{% raw %}_data.cap_capa }}{% endraw %}</td>
+                   </tr>
+                    <tr>
+                        <th>Power loss</th><td>{% raw %}{{ cap{% endraw %}{{index}}{% raw %}_data.cap_loss }}{% endraw %}</td>
+                        <th>Components in series</th><td>{% raw %}{{ cap{% endraw %}{{index}}{% raw %}_data.cap_series }}{% endraw %}</td>
+                        <th>ESL H</th><td>{% raw %}{{ cap{% endraw %}{{index}}{% raw %}_data.cap_esl }}{% endraw %}</td>
+                   </tr>
+                   <tr>
+                        <th>Loss per component</th><td>{% raw %}{{ cap{% endraw %}{{index}}{% raw %}_data.cap_per_loss }}{% endraw %}</td>
+                        <th>Components in parallel</th><td>{% raw %}{{ cap{% endraw %}{{index}}{% raw %}_data.cap_parallel }}{% endraw %}</td>
+                        <th>ESR in Ohm</th><td>{% raw %}{{ cap{% endraw %}{{index}}{% raw %}_data.cap_esr }}{% endraw %}</td>
+                   </tr>
+                </tbody>
+            </table>
+        {%- endfor %}
+
+            {% raw %}
             <table>
                 <thead>
                     <tr>
@@ -50,17 +80,17 @@
                 <tbody>
                     <tr>
                         <th>Volume</th><td>{{ ind_data.ind_vol }}</td>
-                        <th>Power loss</th><td>{{ ind_data.ind_loss}}</td>
-                        <th>Mag. peak flux</th><td>{{ ind_data.ind_peak_flux }}</td>
+                        <th>Core name</th><td>{{ ind_data.ind_core }}</td>
+                        <th>turns</th><td>{{ ind_data.ind_turns }}</td>
                    </tr>
                     <tr>
-                        <th>Core name</th><td>{{ ind_data.ind_core }}</td>
+                        <th>Power loss</th><td>{{ ind_data.ind_loss}}</td>
                         <th>Magnetic material</th><td>{{ ind_data.ind_material}}</td>
-                        <th>Inductivity</th><td>{{ ind_data.ind_l}}</td>
+                        <th>Air gap</th><td>{{ ind_data.ind_airgap }}</td>
                    </tr>
                    <tr>
-                        <th>turns</th><td>{{ ind_data.ind_turns }}</td>
-                        <th>Air gap</th><td>{{ ind_data.ind_airgap }}</td>
+                        <th>Mag. peak flux</th><td>{{ ind_data.ind_peak_flux }}</td>
+                        <th>Inductivity</th><td>{{ ind_data.ind_l}}</td>
                         <th>Litz material</th><td>{{ ind_data.ind_litz}}</td>
                    </tr>
                 </tbody>
@@ -75,39 +105,41 @@
                 <tbody>
                     <tr>
                         <th>Volume</th><td>{{ tr_data.tr_vol }}</td>
+                        <th>Turns primary (top.)</th><td>{{ tr_data.tr_turn_ptop }}</td>
+                        <th>Air gap (top.)</th><td>{{ tr_data.tr_top_airgap }}</td>
+                   </tr>
+                    <tr>
                         <th>Power loss</th><td>{{ tr_data.tr_loss}}</td>
+                        <th>Turns primary (bot.)</th><td>{{ tr_data.tr_turn_pbot }}</td>
+                        <th>Air gap (bot.)</th><td>{{ tr_data.tr_bot_airgap }}</td>
+                   </tr>
+                   <tr>
                         <th>Winding loss</th><td>{{ tr_data.tr_wind_loss}}</td>
+                        <th>Turns secondary (bot.)</th><td>{{ tr_data.tr_turn_sbot }}</td>
+                        <th>Core inner diameter</th><td>{{ tr_data.tr_core_inner_dia }}</td>
                    </tr>
                     <tr>
                         <th>Core name</th><td>{{ tr_data.tr_core }}</td>
-                        <th>Magnetic material</th><td>{{ tr_data.tr_material }}</td>
-                        <th>Inductivity</th><td>{{ tr_data.tr_l }}</td>
-                   </tr>
-                   <tr>
-                        <th>Air gap (top.)</th><td>{{ tr_data.tr_top_airgap }}</td>
-                        <th>Air gap (bot.)</th><td>{{ tr_data.tr_bot_airgap }}</td>
-                        <th>Core inner diameter</th><td>{{ tr_data.tr_core_inner_dia }}</td>
-                   </tr>
-                   <tr>
-                        <th>Turns primary (top.)</th><td>{{ tr_data.tr_turn_ptop }}</td>
-                        <th>Turns primary (bot.)</th><td>{{ tr_data.tr_turn_pbot }}</td>
-                        <th>Turns secondary (bot.)</th><td>{{ tr_data.tr_turn_sbot }}</td>
-                   </tr>
-                   <tr>
                         <th>flux density (top.)</th><td>{{ tr_data.tr_flux_top }}</td>
-                        <th>flux density (bot.)</th><td>{{ tr_data.tr_flux_mid }}</td>
-                        <th>flux density (bot.)</th><td>{{ tr_data.tr_flux_bot }}</td>
+                        <th>Prim. Litz material</th><td>{{ tr_data.tr_litz_prim}}</td>
                    </tr>
                     <tr>
-                        <th>Prim. Litz material</th><td>{{ tr_data.tr_litz_prim}}</td>
+                        <th>Magnetic material</th><td>{{ tr_data.tr_material }}</td>
+                        <th>flux density (bot.)</th><td>{{ tr_data.tr_flux_mid }}</td>
                         <th>Sec. Litz material</th><td>{{ tr_data.tr_litz_sec}}</td>
+                   </tr>
+                   <tr>
+                        <th>Inductivity</th><td>{{ tr_data.tr_l }}</td>
+                        <th>flux density (bot.)</th><td>{{ tr_data.tr_flux_bot }}</td>
                         <th>View details</th><td><button id="View3DButton" onclick="open3DView()" disabled>3D View</button></td>
                    </tr>
                 </tbody>
             </table>
+            {% endraw %}
         </div>
     </div>
 
+    {% raw %}
     <script>
         // Pareto circuit list
         const circuit_points = [];
@@ -346,5 +378,6 @@
         }
 
     </script>
+    {% endraw %}
 </body>
 </html>

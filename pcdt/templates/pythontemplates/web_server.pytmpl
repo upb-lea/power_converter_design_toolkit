@@ -135,10 +135,10 @@ async def detailed_view(request: Request, combination_id: int):
 
     return templates.TemplateResponse(request,
         "{{ path_info.detailed_page_template}}",
-         {"plot_data": plot_data, "cir_data": candidate_data["circuit_data"],
-          "ind_data": candidate_data["inductor_data"], "tr_data": candidate_data["transformer_data"]}
-     )
-
+        {"plot_data": plot_data, "cir_data": candidate_data["circuit_data"], 
+        {% for index in range(component.nr_of_caps) %} "cap{{ index }}_data": candidate_data["capacitor{{ index }}_data"], {%- endfor %}
+         "ind_data": candidate_data["inductor_data"], "tr_data": candidate_data["transformer_data"]}
+    )
 
 def read_component_plot_data(file_path: str, x_key: str, y_key: str, x_value: str, y_value: str,
                              id_key: str, sel_id: int) -> dict[str, dict | list[dict]]:
@@ -171,7 +171,7 @@ def read_component_plot_data(file_path: str, x_key: str, y_key: str, x_value: st
 
     return plot_component_data
 
-def read_component_candidate_data(file_path: str, id_key: str, id: int, parameter_list: list[tuple[str, str, str]]) -> dict:
+def read_component_candidate_data(file_path: str, id_key: str, id: int, parameter_list: list[tuple[str, str, str]], is_all_valid: bool) -> dict:
     # Variable declaration
     candidate_component_data: dict = {}
     data: dict|None = None
@@ -182,8 +182,7 @@ def read_component_candidate_data(file_path: str, id_key: str, id: int, paramete
             reader = csv.DictReader(file)
             # Find candidate
             for data_row in reader:
-                # Check if row is valid
-                if data_row["state"] == "COMPLETE" and data_row[id_key] == id:
+                if data_row[id_key] == id:
                     data = data_row
                     break
 
@@ -289,6 +288,11 @@ def read_csv_candidate_data(file_path_dict: dict, act_cid: int) -> dict[str, lis
                                                           ("params_l_2_suggest", "l2", "H"),
                                                      ("params_l_s_suggest", "ls", "H"), ("params_transistor_1_name_suggest", "T1_type", NAME_KEY),
                                                      ("params_transistor_2_name_suggest", "T2_type", NAME_KEY)]
+
+    capacitor_parameter_list: list[tuple[str, str, str]] = [("volume", "cap_vol", "m³"), ("power_loss_total", "cap_loss", "W"), ("power_loss_per_capacitor", "cap_per_loss", "W"),
+                                                      ("ordering code", "cap_order", NAME_KEY), ("in_series_needed", "cap_series", ""), ("in_parallel_needed", "cap_parallel", ""),
+                                                      ("capacitance", "cap_capa", "F"), ("ESL_in_H", "cap_esl", "H"), ("ESR_85degree_in_Ohm", "cap_esr", "Ohm")]
+
     inductor_parameter_list: list[tuple[str, str, str]] = [("values_0", "ind_vol", "m³"), ("values_1", "ind_loss", "W"), ("user_attrs_flux_density_peak", "ind_peak_flux", "T"),
                                                       ("params_core_name", "ind_core", NAME_KEY), ("params_material_name", "ind_material", NAME_KEY), ("params_material_name", "ind_l", "H"),
                                                       ("params_turns", "ind_turns", ""), ("user_attrs_l_air_gap", "ind_airgap", "m"), ("params_litz_wire_name", "ind_litz", NAME_KEY)]
@@ -306,15 +310,21 @@ def read_csv_candidate_data(file_path_dict: dict, act_cid: int) -> dict[str, lis
 
     # Read circuit data
     candidate_data["circuit_data"] = read_component_candidate_data(
-        file_path_dict["circuit_csv_file"], "number", candidate_ids["cir_id"], circuit_parameter_list)
+        file_path_dict["circuit_csv_file"], "number", candidate_ids["cir_id"], circuit_parameter_list, False)
+
+    {% for index in range(component.nr_of_caps) %}
+    # Read capacitor{{ index }} data
+    candidate_data["capacitor{{ index }}_data"] = read_component_candidate_data(
+        file_path_dict["capacitor{{ index }}_csv_file"], "ordering code", candidate_ids["cap{{ index }}_id"], capacitor_parameter_list, True)
+    {%- endfor %}
 
     # Read inductor data
     candidate_data["inductor_data"] = read_component_candidate_data(
-        file_path_dict["inductor_csv_file"], "number", candidate_ids["ind_id"], inductor_parameter_list)
+        file_path_dict["inductor_csv_file"], "number", candidate_ids["ind_id"], inductor_parameter_list, False)
 
     # Read transformer data
     candidate_data["transformer_data"] = read_component_candidate_data(
-        file_path_dict["transformer_csv_file"], "number", candidate_ids["tr_id"], transformer_parameter_list)
+        file_path_dict["transformer_csv_file"], "number", candidate_ids["tr_id"], transformer_parameter_list, False)
 
     # Read heat sink plot data
     # plot_data["heat_sink"] = read_component_plot_data(plot_file_path_dict["inductor_csv_file"],"values_0" , "values_0", "volume" ,"ploss" )
@@ -332,8 +342,9 @@ def get_file_path_list(cid: int) -> dict:
     # Check if candidate is found
     if candidate_ids is not None:
         file_path_dict["circuit_csv_file"] = CIRCUIT_DATA_CSV
-        file_path_dict["capacitor0_csv_file"] = os.path.join(CAPACITOR_BASE_PATH, candidate_ids["cir_id"], CAPACITOR0_CSV)
-        file_path_dict["capacitor1_csv_file"] = os.path.join(CAPACITOR_BASE_PATH, candidate_ids["cir_id"], CAPACITOR1_CSV)
+    {% for index in range(component.nr_of_caps) %}
+        file_path_dict["capacitor{{ index }}_csv_file"] = os.path.join(CAPACITOR_BASE_PATH, candidate_ids["cir_id"], CAPACITOR{{ index }}_CSV)
+    {%- endfor %}
         file_path_dict["inductor_csv_file"] = os.path.join(INDUCTOR_BASE_PATH, candidate_ids["cir_id"], INDUCTOR_CSV)
         file_path_dict["transformer_csv_file"] = os.path.join(TRANSFORMER_BASE_PATH, candidate_ids["cir_id"], TRANSFORMER_CSV)
         file_path_dict["heat_sink_csv_file"] = HEAT_SINK_CSV
@@ -358,4 +369,3 @@ if __name__ == "__main__":
     threading.Timer(1.5, open_browser).start()
     # Start server (block mode)
     uvicorn.run(app, host="127.0.0.1", port=8000)
-
