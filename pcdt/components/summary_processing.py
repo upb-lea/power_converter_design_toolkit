@@ -333,12 +333,12 @@ class SummaryProcessing:
                         f"inductor_area_{number_in_circuit}": inductor_results_dto.area_to_heat_sink,
                         f"r_th_ind_heat_sink_{number_in_circuit}": inductor_results_dto.r_th_ind_heat_sink
                     }
-                    # Store inductor data set
-                    inductors.append(inductor_data)
+                    if np.all(inductor_results_dto.b_max_array < SATURATION_THRESHOLD):
+                        # Store inductor data set
+                        inductors.append(inductor_data)
 
-                if np.all(inductor_results_dto.b_max_array < SATURATION_THRESHOLD):
-                    # Add to inductor component list
-                    inductor_data_list.append(inductors)
+                # Add to inductor component list
+                inductor_data_list.append(inductors)
 
             # iterate transformer study
             for act_transformer_data in act_transformer_data_list:
