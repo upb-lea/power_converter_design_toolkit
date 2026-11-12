@@ -43,6 +43,7 @@ from pcdt.constant_path import (CIRCUIT_INDUCTOR_RELUCTANCE_LOSSES_FOLDER, CIRCU
                                 DAB_TOPOLOGY_FOLDER, PCDT_ROOT, TOMPL_TEMPLATE_FOLDER_NAME, GENERAL_CONF_TPL, CIRCUIT_CONF_TPL)
 from pcdt.constants import FACTOR_SECONDS_TO_NANOSECONDS
 from pcdt.topology.dab.dab_plot_waveforms import plot_calc_vs_requirements, plot_calc_waveforms, plot_calc_i_hf_waveforms
+from pcdt.topology.dab.dab_enums import DabEnums
 
 logger = logging.getLogger(__name__)
 
@@ -617,7 +618,8 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
         return pareto_html
 
     @staticmethod
-    def _objective_pareto(trial: optuna.Trial, dab_config: circuit_dtos.CircuitParetoDabDesign, fixed_parameters: d_dtos.FixedParameters) -> tuple:
+    def _objective_pareto_3_dimensions(trial: optuna.Trial, dab_config: circuit_dtos.CircuitParetoDabDesign,
+                                       fixed_parameters: d_dtos.FixedParameters) -> tuple:
         """
         Objective function to optimize as a pareto plane with maximizing weighted efficiency and minimizing weighted bridge RMS current.
 
@@ -703,6 +705,95 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
 
         weighted_transistor_efficiency = np.sum(transistor_efficiency * fixed_parameters.mesh_weights)
         return weighted_transistor_efficiency, i_cost, dab_calc.calc_dead_time.zvs_coverage * 100
+
+    @staticmethod
+    def _objective_pareto_2_dimensions(trial: optuna.Trial, dab_config: circuit_dtos.CircuitParetoDabDesign,
+                                       fixed_parameters: d_dtos.FixedParameters) -> tuple:
+        """
+        Objective function to optimize as a pareto plane with maximizing weighted efficiency and minimizing weighted bridge RMS current.
+
+        :param dab_config: DAB optimization configuration file
+        :type dab_config: circuit_dtos.CircuitParetoDabDesign
+        :param trial: optuna trial
+        :type trial: optuna.Trial
+        :param fixed_parameters: fixed parameters (loaded transistor DTOs)
+        :type fixed_parameters: d_dtos.FixedParameters
+
+        :return:
+        """
+        f_s_suggest = trial.suggest_int('f_s_suggest', dab_config.design_space.f_s_min_max_list[0], dab_config.design_space.f_s_min_max_list[1])
+        l_s_suggest = trial.suggest_float('l_s_suggest', dab_config.design_space.l_s_min_max_list[0], dab_config.design_space.l_s_min_max_list[1])
+        l_1_suggest = trial.suggest_float('l_1_suggest', dab_config.design_space.l_1_min_max_list[0], dab_config.design_space.l_1_min_max_list[1])
+        l_2__suggest = trial.suggest_float('l_2__suggest', dab_config.design_space.l_2__min_max_list[0], dab_config.design_space.l_2__min_max_list[1])
+        n_suggest = trial.suggest_float('n_suggest', dab_config.design_space.n_min_max_list[0], dab_config.design_space.n_min_max_list[1])
+        transistor_1_name_suggest = trial.suggest_categorical('transistor_1_name_suggest', dab_config.design_space.transistor_1_name_list)
+        transistor_2_name_suggest = trial.suggest_categorical('transistor_2_name_suggest', dab_config.design_space.transistor_2_name_list)
+
+        for _, transistor_dto in enumerate(fixed_parameters.transistor_1_dto_list):
+            if transistor_dto.name == transistor_1_name_suggest:
+                transistor_1_dto: d_dtos.TransistorDTO = transistor_dto
+
+        for _, transistor_dto in enumerate(fixed_parameters.transistor_2_dto_list):
+            if transistor_dto.name == transistor_2_name_suggest:
+                transistor_2_dto: d_dtos.TransistorDTO = transistor_dto
+
+        dab_calc = HandleDabDto.init_config(
+            circuit_id=str(trial.number),
+            mesh_v1=fixed_parameters.mesh_v1,
+            mesh_v2=fixed_parameters.mesh_v2,
+            mesh_p=fixed_parameters.mesh_p,
+            mesh_weights=fixed_parameters.mesh_weights,
+            sampling=dab_config.sampling,
+            n=n_suggest,
+            ls=l_s_suggest,
+            fs=f_s_suggest,
+            lc1=l_1_suggest,
+            lc2=l_2__suggest / n_suggest ** 2,
+            lossfilepath=fixed_parameters.transistorlosses_filepath,
+            c_par_1=dab_config.design_space.c_par_1,
+            c_par_2=dab_config.design_space.c_par_2,
+            transistor_dto_1=transistor_1_dto,
+            transistor_dto_2=transistor_2_dto,
+            t_dead_1_max=dab_config.design_space.t_dead_1_max,
+            t_dead_2_max=dab_config.design_space.t_dead_2_max
+        )
+
+        if (np.any(np.isnan(dab_calc.calc_modulation.phi)) or np.any(np.isnan(dab_calc.calc_modulation.tau1)) \
+                or np.any(np.isnan(dab_calc.calc_modulation.tau2))):
+            return float('nan'), float('nan')
+
+        if dab_calc.calc_dead_time is None:
+            raise ValueError("Incomplete calculation, as dead time is missing.")
+
+        # check if the minimum dead time in all operating points is less equal than the maximum allowed dead time
+        dead_time_1_less_maximum = np.less_equal(dab_calc.calc_dead_time.t_dead_1, dab_calc.input_config.t_dead_1_max)
+        dead_time_2_less_maximum = np.less_equal(dab_calc.calc_dead_time.t_dead_2, dab_calc.input_config.t_dead_2_max)
+
+        if not np.all(dead_time_1_less_maximum):
+            logger.info(f"Needed dead time of bridge 1 exceeds maximum dead time of {dab_calc.input_config.t_dead_1_max}.")
+            return float('nan'), float('nan')
+        if not np.all(dead_time_2_less_maximum):
+            logger.info(f"Needed dead time of bridge 2 exceeds maximum dead time of {dab_calc.input_config.t_dead_2_max}.")
+            return float('nan'), float('nan')
+
+        # Calculate the cost function.
+        i_cost_matrix = dab_calc.calc_currents.i_hf_1_rms ** 2 + dab_calc.calc_currents.i_hf_2_rms ** 2
+        # consider weighting
+        i_cost_matrix_weighted = i_cost_matrix * fixed_parameters.mesh_weights
+
+        # Sum for not-NaN values, as there will be too many NaN results.
+        i_cost = np.sum(i_cost_matrix_weighted[~np.isnan(i_cost_matrix_weighted)])
+
+        trial.set_user_attr('dead_time_zvs_coverage', dab_calc.calc_dead_time.zvs_coverage * 100)
+        trial.set_user_attr('zvs_coverage', dab_calc.calc_modulation.zvs_coverage * 100)
+
+        # add transistor losses
+        dab_calc = HandleDabDto.add_transistor_turn_off_currents_losses(dab_calc)
+
+        transistor_efficiency = (np.abs(fixed_parameters.mesh_p) - dab_calc.calc_losses.p_dab) / np.abs(fixed_parameters.mesh_p)
+
+        weighted_transistor_efficiency = np.sum(transistor_efficiency * fixed_parameters.mesh_weights)
+        return weighted_transistor_efficiency, i_cost
 
     @staticmethod
     def _objective(trial: optuna.Trial, dab_config: circuit_dtos.CircuitParetoDabDesign, fixed_parameters: d_dtos.FixedParameters) -> tuple:
@@ -904,8 +995,10 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
             return
 
         # Function to execute
-        if self._dab_config.filter.filter_algorithm == "sort_pareto":
-            func = lambda trial: DabCircuitOptimization._objective_pareto(trial, self._dab_config, self._fixed_parameters)
+        if self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_3_dimensional:
+            func = lambda trial: DabCircuitOptimization._objective_pareto_3_dimensions(trial, self._dab_config, self._fixed_parameters)
+        elif self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_2_dimensional:
+            func = lambda trial: DabCircuitOptimization._objective_pareto_2_dimensions(trial, self._dab_config, self._fixed_parameters)
         else:
             func = lambda trial: DabCircuitOptimization._objective(trial, self._dab_config, self._fixed_parameters)
 
@@ -994,7 +1087,7 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
                                  f"Program is terminated.\n"
                                  f"Difference: {difference}")
 
-        if self._dab_config.filter.filter_algorithm == "sort_pareto":
+        if self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_3_dimensional:
             directions: list[Literal["minimize", "maximize"]] = ["maximize", "minimize", "maximize"]
         else:
             directions: list[Literal["minimize", "maximize"]] = ["maximize", "minimize"]
@@ -1104,8 +1197,10 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
             logger.warning("Circuit configuration is not initialized!")
             return
 
-        if self._dab_config.filter.filter_algorithm == "sort_pareto":
+        if self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_3_dimensional:
             target_names = ["Weighted efficiency / %", r"i_\mathrm{cost}", "ZVS coverage"]
+        elif self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_2_dimensional:
+            target_names = ["Weighted efficiency / %", r"i_\mathrm{cost}"]
         else:
             target_names = ["ZVS coverage / %", r"i_\mathrm{cost}"]
         fig = optuna.visualization.plot_pareto_front(self._study_in_storage, target_names=target_names)
@@ -1444,7 +1539,9 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
         df = self._study_in_storage.trials_dataframe()
         df.to_csv(f'{self.circuit_study_data.optimization_directory}/{self._dab_config.circuit_study_name}.csv')
 
-        if self._dab_config.filter.filter_algorithm == "sort_pareto":
+        if self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_3_dimensional:
+            df = df.loc[df["user_attrs_dead_time_zvs_coverage"].eq(100)]
+        elif self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_2_dimensional:
             df = df.loc[df["user_attrs_dead_time_zvs_coverage"].eq(100)]
         else:
             # get 100 percent ZVS coverage designs
@@ -1458,7 +1555,7 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
 
         smallest_dto_list: list[d_dtos.DabCircuitDTO] = []
 
-        if self._dab_config.filter.filter_algorithm == "sort_lowest":
+        if self._dab_config.filter.filter_algorithm == DabEnums.sort_lowest.value:
 
             df_smallest_all = df.nsmallest(n=1, columns=["values_1"])
             df_smallest = df.nsmallest(n=1, columns=["values_1"])
@@ -1489,7 +1586,7 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
 
                 df_smallest = df.nsmallest(n=1, columns=["values_1"])
                 df_smallest_all = pd.concat([df_smallest_all, df_smallest], axis=0)
-        elif self._dab_config.filter.filter_algorithm == "sort_frequency":
+        elif self._dab_config.filter.filter_algorithm == DabEnums.sort_frequency.value:
             f_min = df['params_f_s_suggest'].min()
             f_max = df['params_f_s_suggest'].max()
             df_smallest_all = pd.DataFrame(columns=df.columns)
@@ -1504,11 +1601,18 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
                     selected_positions.append(candidates.idxmin())
                     df_smallest_all = pd.concat([df_smallest_all, df.loc[[candidates.idxmin()]]], axis=0)
 
-        elif self._dab_config.filter.filter_algorithm == "sort_pareto":
+        elif self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_3_dimensional.value:
             pareto_front = DabCircuitOptimization.find_pareto_front(df)
             print(f"{pareto_front=}")
             df_smallest_all = DabCircuitOptimization.sample_pareto_front_by_number_points(
                 pareto_front, number_of_points=self._dab_config.filter.number_filtered_designs, tolerance_percent=self._dab_config.filter.difference_percentage)
+        elif self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_2_dimensional.value:
+            pareto_front = DabCircuitOptimization.find_pareto_front(df)
+            print(f"{pareto_front=}")
+            df_smallest_all = DabCircuitOptimization.sample_pareto_front_by_number_points(
+                pareto_front, number_of_points=self._dab_config.filter.number_filtered_designs, tolerance_percent=self._dab_config.filter.difference_percentage)
+        else:
+            raise ValueError("Filter algorithm not available.")
 
         smallest_dto_list = self.df_to_dab_dto_list(df_smallest_all)
         logger.info("Save filtered circuit results into csv file.")
