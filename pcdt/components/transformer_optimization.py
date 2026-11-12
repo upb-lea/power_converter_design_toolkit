@@ -432,7 +432,7 @@ class TransformerOptimization:
         # Overtake the filtered operation points
         quantity_transformer_id_pareto = len(transformer_id_list_pareto)
 
-        logger.info(f"Full-operating point simulation list with {len(transformer_id_list_pareto)} designs: {transformer_id_list_pareto}")
+        logger.info(f"Reluctance model: Full-operating point simulation list with {len(transformer_id_list_pareto)} designs: {transformer_id_list_pareto}")
 
         new_circuit_dto_directory = os.path.join(act_sto_config.stacked_transformer_optimization_directory, CIRCUIT_TRANSFORMER_RELUCTANCE_LOSSES_FOLDER)
         if not os.path.exists(new_circuit_dto_directory):
@@ -628,7 +628,7 @@ class TransformerOptimization:
 
         transformer_id_list_pareto = df_transformer_pareto["number"].to_numpy()
 
-        logger.info(f"Full-operating point simulation list with {len(transformer_id_list_pareto)} designs: {transformer_id_list_pareto}")
+        logger.info(f"FEM simulation: Full-operating point simulation list with {len(transformer_id_list_pareto)} designs: {transformer_id_list_pareto}")
 
         new_circuit_dto_directory = os.path.join(act_sto_config.stacked_transformer_optimization_directory,
                                                  CIRCUIT_TRANSFORMER_FEM_LOSSES_FOLDER)

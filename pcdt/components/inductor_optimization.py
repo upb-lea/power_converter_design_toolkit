@@ -360,7 +360,7 @@ class InductorOptimization:
         # Overtake the filtered operation points
         quantity_of_inductor_id_pareto = len(inductor_id_list_pareto)
 
-        logger.info(f"Full-operating point simulation list with {len(inductor_id_list_pareto)} designs: {inductor_id_list_pareto}")
+        logger.info(f"Reluctance model: Full-operating point simulation list with {len(inductor_id_list_pareto)} designs: {inductor_id_list_pareto}")
 
         new_circuit_dto_directory = os.path.join(act_io_config.inductor_optimization_directory, CIRCUIT_INDUCTOR_RELUCTANCE_LOSSES_FOLDER)
         if not os.path.exists(new_circuit_dto_directory):
@@ -544,7 +544,7 @@ class InductorOptimization:
 
         inductor_id_list_pareto = df_inductor_pareto["number"].to_numpy()
 
-        logger.info(f"Full-operating point simulation list with {len(inductor_id_list_pareto)} designs: {inductor_id_list_pareto}")
+        logger.info(f"FEM simulation: Full-operating point simulation list with {len(inductor_id_list_pareto)} designs: {inductor_id_list_pareto}")
 
         new_circuit_dto_directory = os.path.join(act_io_config.inductor_optimization_directory, CIRCUIT_INDUCTOR_FEM_LOSSES_FOLDER)
         if not os.path.exists(new_circuit_dto_directory):

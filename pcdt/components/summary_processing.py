@@ -602,7 +602,7 @@ class SummaryProcessing:
 
         # Check if initialization list is empty
         if not self._summary_configuration_list:
-            raise ValueError("First you need to initialize summary by calling 'initialize_processing'!")
+            raise ValueError("Generate cooling requirement database: First you need to initialize summary by calling 'initialize_processing'!")
 
         # Start the progress time measurement
         with self._s_lock_stat:
@@ -779,7 +779,7 @@ class SummaryProcessing:
 
         # Check if initialization list is empty
         if not self._summary_configuration_list:
-            raise ValueError("First you need to initialize summary by calling 'initialize_processing'!")
+            raise ValueError("Generate result database: First you need to initialize summary by calling 'initialize_processing'!")
 
         # iterate circuit numbers
         for design in self._summary_configuration_list:
