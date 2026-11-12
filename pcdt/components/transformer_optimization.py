@@ -686,6 +686,7 @@ class TransformerOptimization:
                         winding_1_loss_array=winding_1_loss_array,
                         winding_2_loss_array=winding_2_loss_array,
                         core_loss_array=core_loss_array,
+                        b_max_array=0,
                         volume=fem_output.volume,
                         area_to_heat_sink=area_to_heat_sink,
                         r_th_xfmr_heat_sink=r_th_xfmr_heat_sink,

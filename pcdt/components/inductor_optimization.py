@@ -596,6 +596,7 @@ class InductorOptimization:
                         loss_array=combined_loss_array,
                         winding_loss_array=winding_loss_array,
                         core_loss_array=core_loss_array,
+                        b_max_array=0,
                         volume=fem_output.volume,
                         area_to_heat_sink=area_to_heat_sink,
                         r_th_ind_heat_sink=r_th_ind_heat_sink,
