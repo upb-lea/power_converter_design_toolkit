@@ -1473,10 +1473,9 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
 
         frequency_points = pareto_front.dropna(subset=[frequency_column]).copy()
         if len(frequency_points) < number_of_points:
-            raise ValueError(
-                f"Cannot select {number_of_points} unique points from only {len(frequency_points)} "
-                "Pareto points with a frequency value"
-            )
+            logger.warning(f"Number of Pareto front points is {len(frequency_points)}, but {number_of_points} are required. "
+                           f"Update required number to available number.")
+            number_of_points = len(frequency_points)
 
         frequency_points["source_index"] = frequency_points.index
         frequency_points = frequency_points.reset_index(drop=True)
