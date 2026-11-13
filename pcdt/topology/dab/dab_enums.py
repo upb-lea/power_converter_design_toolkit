@@ -1,4 +1,4 @@
-"""Enums for the DAB topology."""
+"""Enumerations for the DAB topology."""
 # python libraries
 import enum
 
