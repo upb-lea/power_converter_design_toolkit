@@ -1122,7 +1122,7 @@ class MainCtl:
         # Check if transformer is initialized,if not initialized progress data are valid (ASA: Multi component state is to add)
         if self._transformer_optimization is not None:
             self._transformer_list[0].progress_data = self._transformer_optimization.get_progress_data(0, filtered_pt_id)
-        elif self._inductor_list[0].progress_data.progress_status == ProgressStatus.Skipped:
+        elif self._transformer_list[0].progress_data.progress_status == ProgressStatus.Skipped:
             self._transformer_list[0].progress_data.number_of_filtered_points = self._transformer_number_filtered_analytic_points_skip_list[filtered_pt_id]
         # Heat sink
         # Check if heat sink is initialized,if not initialized progress data are valid
