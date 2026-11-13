@@ -66,7 +66,8 @@ class TomlDabThermalResistanceData(TomlCData):
 class TomlDabCircuitFilterDistance(TomlCData):
     """Toml checker class for CircuitFilterDistance."""
 
-    filter_algorithm: Literal[DabEnums.sort_pareto_3_dimensional.value, DabEnums.sort_pareto_2_dimensional.value, DabEnums.sort_frequency.value, DabEnums.sort_lowest.value]
+    filter_algorithm: Literal[
+        DabEnums.sort_pareto_3_dimensional.value, DabEnums.sort_pareto_2_dimensional.value, DabEnums.sort_frequency.value, DabEnums.sort_lowest.value]
     number_filtered_designs: int
     difference_percentage: float
 

@@ -671,7 +671,7 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
 
         if (np.any(np.isnan(dab_calc.calc_modulation.phi)) or np.any(np.isnan(dab_calc.calc_modulation.tau1)) \
                 or np.any(np.isnan(dab_calc.calc_modulation.tau2))):
-            return float('nan'), float('nan')
+            return float('nan'), float('nan'), float('nan')
 
         if dab_calc.calc_dead_time is None:
             raise ValueError("Incomplete calculation, as dead time is missing.")
@@ -682,10 +682,10 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
 
         if not np.all(dead_time_1_less_maximum):
             logger.info(f"Needed dead time of bridge 1 exceeds maximum dead time of {dab_calc.input_config.t_dead_1_max}.")
-            return float('nan'), float('nan')
+            return float('nan'), float('nan'), float('nan')
         if not np.all(dead_time_2_less_maximum):
             logger.info(f"Needed dead time of bridge 2 exceeds maximum dead time of {dab_calc.input_config.t_dead_2_max}.")
-            return float('nan'), float('nan')
+            return float('nan'), float('nan'), float('nan')
 
         # Calculate the cost function.
         i_cost_matrix = dab_calc.calc_currents.i_hf_1_rms ** 2 + dab_calc.calc_currents.i_hf_2_rms ** 2
@@ -700,11 +700,13 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
 
         # add transistor losses
         dab_calc = HandleDabDto.add_transistor_turn_off_currents_losses(dab_calc)
+        if dab_calc.calc_losses is not None:
+            transistor_efficiency = (np.abs(fixed_parameters.mesh_p) - dab_calc.calc_losses.p_dab) / np.abs(fixed_parameters.mesh_p)
 
-        transistor_efficiency = (np.abs(fixed_parameters.mesh_p) - dab_calc.calc_losses.p_dab) / np.abs(fixed_parameters.mesh_p)
-
-        weighted_transistor_efficiency = np.sum(transistor_efficiency * fixed_parameters.mesh_weights)
-        return weighted_transistor_efficiency, i_cost, dab_calc.calc_dead_time.zvs_coverage * 100
+            weighted_transistor_efficiency = np.sum(transistor_efficiency * fixed_parameters.mesh_weights)
+            return weighted_transistor_efficiency, i_cost, dab_calc.calc_dead_time.zvs_coverage * 100
+        else:
+            return float('nan'), float('nan'), float('nan')
 
     @staticmethod
     def _objective_pareto_2_dimensions(trial: optuna.Trial, dab_config: circuit_dtos.CircuitParetoDabDesign,
@@ -790,10 +792,14 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
         # add transistor losses
         dab_calc = HandleDabDto.add_transistor_turn_off_currents_losses(dab_calc)
 
-        transistor_efficiency = (np.abs(fixed_parameters.mesh_p) - dab_calc.calc_losses.p_dab) / np.abs(fixed_parameters.mesh_p)
+        if dab_calc.calc_losses is not None:
 
-        weighted_transistor_efficiency = np.sum(transistor_efficiency * fixed_parameters.mesh_weights)
-        return weighted_transistor_efficiency, i_cost
+            transistor_efficiency = (np.abs(fixed_parameters.mesh_p) - dab_calc.calc_losses.p_dab) / np.abs(fixed_parameters.mesh_p)
+
+            weighted_transistor_efficiency = np.sum(transistor_efficiency * fixed_parameters.mesh_weights)
+            return weighted_transistor_efficiency, i_cost
+        else:
+            return float('nan'), float('nan')
 
     @staticmethod
     def _objective(trial: optuna.Trial, dab_config: circuit_dtos.CircuitParetoDabDesign, fixed_parameters: d_dtos.FixedParameters) -> tuple:
@@ -994,12 +1000,17 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
             logger.warning("Study is not initialized!")
             return
 
+        if self._dab_config is None:
+            raise ValueError("_dab_config needs to be initialized first.")
+        if self._fixed_parameters is None:
+            raise ValueError("_fixed_parameters needs to be initialized first.")
+
         # Function to execute
         if self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_3_dimensional.value:
             func = lambda trial: DabCircuitOptimization._objective_pareto_3_dimensions(trial, self._dab_config, self._fixed_parameters)
         elif self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_2_dimensional.value:
             func = lambda trial: DabCircuitOptimization._objective_pareto_2_dimensions(trial, self._dab_config, self._fixed_parameters)
-        elif (self._dab_config.filter.filter_algorithm == DabEnums.sort_lowest.value or
+        elif (self._dab_config.filter.filter_algorithm == DabEnums.sort_lowest.value or \
               self._dab_config.filter.filter_algorithm == DabEnums.sort_frequency.value):
             func = lambda trial: DabCircuitOptimization._objective(trial, self._dab_config, self._fixed_parameters)
         else:
@@ -1093,7 +1104,7 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
         if self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_3_dimensional:
             directions: list[Literal["minimize", "maximize"]] = ["maximize", "minimize", "maximize"]
         else:
-            directions: list[Literal["minimize", "maximize"]] = ["maximize", "minimize"]
+            directions = ["maximize", "minimize"]
 
         # Calculate the fixed parameters
         self._fixed_parameters = DabCircuitOptimization.calculate_fixed_parameters(self._dab_config)
@@ -1480,7 +1491,7 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
         tolerance_hz = target_spacing * 0.5 * tolerance_percent / 100
 
         selected_rows = []
-        selected_positions = set()
+        selected_positions: set = set()
         for sample_number, target_hz in enumerate(target_frequencies, start=1):
             candidates = frequency_points.loc[~frequency_points.index.isin(selected_positions)].copy()
             candidates["_frequency_deviation_hz"] = (candidates[frequency_column] - target_hz).abs()
