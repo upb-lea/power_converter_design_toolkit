@@ -995,12 +995,15 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
             return
 
         # Function to execute
-        if self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_3_dimensional:
+        if self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_3_dimensional.value:
             func = lambda trial: DabCircuitOptimization._objective_pareto_3_dimensions(trial, self._dab_config, self._fixed_parameters)
-        elif self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_2_dimensional:
+        elif self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_2_dimensional.value:
             func = lambda trial: DabCircuitOptimization._objective_pareto_2_dimensions(trial, self._dab_config, self._fixed_parameters)
-        else:
+        elif (self._dab_config.filter.filter_algorithm == DabEnums.sort_lowest.value or
+              self._dab_config.filter.filter_algorithm == DabEnums.sort_frequency.value):
             func = lambda trial: DabCircuitOptimization._objective(trial, self._dab_config, self._fixed_parameters)
+        else:
+            raise ValueError(f"Filter algorithm {self._dab_config.filter.filter_algorithm} not available")
 
         try:
             self._study_in_memory.optimize(func, n_trials=act_number_trials, n_jobs=1, show_progress_bar=True)
