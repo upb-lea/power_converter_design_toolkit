@@ -1110,7 +1110,7 @@ class HandleDabDto:
             time_vec=sorted_max_rms_angles / (2 * np.pi * dab_dto.input_config.fs),
             time_array=time_array_resorted,
             current_array=current_array_resorted,
-            v_dc_max=np.max(dab_dto.input_config.mesh_v1),
+            v_dc_max=np.max(dab_dto.input_config.mesh_v2),
             study_name="",
             circuit_id=dab_dto.circuit_id,
             capacitor_number_in_circuit=1

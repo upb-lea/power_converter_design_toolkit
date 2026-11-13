@@ -1556,18 +1556,8 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
         df = self._study_in_storage.trials_dataframe()
         df.to_csv(f'{self.circuit_study_data.optimization_directory}/{self._dab_config.circuit_study_name}.csv')
 
-        if self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_3_dimensional.value:
-            df = df.loc[df["user_attrs_dead_time_zvs_coverage"].eq(100)]
-        elif self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_2_dimensional.value:
-            df = df.loc[df["user_attrs_dead_time_zvs_coverage"].eq(100)]
-        elif (self._dab_config.filter.filter_algorithm == DabEnums.sort_frequency.value or \
-              self._dab_config.filter.filter_algorithm == DabEnums.sort_lowest.value):
-            # get 100 percent ZVS coverage designs
-            df = df[df["values_0"] == 100]
-        else:
-            raise ValueError(f"Filter algorithm {self._dab_config.filter.filter_algorithm} not available.")
-
-        print(df.head())
+        # use 100 percent zvs coverage only, based on dead time calculations
+        df = df.loc[df["user_attrs_dead_time_zvs_coverage"].eq(100)]
 
         # Continue time measurement
         with self._c_lock_stat:
@@ -1621,14 +1611,9 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
                     selected_positions.append(candidates.idxmin())
                     df_smallest_all = pd.concat([df_smallest_all, df.loc[[candidates.idxmin()]]], axis=0)
 
-        elif self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_3_dimensional.value:
+        elif (self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_3_dimensional.value) or \
+                (self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_2_dimensional.value):
             pareto_front = DabCircuitOptimization.find_pareto_front(df)
-            print(f"{pareto_front=}")
-            df_smallest_all = DabCircuitOptimization.sample_pareto_front_by_number_points(
-                pareto_front, number_of_points=self._dab_config.filter.number_filtered_designs, tolerance_percent=self._dab_config.filter.difference_percentage)
-        elif self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_2_dimensional.value:
-            pareto_front = DabCircuitOptimization.find_pareto_front(df)
-            print(f"{pareto_front=}")
             df_smallest_all = DabCircuitOptimization.sample_pareto_front_by_number_points(
                 pareto_front, number_of_points=self._dab_config.filter.number_filtered_designs, tolerance_percent=self._dab_config.filter.difference_percentage)
         else:
