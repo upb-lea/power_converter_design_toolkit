@@ -844,7 +844,7 @@ class SummaryProcessing:
         # Convert for saving data in CSV-format
         act_df = SummaryProcessing._convert_for_csv(
             act_df, ["total_loss_array", "circuit_loss_array", "capacitor_loss_array",
-                     "inductor_loss_array", "transformer_loss_array""circuit_loss_array"])
+                     "inductor_loss_array", "transformer_loss_array", "circuit_loss_array"])
 
         act_df.to_csv(f"{self._summary_study_data.optimization_directory}/{DF_SUMMARY_FINAL}")
 
