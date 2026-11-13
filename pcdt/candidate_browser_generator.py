@@ -163,10 +163,6 @@ class CandidateBrowserGen:
         """
         # Variable declaration and initialization
         server_path_information: dict = {}
-        # Destination path for template
-        template_path: str
-        # Template list
-        template_list: list[str] = [TMP_DETAILED_HTML]
 
         # Template are load by data (Special approach of Jinja2 to access the template)
         env = Environment(loader=FileSystemLoader(self.html_template_folder))
@@ -213,12 +209,15 @@ class CandidateBrowserGen:
         conf_names: dict[str, str | list] = {}
         # List for sub path
         conf_sub_list: list[str] = []
-        # Numbers of components
-        number_of_components: dict = {}
-        # Debug Test
-        number_of_components["nr_of_caps"] = 2
         # File path for csv data
         csv_filepath: str = os.path.join(summary_data.optimization_directory, DF_SUMMARY_FINAL)
+        # Numbers of components
+        number_of_components: dict = {}
+
+        # Get numbers of components
+        number_of_components["nb_of_cap"] = circuit_configuration.get_number_of_required_capacitors()
+        number_of_components["nb_of_ind"] = circuit_configuration.get_number_of_required_inductors()
+        number_of_components["nb_of_tr"] = circuit_configuration.get_number_of_required_transformers()
 
         # Read csv-file
         candidate_info_list = CandidateBrowserGen._read_brief_candidate_data(csv_filepath)
@@ -277,7 +276,7 @@ class CandidateBrowserGen:
             # Assemble target name
             webserver_filepath: str = os.path.join(self.candidate_browser_study_data.optimization_directory, WEB_SERVER_PY)
             template_file_path = os.path.join(self.candidate_browser_study_data.optimization_directory, HTML_TEMPLATE_FOLDER_NAME, TARGET_TMP_DETAILED_HTML)
-            # Generate webbrowser-file
+            # Generate web browser-file
             self._generate_webbrowser(conf_names, webserver_filepath, number_of_components)
             # Generate Detailed page template
             self._generate_detailed_page_template(template_file_path, number_of_components)
