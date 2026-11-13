@@ -7,7 +7,6 @@ from typing import Literal
 # own libraries
 from pcdt.topology.circuit_optimization_base import TomlGData, TomlCData
 from pcdt.circuit_enums import SamplingEnum
-from pcdt.topology.dab.dab_enums import DabEnums
 
 # ######################################################
 # dab general
@@ -66,8 +65,7 @@ class TomlDabThermalResistanceData(TomlCData):
 class TomlDabCircuitFilterDistance(TomlCData):
     """Toml checker class for CircuitFilterDistance."""
 
-    filter_algorithm: Literal[
-        DabEnums.sort_pareto_3_dimensional.value, DabEnums.sort_pareto_2_dimensional.value, DabEnums.sort_frequency.value, DabEnums.sort_lowest.value]
+    filter_algorithm: Literal["sort_pareto_3_dimensional", "sort_pareto_2_dimensional", "sort_frequency", "sort_lowest"]
     number_filtered_designs: int
     difference_percentage: float
 
