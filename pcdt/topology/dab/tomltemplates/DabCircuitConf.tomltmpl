@@ -19,9 +19,9 @@
     t_dead_2_max = 500e-9
 
 [filter_distance]
-    filter_algorithm = "sort_frequency"  # "sort_frequency" or "sort_lowest"
+    filter_algorithm = "sort_pareto_2_dimensional"  # "sort_frequency" or "sort_lowest"
     number_filtered_designs = 2
-    difference_percentage = 5
+    difference_percentage = 95
 
 [thermal_data]
     # [tim_thickness, tim_conductivity]

@@ -566,7 +566,7 @@ class MainCtl:
         :rtype: bool
         """
         # Variable declaration and initialization
-        is_heat_sink_disc_useable: bool = True
+        is_heat_sink_disc_usable: bool = True
         issue_report: str = ""
         file_list: list[str] = []
         toml_file_name: str = ""
@@ -575,7 +575,7 @@ class MainCtl:
         # Check path
         if not (os.path.exists(act_heat_sink_disc_path) or act_heat_sink_disc_path == ""):
             issue_report = f"file path {act_heat_sink_disc_path} does not exists!"
-            is_heat_sink_disc_useable = False
+            is_heat_sink_disc_usable = False
         else:
             # Initialize file check flags
             _is_pkl_file: bool = False
@@ -587,7 +587,7 @@ class MainCtl:
                 if filename.endswith("pkl"):
                     if _is_pkl_file is True:
                         issue_report = issue_report + f"A second pkl-file {filename} in {act_heat_sink_disc_path} exists!\n"
-                        is_heat_sink_disc_useable = False
+                        is_heat_sink_disc_usable = False
                         break
                     else:
                         # Add file name to list
@@ -597,7 +597,7 @@ class MainCtl:
                 if filename.endswith("csv"):
                     if _is_csv_file is True:
                         issue_report = issue_report + f"A second csv-file {filename} in {act_heat_sink_disc_path} exists!\n"
-                        is_heat_sink_disc_useable = False
+                        is_heat_sink_disc_usable = False
                         break
                     else:
                         # Add file name to list
@@ -607,7 +607,7 @@ class MainCtl:
                 if filename.endswith("toml"):
                     if _is_toml_file is True:
                         issue_report = issue_report + f"A second toml-file {filename} in {act_heat_sink_disc_path} exists!\n"
-                        is_heat_sink_disc_useable = False
+                        is_heat_sink_disc_usable = False
                         break
                     else:
                         # Add file name to list
@@ -617,7 +617,7 @@ class MainCtl:
                         _is_toml_file = True
 
         # Compare heat sink configuration if no error occurs
-        if is_heat_sink_disc_useable:
+        if is_heat_sink_disc_usable:
             # Load the file
             is_heat_sink_loaded, heat_sink_dict_disc = MainCtl.load_toml_file(toml_file_name)
             # Check for success
@@ -627,13 +627,13 @@ class MainCtl:
                 if toml_heat_sink_disc != act_toml_data:
                     issue_report = (issue_report + f"Heat sink configuration data file {HEAT_SINK_DISC_FOLDER} is not equal\n"
                                                    "to this one in workspace!")
-                    is_heat_sink_disc_useable = False
+                    is_heat_sink_disc_usable = False
             else:
                 issue_report = issue_report + f"toml-file {act_heat_sink_disc_path} could not be loaded!\n"
-                is_heat_sink_disc_useable = False
+                is_heat_sink_disc_usable = False
 
         # Perform the usage if no error occurs
-        if is_heat_sink_disc_useable:
+        if is_heat_sink_disc_usable:
             # Delete current files in heat sink sub folder
             self.delete_study_content(True, self._heat_sink_study_data.optimization_directory, self._heat_sink_study_data.study_name)
             # Copy data
@@ -644,7 +644,7 @@ class MainCtl:
                 # Perform copy
                 shutil.copy(source_pathfile, destination_pathfile)
 
-        return is_heat_sink_disc_useable, issue_report
+        return is_heat_sink_disc_usable, issue_report
 
     @staticmethod
     def _create_pkl_file_completion_list(path_list: list[str], extension: str) -> list[str]:
@@ -701,7 +701,6 @@ class MainCtl:
         """
         # Variable declaration and initialization
         path_list: list[str] = []
-        pkl_file_list: list[str] = []
 
         # Check if file exists
         # Check path
@@ -719,7 +718,7 @@ class MainCtl:
             path_list.append(os.path.join(base_directory, subdirectory))
 
         # Create pkl-file completion list
-        pkl_file_list = MainCtl._create_pkl_file_completion_list(path_list, ".pkl")
+        pkl_file_list: list[str] = MainCtl._create_pkl_file_completion_list(path_list, ".pkl")
 
         # Store processing_complete_file
         with open(processing_complete_file, "w", encoding="utf-8") as file_handle:
@@ -867,10 +866,10 @@ class MainCtl:
         if circuit_calculation_mode is continues_mode the calculation mode of the dependent study data
         is set to continues_mode, if it's mode was not new_mode.
 
-        :param calculation_mode_value: calculation mode from circuit study data
-        :type  calculation_mode_value: CalcModeEnum
-        :param dependent_study_data_list: Dependent study data
-        :type  dependent_study_data_list: StudyData
+        :param circuit_calculation_mode: calculation mode from circuit study data
+        :type  circuit_calculation_mode: CalcModeEnum
+        :param dependent_study_data: Dependent study data
+        :type  dependent_study_data: StudyData
         """
         # new_mode of dependent study is kept independently of circuit study calculation mode
         if dependent_study_data.calculation_mode != CalcModeEnum.new_mode:
@@ -1123,7 +1122,7 @@ class MainCtl:
         # Check if transformer is initialized,if not initialized progress data are valid (ASA: Multi component state is to add)
         if self._transformer_optimization is not None:
             self._transformer_list[0].progress_data = self._transformer_optimization.get_progress_data(0, filtered_pt_id)
-        elif self._inductor_list[0].progress_data.progress_status == ProgressStatus.Skipped:
+        elif self._transformer_list[0].progress_data.progress_status == ProgressStatus.Skipped:
             self._transformer_list[0].progress_data.number_of_filtered_points = self._transformer_number_filtered_analytic_points_skip_list[filtered_pt_id]
         # Heat sink
         # Check if heat sink is initialized,if not initialized progress data are valid

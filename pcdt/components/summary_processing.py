@@ -19,6 +19,8 @@ from pcdt.toml_checker import TomlHeatSink
 from pcdt.datasets_dtos import (FilterData, StudyData, CapacitorConfiguration, InductorConfiguration,
                                 TransformerConfiguration, SummaryConfiguration)
 from pcdt.topology.circuit_optimization_base import CircuitOptimizationBase
+from pcdt.components.component_dtos import InductorResults, StackedTransformerResults
+from pcdt.constants import SATURATION_THRESHOLD
 import hct
 from pcdt.server_ctl_dtos import ProgressData
 from pcdt.server_ctl_dtos import RunTimeMeasurement as RunTime
@@ -151,7 +153,7 @@ class SummaryProcessing:
         result_summary_configuration_list: list[SummaryConfiguration] = []
 
         for summary_configuration in act_summary_configuration_list:
-            if summary_configuration.circuit_data_list[0]["circuit_id"] is not missing_component_circuit_index:
+            if summary_configuration.circuit_data_list[0]["circuit_id"] != missing_component_circuit_index:
                 result_summary_configuration_list.append(summary_configuration)
 
         return result_summary_configuration_list
@@ -306,7 +308,7 @@ class SummaryProcessing:
 
                     # Get inductor results
                     with open(inductor_id_filepath, 'rb') as pickle_file_data:
-                        inductor_results_dto = pickle.load(pickle_file_data)
+                        inductor_results_dto: InductorResults = pickle.load(pickle_file_data)
 
                     if inductor_results_dto.circuit_id != circuit_id:
                         raise ValueError(f"{inductor_results_dto.circuit_id=} != {circuit_id}")
@@ -322,7 +324,6 @@ class SummaryProcessing:
 
                     # Assemble the data frame entry
                     inductor_data = {
-                        # inductor
                         f"inductor_study_name_{number_in_circuit}": act_inductor_data.study_data.study_name,
                         f"inductor_id_{number_in_circuit}": inductor_id,
                         f"inductor_volume_{number_in_circuit}": inductor_results_dto.volume,
@@ -331,8 +332,9 @@ class SummaryProcessing:
                         f"inductor_area_{number_in_circuit}": inductor_results_dto.area_to_heat_sink,
                         f"r_th_ind_heat_sink_{number_in_circuit}": inductor_results_dto.r_th_ind_heat_sink
                     }
-                    # Store inductor data set
-                    inductors.append(inductor_data)
+                    if np.all(inductor_results_dto.b_max_array < SATURATION_THRESHOLD):
+                        # Store inductor data set
+                        inductors.append(inductor_data)
 
                 # Add to inductor component list
                 inductor_data_list.append(inductors)
@@ -365,7 +367,7 @@ class SummaryProcessing:
 
                     # get transformer results
                     with open(transformer_id_filepath, 'rb') as pickle_file_data:
-                        transformer_results_dto = pickle.load(pickle_file_data)
+                        transformer_results_dto: StackedTransformerResults = pickle.load(pickle_file_data)
 
                     if transformer_results_dto.circuit_id != circuit_id:
                         raise ValueError(f"{transformer_results_dto.circuit_id=} != {circuit_id}")
@@ -378,7 +380,6 @@ class SummaryProcessing:
                     number_in_circuit = transformer_results_dto.transformer_number_in_circuit
                     # Assemble the data frame entry
                     transformer_data = {
-                        # transformer
                         f"transformer_study_name_{number_in_circuit}": act_transformer_data.study_data.study_name,
                         f"transformer_id_{number_in_circuit}": transformer_id,
                         f"transformer_volume_{number_in_circuit}": transformer_results_dto.volume,
@@ -388,8 +389,9 @@ class SummaryProcessing:
                         f"r_th_xfmr_heat_sink_{number_in_circuit}": transformer_results_dto.r_th_xfmr_heat_sink
                     }
 
-                    # Store transformer data set
-                    transformers.append(transformer_data)
+                    if np.all(transformer_results_dto.b_max_array < SATURATION_THRESHOLD):
+                        # Store transformer data set
+                        transformers.append(transformer_data)
 
                 # Add to inductor component list
                 transformer_data_list.append(transformers)
@@ -598,7 +600,7 @@ class SummaryProcessing:
 
         # Check if initialization list is empty
         if not self._summary_configuration_list:
-            raise ValueError("First you need to initialize summary by calling 'initialize_processing'!")
+            raise ValueError("Generate cooling requirement database: First you need to initialize summary by calling 'initialize_processing'!")
 
         # Start the progress time measurement
         with self._s_lock_stat:
@@ -775,7 +777,7 @@ class SummaryProcessing:
 
         # Check if initialization list is empty
         if not self._summary_configuration_list:
-            raise ValueError("First you need to initialize summary by calling 'initialize_processing'!")
+            raise ValueError("Generate result database: First you need to initialize summary by calling 'initialize_processing'!")
 
         # iterate circuit numbers
         for design in self._summary_configuration_list:
@@ -842,7 +844,7 @@ class SummaryProcessing:
         # Convert for saving data in CSV-format
         act_df = SummaryProcessing._convert_for_csv(
             act_df, ["total_loss_array", "circuit_loss_array", "capacitor_loss_array",
-                     "inductor_loss_array", "transformer_loss_array""circuit_loss_array"])
+                     "inductor_loss_array", "transformer_loss_array", "circuit_loss_array"])
 
         act_df.to_csv(f"{self._summary_study_data.optimization_directory}/{DF_SUMMARY_FINAL}")
 
