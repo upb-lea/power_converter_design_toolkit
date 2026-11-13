@@ -20,13 +20,22 @@ from fastapi.staticfiles import StaticFiles
 PCDT_ROOT: str
 SUMMARY_DATA_CSV: str
 CIRCUIT_DATA_CSV: str
+# Base path global variable declaration
 CAPACITOR_BASE_PATH: str
 INDUCTOR_BASE_PATH: str
 TRANSFORMER_BASE_PATH: str
-CAPACITOR0_CSV: str
-CAPACITOR1_CSV: str
-INDUCTOR_CSV: str
-TRANSFORMER_CSV: str
+
+# Component csv file names global variable declaration
+{% for index in range(component.nb_of_cap) %}
+CAPACITOR{{ index }}_CSV: str
+{%- endfor %}
+{% for index in range(component.nb_of_ind) %}
+INDUCTOR{{ index }}_CSV: str
+{%- endfor %}
+{% for index in range(component.nb_of_tr) %}
+TRANSFORMER{{ index }}_CSV: str
+{%- endfor %}
+
 HEAT_SINK_CSV: str
 VISUALIZATION_BASE_PATH: str
 # Name key (Use a key, which does not correspond to any SI-unit)
@@ -41,7 +50,17 @@ candidates_key_list: list[dict] = []
 def initialize_path(act_workspace_name: str):
     # Variable declaration
     global PCDT_ROOT, SUMMARY_DATA_CSV, CIRCUIT_DATA_CSV, CAPACITOR_BASE_PATH, INDUCTOR_BASE_PATH, VISUALIZATION_BASE_PATH
-    global TRANSFORMER_BASE_PATH, CAPACITOR0_CSV, CAPACITOR1_CSV, INDUCTOR_CSV, TRANSFORMER_CSV, HEAT_SINK_CSV
+    {% for index in range(component.nb_of_cap) %} 
+    global CAPACITOR{{ index }}_CSV
+    {%- endfor %}
+    {% for index in range(component.nb_of_ind) %}
+    global INDUCTOR{{ index }}_CSV
+    {%- endfor %}
+    {% for index in range(component.nb_of_tr) %}
+    global TRANSFORMER{{ index }}_CSV
+    {%- endfor %}
+
+    global TRANSFORMER_BASE_PATH, HEAT_SINK_CSV
     global app, templates
 
     # Find root directory
@@ -73,12 +92,18 @@ def initialize_path(act_workspace_name: str):
     CAPACITOR_BASE_PATH = "{{ path_info.capacitor_base_path }}"
     INDUCTOR_BASE_PATH = "{{ path_info.inductor_base_path }}"
     TRANSFORMER_BASE_PATH = "{{ path_info.transformer_base_path }}"
-    CAPACITOR0_CSV = "{{ path_info.capacitor_csv0 }}"
-    CAPACITOR1_CSV = "{{ path_info.capacitor_csv1 }}"
-    INDUCTOR_CSV = "{{ path_info.inductor_csv0 }}"
-    TRANSFORMER_CSV = "{{ path_info.transformer_csv0 }}"
+    {% for index in range(component.nb_of_cap) %}
+    CAPACITOR{{ index }}_CSV = "{{ path_info['capacitor_csv' ~ index] }}"
+    {%- endfor %}
+    {% for index in range(component.nb_of_ind) %}
+    INDUCTOR{{ index }}_CSV = "{{ path_info['inductor_csv' ~ index] }}"
+    {%- endfor %}
+    {% for index in range(component.nb_of_tr) %}
+    TRANSFORMER{{ index }}_CSV = "{{ path_info['transformer_csv' ~ index] }}"
+    {%- endfor %}
+
     HEAT_SINK_CSV = "{{ path_info.heat_sink_csv }}"
-    VISUALIZATION_BASE_PATH = "{{ path_info.visualization_base_path }}"
+    VISUALIZATION_BASE_PATH = "{{ path_infovisualization_base_path }}"
 
     # Register FastAPI
     # app.add_api_route(path="/", methods=["GET"], endpoint=startpage, response_class=HTMLResponse)
@@ -98,10 +123,15 @@ def load_candidates()-> list [dict]:
             candidates.append({
                 'cid': row['combination_id'],
                 'cir_id': row['circuit_id'],
-                'cap0_id': row['capacitor_id_0'],
-                'cap1_id': row['capacitor_id_1'],
-                'ind_id': row['inductor_id_0'],
-                'tr_id': row['transformer_id_0'],
+            {% for index in range(component.nb_of_cap) -%}
+                'cap{{ index }}_id': row['capacitor_id_{{ index }}'],
+            {%- endfor %}
+            {% for index in range(component.nb_of_ind) -%}
+                'ind{{ index }}_id': row['inductor_id_{{ index }}'],
+            {%- endfor %}
+            {% for index in range(component.nb_of_tr) -%}
+                'tr{{ index }}_id': row['transformer_id_{{ index }}'],
+            {%- endfor %}
                 'hct_id': row['heat_sink_id']
             })
 
@@ -135,10 +165,8 @@ async def detailed_view(request: Request, combination_id: int):
 
     return templates.TemplateResponse(request,
         "{{ path_info.detailed_page_template}}",
-         {"plot_data": plot_data, "cir_data": candidate_data["circuit_data"],
-          "ind_data": candidate_data["inductor_data"], "tr_data": candidate_data["transformer_data"]}
-     )
-
+        {"plot_data": plot_data, "candidate_data": candidate_data}
+    )
 
 def read_component_plot_data(file_path: str, x_key: str, y_key: str, x_value: str, y_value: str,
                              id_key: str, sel_id: int) -> dict[str, dict | list[dict]]:
@@ -146,6 +174,7 @@ def read_component_plot_data(file_path: str, x_key: str, y_key: str, x_value: st
     plot_component_data: dict[str, dict | list[dict]] = {}
     plot_points: list[dict] = []
     plot_selected_point: dict = {}
+    is_valid: bool
 
     # Check if file exists
     if os.path.isfile(file_path):
@@ -153,8 +182,13 @@ def read_component_plot_data(file_path: str, x_key: str, y_key: str, x_value: st
             reader = csv.DictReader(file)
             # Get data from file
             for data_row in reader:
-                # Check if row is valid
-                if data_row["state"] == "COMPLETE":
+                is_valid = True
+                # Check if validity entry column exists, otherwise all values are valid
+                if "state" in data_row:
+                    if data_row["state"] != "COMPLETE":
+                       is_valid = False
+                # Check if row is validity
+                if is_valid:
                     plot_points.append({x_value: data_row[x_key], y_value: data_row[y_key]})
                     # Check if the data point corresponds to the selection
                     if data_row[id_key] == sel_id:
@@ -166,8 +200,6 @@ def read_component_plot_data(file_path: str, x_key: str, y_key: str, x_value: st
     else:
         # Notify the user about not existing file
         print(f"File '{file_path}' does not exists!")
-
-
 
     return plot_component_data
 
@@ -182,8 +214,7 @@ def read_component_candidate_data(file_path: str, id_key: str, id: int, paramete
             reader = csv.DictReader(file)
             # Find candidate
             for data_row in reader:
-                # Check if row is valid
-                if data_row["state"] == "COMPLETE" and data_row[id_key] == id:
+                if data_row[id_key] == id:
                     data = data_row
                     break
 
@@ -213,6 +244,9 @@ def read_component_candidate_data(file_path: str, id_key: str, id: int, paramete
     else:
         # Notify the user about not existing file
         print(f"File '{file_path}' does not exists!")
+
+    # Add key ID
+    candidate_component_data["id_key"] = id
 
     return candidate_component_data
 
@@ -267,14 +301,24 @@ def read_csv_plot_data(plot_file_path_dict: dict,  act_cid: int) -> dict[str, di
     plot_data["circuit_data"] = read_component_plot_data(
         plot_file_path_dict["circuit_csv_file"],"values_0" , "values_1", "ZVS_rate" ,"Current_factor",
         "number", candidate_ids["cir_id"] )
+   {%- for index in range(component.nb_of_cap) %}
+    # Read capacitor plot data
+    plot_data["capacitor{{ index }}_data"] = read_component_plot_data(
+        plot_file_path_dict["capacitor{{ index }}_csv_file"],"volume_total" , "power_loss_total", "total_volume" ,"total_mean_loss",
+        "ordering code", candidate_ids["cap{{ index }}_id"] )
+   {%- endfor %}
+   {%- for index in range(component.nb_of_ind) %}
     # Read inductor plot data
-    plot_data["inductor_data"] = read_component_plot_data(
-        plot_file_path_dict["inductor_csv_file"],"values_0" , "values_1", "total_volume" ,"total_mean_loss",
-        "number", candidate_ids["ind_id"] )
-    # Read transformer plot data
-    plot_data["transformer_data"] = read_component_plot_data(
-        plot_file_path_dict["transformer_csv_file"],"values_0" , "values_1", "total_volume" ,"total_mean_loss",
-        "number", candidate_ids["tr_id"])
+    plot_data["inductor{{ index }}_data"] = read_component_plot_data(
+        plot_file_path_dict["inductor{{ index }}_csv_file"],"values_0" , "values_1", "total_volume" ,"total_mean_loss",
+        "number", candidate_ids["ind{{ index }}_id"] )
+   {%- endfor %}
+   {%- for index in range(component.nb_of_tr) %}
+    # Read transformer{{ index }} plot data
+    plot_data["transformer{{ index }}_data"] = read_component_plot_data(
+        plot_file_path_dict["transformer{{ index }}_csv_file"],"values_0" , "values_1", "total_volume" ,"total_mean_loss",
+        "number", candidate_ids["tr{{ index }}_id"])
+   {%- endfor %}
     # Read heat sink plot data
     # plot_data["heat_sink"] = read_component_plot_data(plot_file_path_dict["inductor_csv_file"],"values_0" , "values_0", "volume" ,"ploss" )
 
@@ -289,6 +333,11 @@ def read_csv_candidate_data(file_path_dict: dict, act_cid: int) -> dict[str, lis
                                                           ("params_l_2_suggest", "l2", "H"),
                                                      ("params_l_s_suggest", "ls", "H"), ("params_transistor_1_name_suggest", "T1_type", NAME_KEY),
                                                      ("params_transistor_2_name_suggest", "T2_type", NAME_KEY)]
+
+    capacitor_parameter_list: list[tuple[str, str, str]] = [("volume", "cap_vol", "m³"), ("power_loss_total", "cap_loss", "W"), ("power_loss_per_capacitor", "cap_per_loss", "W"),
+                                                      ("ordering code", "cap_order", NAME_KEY), ("in_series_needed", "cap_series", ""), ("in_parallel_needed", "cap_parallel", ""),
+                                                      ("capacitance", "cap_capa", "F"), ("ESL_in_H", "cap_esl", "H"), ("ESR_85degree_in_Ohm", "cap_esr", "Ohm")]
+
     inductor_parameter_list: list[tuple[str, str, str]] = [("values_0", "ind_vol", "m³"), ("values_1", "ind_loss", "W"), ("user_attrs_flux_density_peak", "ind_peak_flux", "T"),
                                                       ("params_core_name", "ind_core", NAME_KEY), ("params_material_name", "ind_material", NAME_KEY), ("params_material_name", "ind_l", "H"),
                                                       ("params_turns", "ind_turns", ""), ("user_attrs_l_air_gap", "ind_airgap", "m"), ("params_litz_wire_name", "ind_litz", NAME_KEY)]
@@ -304,17 +353,30 @@ def read_csv_candidate_data(file_path_dict: dict, act_cid: int) -> dict[str, lis
     # Find combinationId
     candidate_ids = get_candidate_ids(act_cid)
 
+    # Add combination id
+    candidate_data["cid"] = act_cid
+
     # Read circuit data
-    candidate_data["circuit_data"] = read_component_candidate_data(
+    candidate_data["cir_data"] = read_component_candidate_data(
         file_path_dict["circuit_csv_file"], "number", candidate_ids["cir_id"], circuit_parameter_list)
 
-    # Read inductor data
-    candidate_data["inductor_data"] = read_component_candidate_data(
-        file_path_dict["inductor_csv_file"], "number", candidate_ids["ind_id"], inductor_parameter_list)
+    {% for index in range(component.nb_of_cap) %}
+    # Read capacitor{{ index }} data
+    candidate_data["cap{{ index }}_data"] = read_component_candidate_data(
+        file_path_dict["capacitor{{ index }}_csv_file"], "ordering code", candidate_ids["cap{{ index }}_id"], capacitor_parameter_list)
+    {%- endfor %}
 
+    {% for index in range(component.nb_of_ind) %}
+    # Read inductor data
+    candidate_data["ind{{ index }}_data"] = read_component_candidate_data(
+        file_path_dict["inductor{{ index }}_csv_file"], "number", candidate_ids["ind{{ index }}_id"], inductor_parameter_list)
+    {%- endfor %}
+
+    {% for index in range(component.nb_of_tr) %}
     # Read transformer data
-    candidate_data["transformer_data"] = read_component_candidate_data(
-        file_path_dict["transformer_csv_file"], "number", candidate_ids["tr_id"], transformer_parameter_list)
+    candidate_data["tr{{ index }}_data"] = read_component_candidate_data(
+        file_path_dict["transformer{{ index }}_csv_file"], "number", candidate_ids["tr{{ index }}_id"], transformer_parameter_list)
+    {%- endfor %}
 
     # Read heat sink plot data
     # plot_data["heat_sink"] = read_component_plot_data(plot_file_path_dict["inductor_csv_file"],"values_0" , "values_0", "volume" ,"ploss" )
@@ -332,10 +394,15 @@ def get_file_path_list(cid: int) -> dict:
     # Check if candidate is found
     if candidate_ids is not None:
         file_path_dict["circuit_csv_file"] = CIRCUIT_DATA_CSV
-        file_path_dict["capacitor0_csv_file"] = os.path.join(CAPACITOR_BASE_PATH, candidate_ids["cir_id"], CAPACITOR0_CSV)
-        file_path_dict["capacitor1_csv_file"] = os.path.join(CAPACITOR_BASE_PATH, candidate_ids["cir_id"], CAPACITOR1_CSV)
-        file_path_dict["inductor_csv_file"] = os.path.join(INDUCTOR_BASE_PATH, candidate_ids["cir_id"], INDUCTOR_CSV)
-        file_path_dict["transformer_csv_file"] = os.path.join(TRANSFORMER_BASE_PATH, candidate_ids["cir_id"], TRANSFORMER_CSV)
+    {% for index in range(component.nb_of_cap) %}
+        file_path_dict["capacitor{{ index }}_csv_file"] = os.path.join(CAPACITOR_BASE_PATH, candidate_ids["cir_id"], CAPACITOR{{ index }}_CSV)
+    {%- endfor %}
+    {% for index in range(component.nb_of_ind) %}
+        file_path_dict["inductor{{ index }}_csv_file"] = os.path.join(INDUCTOR_BASE_PATH, candidate_ids["cir_id"], INDUCTOR{{ index }}_CSV)
+    {%- endfor %}
+    {% for index in range(component.nb_of_tr) %}
+        file_path_dict["transformer{{ index }}_csv_file"] = os.path.join(TRANSFORMER_BASE_PATH, candidate_ids["cir_id"], TRANSFORMER{{ index }}_CSV)
+    {%- endfor %}
         file_path_dict["heat_sink_csv_file"] = HEAT_SINK_CSV
 
     return file_path_dict
@@ -358,4 +425,3 @@ if __name__ == "__main__":
     threading.Timer(1.5, open_browser).start()
     # Start server (block mode)
     uvicorn.run(app, host="127.0.0.1", port=8000)
-

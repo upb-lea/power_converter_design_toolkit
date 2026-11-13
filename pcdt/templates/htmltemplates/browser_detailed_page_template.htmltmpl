@@ -1,3 +1,4 @@
+{%- raw -%} 
 <!DOCTYPE html>
 <html>
 <head>
@@ -12,115 +13,193 @@
 <body>
     <h1>Detailed view of selected candidate</h1>
     <div class="container">
-        <!-- Graphic with information -->
         <div class="plot-column">
             <!-- Circuit plot -->
             <div id="plotcircuit"></div>
-            <!-- Inductor plot -->
-            <div id="plotinductor"></div>
-            <!-- Transformer plot -->
-            <div id="plottransformer"></div>
         </div>
         <div class="data-column">
             <!-- Detailed data -->
             <table>
                 <thead>
                     <tr>
-                        <th colspan="4">Circuit parameter <span class="table-subtitle">(CombinationID: {{ cid }})</span></th>
+                        <th colspan="4">Circuit parameter
+                        <span class="table-subtitle">(Design ID: {{ candidate_data.cir_data.id_key }}
+                        Combination ID: {{ candidate_data.cid }} )</span></th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <th>Switching frequency[kHz]</th><td>{{ cir_data.fs }}</td>
-                        <th>Inductor values</th><td>L<sub>1</sub>={{ cir_data.l1}}, L<sub>2</sub>={{ cir_data.l1}}, L<sub>s</sub>={{ cir_data.ls}}</td>
+                        <th>Switching frequency[kHz]</th><td>{{ candidate_data.cir_data.fs }}</td>
+                        <th>Inductor values</th>
+                        <td>L<sub>1</sub>={{ candidate_data.cir_data.l1}}, 
+                            L<sub>2</sub>={{ candidate_data.cir_data.l1}}, 
+                            L<sub>s</sub>={{ candidate_data.cir_data.ls}}
+                        </td>
                    </tr>
                     <tr>
-                        <th>Transistor 1</th><td>{{ cir_data.T1_type }}</td>
-                        <th>Transistor 2</th><td>{{ cir_data.T2_type }}</td>
+                        <th>Transistor 1</th><td>{{ candidate_data.cir_data.T1_type }}</td>
+                        <th>Transistor 2</th><td>{{ candidate_data.cir_data.T2_type }}</td>
                    </tr>
                 </tbody>
             </table>
-
+        </div>
+    {% endraw %}
+    {% for index in range(component.nb_of_cap) %}
+    {%- raw -%} 
+        <div class="plot-column">
+            <!-- Capacitor{% endraw %}{{index}}{% raw %} plot -->
+            <div id="plotcapacitor{% endraw %}{{index}}{% raw %}"></div>
+        </div>
+        <div class="data-column">
+            <!-- Detailed data -->
             <table>
                 <thead>
                     <tr>
-                        <th colspan="6">Inductor parameter</th>
+                        <th colspan="6">Capacitor{% endraw %}{{index}}{% raw %} parameter 
+                            <span class="table-subtitle">(Ordering number: {{ candidate_data.cap{% endraw %}{{index}}{% raw %}_data.id_key }})</span>
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <th>Volume</th><td>{{ ind_data.ind_vol }}</td>
-                        <th>Power loss</th><td>{{ ind_data.ind_loss}}</td>
-                        <th>Mag. peak flux</th><td>{{ ind_data.ind_peak_flux }}</td>
+                        <th>Volume</th><td>{{ candidate_data.cap{% endraw %}{{index}}{% raw %}_data.cap_vol }}</td>
+                        <th>Ordering name</th><td>{{ candidate_data.cap{% endraw %}{{index}}{% raw %}_data.cap_order }}</td>
+                        <th>Capacitance</th><td>{{ candidate_data.cap{% endraw %}{{index}}{% raw %}_data.cap_capa }}</td>
                    </tr>
                     <tr>
-                        <th>Core name</th><td>{{ ind_data.ind_core }}</td>
-                        <th>Magnetic material</th><td>{{ ind_data.ind_material}}</td>
-                        <th>Inductivity</th><td>{{ ind_data.ind_l}}</td>
+                        <th>Power loss</th><td>{{ candidate_data.cap{% endraw %}{{index}}{% raw %}_data.cap_loss }}</td>
+                        <th>Components in series</th><td>{{ candidate_data.cap{% endraw %}{{index}}{% raw %}_data.cap_series }}</td>
+                        <th>ESL H</th><td>{{ candidate_data.cap{% endraw %}{{index}}{% raw %}_data.cap_esl }}</td>
                    </tr>
                    <tr>
-                        <th>turns</th><td>{{ ind_data.ind_turns }}</td>
-                        <th>Air gap</th><td>{{ ind_data.ind_airgap }}</td>
-                        <th>Litz material</th><td>{{ ind_data.ind_litz}}</td>
+                        <th>Loss per component</th><td>{{ candidate_data.cap{% endraw %}{{index}}{% raw %}_data.cap_per_loss }}</td>
+                        <th>Components in parallel</th><td>{{ candidate_data.cap{% endraw %}{{index}}{% raw %}_data.cap_parallel }}</td>
+                        <th>ESR in Ohm</th><td>{{ candidate_data.cap{% endraw %}{{index}}{% raw %}_data.cap_esr }}</td>
                    </tr>
                 </tbody>
             </table>
-
+        </div>
+    {% endraw %}
+    {%- endfor %}
+    {% for index in range(component.nb_of_ind) %}
+    {%- raw -%} 
+        <div class="plot-column">
+            <!-- Inductor{% endraw %}{{index}}{% raw %} plot -->
+            <div id="plotinductor{% endraw %}{{index}}{% raw %}"></div>
+        </div>
+        <div class="data-column">
+            <!-- Detailed data -->
             <table>
                 <thead>
                     <tr>
-                        <th colspan="6">Transformer parameter</th>
+                        <th colspan="6">Inductor{% endraw %}{{index}}{% raw %} parameter 
+                            <span class="table-subtitle">(Design ID: {{ candidate_data.ind{% endraw %}{{index}}{% raw %}_data.id_key }})</span>
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <th>Volume</th><td>{{ tr_data.tr_vol }}</td>
-                        <th>Power loss</th><td>{{ tr_data.tr_loss}}</td>
-                        <th>Winding loss</th><td>{{ tr_data.tr_wind_loss}}</td>
+                        <th>Volume</th><td>{{ candidate_data.ind{% endraw %}{{index}}{% raw %}_data.ind_vol }}</td>
+                        <th>Core name</th><td>{{ candidate_data.ind{% endraw %}{{index}}{% raw %}_data.ind_core }}</td>
+                        <th>turns</th><td>{{ candidate_data.ind{% endraw %}{{index}}{% raw %}_data.ind_turns }}</td>
                    </tr>
                     <tr>
-                        <th>Core name</th><td>{{ tr_data.tr_core }}</td>
-                        <th>Magnetic material</th><td>{{ tr_data.tr_material }}</td>
-                        <th>Inductivity</th><td>{{ tr_data.tr_l }}</td>
+                        <th>Power loss</th><td>{{ candidate_data.ind{% endraw %}{{index}}{% raw %}_data.ind_loss}}</td>
+                        <th>Magnetic material</th><td>{{ candidate_data.ind{% endraw %}{{index}}{% raw %}_data.ind_material}}</td>
+                        <th>Air gap</th><td>{{ candidate_data.ind{% endraw %}{{index}}{% raw %}_data.ind_airgap }}</td>
                    </tr>
                    <tr>
-                        <th>Air gap (top.)</th><td>{{ tr_data.tr_top_airgap }}</td>
-                        <th>Air gap (bot.)</th><td>{{ tr_data.tr_bot_airgap }}</td>
-                        <th>Core inner diameter</th><td>{{ tr_data.tr_core_inner_dia }}</td>
+                        <th>Mag. peak flux</th><td>{{ candidate_data.ind{% endraw %}{{index}}{% raw %}_data.ind_peak_flux }}</td>
+                        <th>Inductivity</th><td>{{ candidate_data.ind{% endraw %}{{index}}{% raw %}_data.ind_l}}</td>
+                        <th>Litz material</th><td>{{ candidate_data.ind{% endraw %}{{index}}{% raw %}_data.ind_litz}}</td>
                    </tr>
-                   <tr>
-                        <th>Turns primary (top.)</th><td>{{ tr_data.tr_turn_ptop }}</td>
-                        <th>Turns primary (bot.)</th><td>{{ tr_data.tr_turn_pbot }}</td>
-                        <th>Turns secondary (bot.)</th><td>{{ tr_data.tr_turn_sbot }}</td>
-                   </tr>
-                   <tr>
-                        <th>flux density (top.)</th><td>{{ tr_data.tr_flux_top }}</td>
-                        <th>flux density (bot.)</th><td>{{ tr_data.tr_flux_mid }}</td>
-                        <th>flux density (bot.)</th><td>{{ tr_data.tr_flux_bot }}</td>
+                </tbody>
+            </table>
+        </div>
+    {% endraw %}
+    {%- endfor %}
+    {% for index in range(component.nb_of_tr) %}
+    {%- raw -%}
+        <div class="plot-column">
+            <!-- Transformer{% endraw %}{{index}}{% raw %} plot -->
+            <div id="plottransformer{% endraw %}{{index}}{% raw %}"></div>
+        </div>
+        <div class="data-column">
+            <!-- Detailed data -->
+            <table>
+                <thead>
+                    <tr>
+                        <th colspan="6">Transformer{% endraw %}{{index}}{% raw %} parameter 
+                            <span class="table-subtitle">(Design ID: {{ candidate_data.tr{% endraw %}{{index}}{% raw %}_data.id_key }})</span>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th>Volume</th><td>{{ candidate_data.tr{% endraw %}{{index}}{% raw %}_data.tr_vol }}</td>
+                        <th>Turns primary (top.)</th><td>{{ candidate_data.tr{% endraw %}{{index}}{% raw %}_data.tr_turn_ptop }}</td>
+                        <th>Air gap (top.)</th><td>{{ candidate_data.tr{% endraw %}{{index}}{% raw %}_data.tr_top_airgap }}</td>
                    </tr>
                     <tr>
-                        <th>Prim. Litz material</th><td>{{ tr_data.tr_litz_prim}}</td>
-                        <th>Sec. Litz material</th><td>{{ tr_data.tr_litz_sec}}</td>
+                        <th>Power loss</th><td>{{ candidate_data.tr{% endraw %}{{index}}{% raw %}_data.tr_loss}}</td>
+                        <th>Turns primary (bot.)</th><td>{{ candidate_data.tr{% endraw %}{{index}}{% raw %}_data.tr_turn_pbot }}</td>
+                        <th>Air gap (bot.)</th><td>{{ candidate_data.tr{% endraw %}{{index}}{% raw %}_data.tr_bot_airgap }}</td>
+                   </tr>
+                   <tr>
+                        <th>Winding loss</th><td>{{ candidate_data.tr{% endraw %}{{index}}{% raw %}_data.tr_wind_loss}}</td>
+                        <th>Turns secondary (bot.)</th><td>{{ candidate_data.tr{% endraw %}{{index}}{% raw %}_data.tr_turn_sbot }}</td>
+                        <th>Core inner diameter</th><td>{{ candidate_data.tr{% endraw %}{{index}}{% raw %}_data.tr_core_inner_dia }}</td>
+                   </tr>
+                    <tr>
+                        <th>Core name</th><td>{{ candidate_data.tr{% endraw %}{{index}}{% raw %}_data.tr_core }}</td>
+                        <th>flux density (top.)</th><td>{{ candidate_data.tr{% endraw %}{{index}}{% raw %}_data.tr_flux_top }}</td>
+                        <th>Prim. Litz material</th><td>{{ candidate_data.tr{% endraw %}{{index}}{% raw %}_data.tr_litz_prim}}</td>
+                   </tr>
+                    <tr>
+                        <th>Magnetic material</th><td>{{ candidate_data.tr{% endraw %}{{index}}{% raw %}_data.tr_material }}</td>
+                        <th>flux density (bot.)</th><td>{{ candidate_data.tr{% endraw %}{{index}}{% raw %}_data.tr_flux_mid }}</td>
+                        <th>Sec. Litz material</th><td>{{ candidate_data.tr{% endraw %}{{index}}{% raw %}_data.tr_litz_sec}}</td>
+                   </tr>
+                   <tr>
+                        <th>Inductivity</th><td>{{ candidate_data.tr{% endraw %}{{index}}{% raw %}_data.tr_l }}</td>
+                        <th>flux density (bot.)</th><td>{{ candidate_data.tr{% endraw %}{{index}}{% raw %}_data.tr_flux_bot }}</td>
                         <th>View details</th><td><button id="View3DButton" onclick="open3DView()" disabled>3D View</button></td>
                    </tr>
                 </tbody>
             </table>
         </div>
+    {%- endraw -%}
+    {%- endfor -%}
+    {%- raw %}
     </div>
 
     <script>
         // Pareto circuit list
         const circuit_points = [];
         const circuit_sel_point= [];
-
+        {% endraw -%}
+        {% for index in range(component.nb_of_cap) -%}
+        {% raw -%}
+        // Pareto capacitor list
+        const capacitor{% endraw %}{{ index }}{% raw %}_points = [];
+        const capacitor{% endraw %}{{ index }}{% raw %}_sel_point= [];
+        {%- endraw -%}
+        {%- endfor %}
+        {% for index in range(component.nb_of_ind) -%}
+        {% raw -%}
         // Pareto inductor list
-        const inductor_points = [];
-        const inductor_sel_point= [];
-
+        const inductor{% endraw %}{{ index }}{% raw %}_points = [];
+        const inductor{% endraw %}{{ index }}{% raw %}_sel_point= [];
+        {%- endraw -%}
+        {%- endfor %}
+        {% for index in range(component.nb_of_tr) -%}
+        {% raw -%}
         // Pareto transformer list
-        const transformer_points = [];
-        const transformer_sel_point= [];
-
+        const transformer{% endraw %}{{ index }}{% raw %}_points = [];
+        const transformer{% endraw %}{{ index }}{% raw %}_sel_point= [];
+        {%- endraw -%}
+        {%- endfor %}
+        {% raw -%}
         // Scale multiplication factor to prevent cut of points
         const x_ext_scale = 1.1;
         const y_ext_scale = 1.1;
@@ -146,42 +225,60 @@
         console.log("Circuit points:", circuit_points);
         console.log("Circuit selected point:", circuit_sel_point);
 
-
-        // Initialize the inductor list
-        {%- for item in plot_data.inductor_data.points %}
+    {% endraw %}
+    {% for index in range(component.nb_of_cap) -%}
+    {% raw %}
+        // Initialize the capacitor{% endraw %}{{ index }}{% raw %} list
+       {%- for item in plot_data.capacitor{% endraw %}{{ index }}{% raw %}_data.points %}
             {%- if item.total_volume is not none and item.total_volume|length > 0 %}
-        inductor_points.push({ x: {{ item.total_volume|float }}, y: {{ item.total_mean_loss|float }} });
+        capacitor{% endraw %}{{ index }}{% raw %}_points.push({ x: {{ item.total_volume|float }}, y: {{ item.total_mean_loss|float }} });
             {%- endif %}
         {%- endfor %}
-
+        // Initialize the selected point of the capacitor
+        capacitor{% endraw %}{{ index }}{% raw %}_sel_point.push({ x: {{ plot_data.capacitor{% endraw %}{{ index }}{% raw %}_data.sel_point.total_volume|float }},
+                                 y: {{ plot_data.capacitor{% endraw %}{{ index }}{% raw %}_data.sel_point.total_mean_loss|float }}});
+        // Calculate maximum value of x-axe  and y-axe for capacitor plot
+        const cap{% endraw %}{{ index }}{% raw %}_max_x = Math.max(...capacitor{% endraw %}{{ index }}{% raw %}_points.map(p => p.x)) * x_ext_scale;
+        const cap{% endraw %}{{ index }}{% raw %}_max_y = Math.max(...capacitor{% endraw %}{{ index }}{% raw %}_points.map(p => p.y)) * y_ext_scale;
+    {% endraw %}
+    {%- endfor %}
+    {% for index in range(component.nb_of_ind) -%}
+    {% raw %}
+        // Initialize the inductor{% endraw %}{{ index }}{% raw %} list
+       {%- for item in plot_data.inductor{% endraw %}{{ index }}{% raw %}_data.points %}
+            {%- if item.total_volume is not none and item.total_volume|length > 0 %}
+        inductor{% endraw %}{{ index }}{% raw %}_points.push({ x: {{ item.total_volume|float }}, y: {{ item.total_mean_loss|float }} });
+            {%- endif %}
+        {%- endfor %}
         // Initialize the selected point of the inductor
-        inductor_sel_point.push({ x: {{ plot_data.inductor_data.sel_point.total_volume|float }},
-                                 y: {{ plot_data.inductor_data.sel_point.total_mean_loss|float }}});
-
-        // Initialize the transformer list
-        {%- for item in plot_data.transformer_data.points %}
+        inductor{% endraw %}{{ index }}{% raw %}_sel_point.push({ x: {{ plot_data.inductor{% endraw %}{{ index }}{% raw %}_data.sel_point.total_volume|float }},
+                                 y: {{ plot_data.inductor{% endraw %}{{ index }}{% raw %}_data.sel_point.total_mean_loss|float }}});
+        // Calculate maximum value of x-axe  and y-axe for inductor plot
+        const ind{% endraw %}{{ index }}{% raw %}_max_x = Math.max(...inductor{% endraw %}{{ index }}{% raw %}_points.map(p => p.x)) * x_ext_scale;
+        const ind{% endraw %}{{ index }}{% raw %}_max_y = Math.max(...inductor{% endraw %}{{ index }}{% raw %}_points.map(p => p.y)) * y_ext_scale;
+    {% endraw %}
+    {%- endfor %}
+    {% for index in range(component.nb_of_tr) -%}
+    {%- raw -%}
+        // Initialize the transformer{% endraw %}{{ index }}{% raw %} list
+        {%- for item in plot_data.transformer{% endraw %}{{ index }}{% raw %}_data.points %}
             {%- if item.total_volume is not none and item.total_volume|length > 0 %}
-        transformer_points.push({ x: {{ item.total_volume|float }}, y: {{ item.total_mean_loss|float }} });
+        transformer{% endraw %}{{ index }}{% raw %}_points.push({ x: {{ item.total_volume|float }}, y: {{ item.total_mean_loss|float }} });
             {%- endif %}
         {%- endfor %}
-
         // Initialize the selected point of the transformer
-        transformer_sel_point.push({ x: {{ plot_data.transformer_data.sel_point.total_volume|float }},
-                                 y: {{ plot_data.transformer_data.sel_point.total_mean_loss|float }}});
-
+        transformer{% endraw %}{{ index }}{% raw %}_sel_point.push({ x: {{ plot_data.transformer{% endraw %}{{ index }}{% raw %}_data.sel_point.total_volume|float }},
+                                 y: {{ plot_data.transformer{% endraw %}{{ index }}{% raw %}_data.sel_point.total_mean_loss|float }}});
+        // Calculate maximum value of x-axe  and y-axe for transformer plot
+        const tr{% endraw %}{{ index }}{% raw %}_max_x = Math.max(...transformer{% endraw %}{{ index }}{% raw %}_points.map(p => p.x)) * x_ext_scale;
+        const tr{% endraw %}{{ index }}{% raw %}_max_y = Math.max(...transformer{% endraw %}{{ index }}{% raw %}_points.map(p => p.y)) * y_ext_scale;
+    {%- endraw -%}
+    {%- endfor %}
+    {%- raw %}
 
         // Calculate maximum value of x-axe  and y-axe for circuit plot
         const cir_max_x = Math.max(...circuit_points.map(p => p.x)) * x_ext_scale;
         const cir_max_y = Math.max(...circuit_points.map(p => p.y)) * y_ext_scale;
-
-        // Calculate maximum value of x-axe  and y-axe for inductor plot
-        const ind_max_x = Math.max(...inductor_points.map(p => p.x)) * x_ext_scale;
-        const ind_max_y = Math.max(...inductor_points.map(p => p.y)) * y_ext_scale;
-
-        // Calculate maximum value of x-axe  and y-axe for transformer plot
-        const tr_max_x = Math.max(...transformer_points.map(p => p.x)) * x_ext_scale;
-        const tr_max_y = Math.max(...transformer_points.map(p => p.y)) * y_ext_scale;
-
 
         // Common configuration for all plots
         const config = {
@@ -234,107 +331,166 @@
             showlegend: false
         };
 
-        // Prepare inductor data plot
-        const ind_data = [{
-            x: inductor_points.map(p => p.x),
-            y: inductor_points.map(p => p.y),
-            mode: 'markers',
-            type: 'scatter',
-            marker: {
-                size: 12,
-                color: 'blue'
-            },
-            text: [],
-            // hovertemplate: '',
-            name: 'All points'
-        }];
-
-        // Configure inductor diagram
-        const ind_layout = {
-            title: 'Inductor design candidates',
-            xaxis: {
-                title: 'Volume / m³',
-                range: [0, ind_max_x]
-            },
-            yaxis: {
-                title: 'P_ind / W',
-                range: [0, ind_max_y]
-            },
-            // hovermode: 'closest',
-            showlegend: false
-        };
-
-        // Prepare transformer data plot
-        const tr_data = [{
-            x: transformer_points.map(p => p.x),
-            y: transformer_points.map(p => p.y),
-            mode: 'markers',
-            type: 'scatter',
-            marker: {
-                size: 12,
-                color: 'blue'
-            },
-            text: [],
-            // hovertemplate: '',
-            name: 'All points'
-        }];
-
-        const ind_sel_point = [{
-            x: inductor_sel_point.map(p => p.x),
-            y: inductor_sel_point.map(p => p.y),
-            mode: 'markers',
-            type: 'scatter',
-            marker: {
-                size: 14,
-                color: 'red'
-            },
-            text: [],
-            hovertemplate: '',
-            name: ''
-        }];
-
-        // Configure inductor diagram
-        const tr_layout = {
-            title: 'Transformer design candidates',
-            xaxis: {
-                title: 'Volume / m³',
-                range: [0, tr_max_x]
-            },
-            yaxis: {
-                title: 'P_ind / W',
-                range: [0, tr_max_y]
-            },
-            // hovermode: 'closest',
-            showlegend: false
-        };
-
-        const tr_sel_point = [{
-            x: transformer_sel_point.map(p => p.x),
-            y: transformer_sel_point.map(p => p.y),
-            mode: 'markers',
-            type: 'scatter',
-            marker: {
-                size: 14,
-                color: 'red'
-            },
-            text: [],
-            hovertemplate: '',
-            name: ''
-        }];
-
-        // Create diagrams
-        // Circuit plot
+        // Create circuit plot
         const plotDivCir = document.getElementById('plotcircuit');
         Plotly.newPlot(plotDivCir, [...cir_data, ...cir_sel_point], cir_layout, config);
 
-        // Inductor plot
-        const plotDivInd = document.getElementById('plotinductor');
-        Plotly.newPlot(plotDivInd, [...ind_data, ...ind_sel_point], ind_layout, config);
 
-        // Transformer plot
-        const plotDivTr = document.getElementById('plottransformer');
-        Plotly.newPlot(plotDivTr, [...tr_data, ...tr_sel_point], tr_layout, config);
+    {%- endraw -%}
+    {% for index in range(component.nb_of_cap) -%}
+    {%- raw %}
+        // Prepare capacitor{% endraw %}{{ index }}{% raw %} data plots
+        const cap{% endraw %}{{ index }}{% raw %}_data = [{
+            x: capacitor{% endraw %}{{ index }}{% raw %}_points.map(p => p.x),
+            y: capacitor{% endraw %}{{ index }}{% raw %}_points.map(p => p.y),
+            mode: 'markers',
+            type: 'scatter',
+            marker: {
+                size: 12,
+                color: 'blue'
+            },
+            text: [],
+            // hovertemplate: '',
+            name: 'All points'
+        }];
 
+        const cap{% endraw %}{{ index }}{% raw %}_sel_point = [{
+            x: capacitor{% endraw %}{{ index }}{% raw %}_sel_point.map(p => p.x),
+            y: capacitor{% endraw %}{{ index }}{% raw %}_sel_point.map(p => p.y),
+            mode: 'markers',
+            type: 'scatter',
+            marker: {
+                size: 14,
+                color: 'red'
+            },
+            text: [],
+            hovertemplate: '',
+            name: ''
+        }];
+
+        // Configure capacitor diagram
+        const cap{% endraw %}{{ index }}{% raw %}_layout = {
+            title: 'Capacitor design candidates',
+            xaxis: {
+                title: 'Volume / m³',
+                range: [0, cap{% endraw %}{{ index }}{% raw %}_max_x]
+            },
+            yaxis: {
+                title: 'P_cap / W',
+                range: [0, cap{% endraw %}{{ index }}{% raw %}_max_y]
+            },
+            // hovermode: 'closest',
+            showlegend: false
+        };
+
+        // Create capacitor plot
+        const plotDivCap{% endraw %}{{index}}{% raw %} = document.getElementById('plotcapacitor{% endraw %}{{index}}{% raw %}');
+        Plotly.newPlot(plotDivCap{% endraw %}{{index}}{% raw %}, [...cap{% endraw %}{{index}}{% raw %}_data, ...cap{% endraw %}{{index}}{% raw %}_sel_point], cap{% endraw %}{{index}}{% raw %}_layout, config);
+    {%- endraw -%}
+    {%- endfor %}
+    {% for index in range(component.nb_of_ind) -%}
+    {%- raw %}
+        // Prepare inductor{% endraw %}{{ index }}{% raw %} data plots
+        const ind{% endraw %}{{ index }}{% raw %}_data = [{
+            x: inductor{% endraw %}{{ index }}{% raw %}_points.map(p => p.x),
+            y: inductor{% endraw %}{{ index }}{% raw %}_points.map(p => p.y),
+            mode: 'markers',
+            type: 'scatter',
+            marker: {
+                size: 12,
+                color: 'blue'
+            },
+            text: [],
+            // hovertemplate: '',
+            name: 'All points'
+        }];
+
+        const ind{% endraw %}{{ index }}{% raw %}_sel_point = [{
+            x: inductor{% endraw %}{{ index }}{% raw %}_sel_point.map(p => p.x),
+            y: inductor{% endraw %}{{ index }}{% raw %}_sel_point.map(p => p.y),
+            mode: 'markers',
+            type: 'scatter',
+            marker: {
+                size: 14,
+                color: 'red'
+            },
+            text: [],
+            hovertemplate: '',
+            name: ''
+        }];
+
+        // Configure inductor diagram
+        const ind{% endraw %}{{ index }}{% raw %}_layout = {
+            title: 'Inductor design candidates',
+            xaxis: {
+                title: 'Volume / m³',
+                range: [0, ind{% endraw %}{{ index }}{% raw %}_max_x]
+            },
+            yaxis: {
+                title: 'P_ind / W',
+                range: [0, ind{% endraw %}{{ index }}{% raw %}_max_y]
+            },
+            // hovermode: 'closest',
+            showlegend: false
+        };
+
+        // Create inductor plot
+        const plotDivInd{% endraw %}{{index}}{% raw %} = document.getElementById('plotinductor{% endraw %}{{index}}{% raw %}');
+        Plotly.newPlot(plotDivInd{% endraw %}{{index}}{% raw %}, [...ind{% endraw %}{{index}}{% raw %}_data, ...ind{% endraw %}{{index}}{% raw %}_sel_point], ind{% endraw %}{{index}}{% raw %}_layout, config);
+    {%- endraw -%}
+    {%- endfor %}
+    {% for index in range(component.nb_of_tr) -%}
+    {%- raw %}
+        // Prepare transformer{% endraw %}{{ index }}{% raw %} data plots
+        const tr{% endraw %}{{ index }}{% raw %}_data = [{
+            x: transformer{% endraw %}{{ index }}{% raw %}_points.map(p => p.x),
+            y: transformer{% endraw %}{{ index }}{% raw %}_points.map(p => p.y),
+            mode: 'markers',
+            type: 'scatter',
+            marker: {
+                size: 12,
+                color: 'blue'
+            },
+            text: [],
+            // hovertemplate: '',
+            name: 'All points'
+        }];
+
+        // Configure transformer diagram
+        const tr{% endraw %}{{index}}{% raw %}_layout = {
+            title: 'Transformer design candidates',
+            xaxis: {
+                title: 'Volume / m³',
+                range: [0, tr{% endraw %}{{ index }}{% raw %}_max_x]
+            },
+            yaxis: {
+                title: 'P_ind / W',
+                range: [0, tr{% endraw %}{{ index }}{% raw %}_max_y]
+            },
+            // hovermode: 'closest',
+            showlegend: false
+        };
+
+        const tr{% endraw %}{{index}}{% raw %}_sel_point = [{
+            x: transformer{% endraw %}{{ index }}{% raw %}_sel_point.map(p => p.x),
+            y: transformer{% endraw %}{{ index }}{% raw %}_sel_point.map(p => p.y),
+            mode: 'markers',
+            type: 'scatter',
+            marker: {
+                size: 14,
+                color: 'red'
+            },
+            text: [],
+            hovertemplate: '',
+            name: ''
+        }];
+
+        // Create transformer plot
+        const plotDivTr{% endraw %}{{index}}{% raw %} = document.getElementById('plottransformer{% endraw %}{{index}}{% raw %}');
+        Plotly.newPlot(plotDivTr{% endraw %}{{index}}{% raw %}, [...tr{% endraw %}{{index}}{% raw %}_data, ...tr{% endraw %}{{index}}{% raw %}_sel_point], tr{% endraw %}{{index}}{% raw %}_layout, config);
+    {%- endraw -%}
+    {%- endfor %}
+    {%- raw %}
         // Request detailed view sheet
         function open3DView() {
             window.location.href = "model-view?combination_id=" + DetailedViewCID;
@@ -346,5 +502,6 @@
         }
 
     </script>
+    {%- endraw %}
 </body>
 </html>
