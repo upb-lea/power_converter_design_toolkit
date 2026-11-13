@@ -153,7 +153,7 @@ class SummaryProcessing:
         result_summary_configuration_list: list[SummaryConfiguration] = []
 
         for summary_configuration in act_summary_configuration_list:
-            if summary_configuration.circuit_data_list[0]["circuit_id"] is not missing_component_circuit_index:
+            if summary_configuration.circuit_data_list[0]["circuit_id"] != missing_component_circuit_index:
                 result_summary_configuration_list.append(summary_configuration)
 
         return result_summary_configuration_list
@@ -324,7 +324,6 @@ class SummaryProcessing:
 
                     # Assemble the data frame entry
                     inductor_data = {
-                        # inductor
                         f"inductor_study_name_{number_in_circuit}": act_inductor_data.study_data.study_name,
                         f"inductor_id_{number_in_circuit}": inductor_id,
                         f"inductor_volume_{number_in_circuit}": inductor_results_dto.volume,
@@ -381,7 +380,6 @@ class SummaryProcessing:
                     number_in_circuit = transformer_results_dto.transformer_number_in_circuit
                     # Assemble the data frame entry
                     transformer_data = {
-                        # transformer
                         f"transformer_study_name_{number_in_circuit}": act_transformer_data.study_data.study_name,
                         f"transformer_id_{number_in_circuit}": transformer_id,
                         f"transformer_volume_{number_in_circuit}": transformer_results_dto.volume,
