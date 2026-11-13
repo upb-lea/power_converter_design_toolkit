@@ -29,9 +29,9 @@ def transistor_conduction_loss(transistor_rms_current: float, transistor_dto: d_
 def calculate_turn_off_currents_single_operating_point(i_lc_full_time_current_waveform: np.ndarray, i_hf_full_time_current_waveform: np.ndarray,
                                                        tau_rad: np.ndarray) -> tuple[float, float]:
     """
-    MOSFET turn-off current estimation.
+    Transistor turn-off current estimation.
 
-    The i_lc current is needed to estimate the switching point of the corresponding bridge.
+    The i_lc current (in the commutation inductance) is needed to estimate the switching point of the corresponding bridge.
     This function is independent of the bridge, so there is no _1 or _2 variable name index.
 
     :param i_lc_full_time_current_waveform: i_lc1 or i_lc2 in format [[time], [current]]
@@ -56,9 +56,9 @@ def calculate_turn_off_currents_single_operating_point(i_lc_full_time_current_wa
         logger.debug("Curve at very beginning. Shift index.")
         # curve is at the very beginning. Integration will fail due to the shift.
         index_switching = len(i_lc_full_time_current_waveform_doubled[0]) - 1
-        current_switching_1 = i_lc_full_time_current_waveform_doubled[1][index_switching]
+        current_switching_1 = i_hf_full_time_current_waveform_doubled[1][index_switching]
     else:
-        current_switching_1 = i_lc_full_time_current_waveform_doubled[1][first_switching_index]
+        current_switching_1 = i_hf_full_time_current_waveform_doubled[1][first_switching_index]
 
     # in case of tau_rad is not 180°, two maximum in i_lc appear (three different voltage levels on the bridge output)
     # but i_hf has two different current values at the switching points. The integration must be done on the second switching point also.
@@ -89,9 +89,9 @@ def calculate_turn_off_currents_single_operating_point(i_lc_full_time_current_wa
             logger.debug("Curve at very beginning. Shift index.")
             # curve is at the very beginning. Integration will fail due to the shift.
             index_switching = len(i_lc_full_time_current_waveform_doubled[0]) - 1
-            current_switching_2 = i_lc_full_time_current_waveform_doubled[1][index_switching]
+            current_switching_2 = i_hf_full_time_current_waveform_doubled[1][index_switching]
         else:
-            current_switching_2 = i_lc_full_time_current_waveform_doubled[1][second_switching_index]
+            current_switching_2 = i_hf_full_time_current_waveform_doubled[1][second_switching_index]
 
     return current_switching_1, current_switching_2
 
