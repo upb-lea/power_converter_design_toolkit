@@ -422,15 +422,15 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
             toml_check_value_list2.append(
                 (toml_circuit.thermal_data.transistor_b1_cooling[1], f"{group_name}: transistor_b1_cooling[1]-tim_conductivity"))
 
-        # Perform list length check for transistor_b1_cooling
-        if len(toml_circuit.thermal_data.transistor_b1_cooling) != 2:
+        # Perform list length check for transistor_b2_cooling
+        if len(toml_circuit.thermal_data.transistor_b2_cooling) != 2:
             inconsistency_report = inconsistency_report + "    Number of values in parameter 'transistor_b2_cooling' is not equal 2!\n"
             is_consistent = False
         else:
             toml_check_value_list1.append(
-                (toml_circuit.thermal_data.transistor_b1_cooling[0], f"{group_name}: transistor_b2_cooling[0]-tim_thickness"))
+                (toml_circuit.thermal_data.transistor_b2_cooling[0], f"{group_name}: transistor_b2_cooling[0]-tim_thickness"))
             toml_check_value_list2.append(
-                (toml_circuit.thermal_data.transistor_b1_cooling[1], f"{group_name}: transistor_b2_cooling[1]-tim_conductivity"))
+                (toml_circuit.thermal_data.transistor_b2_cooling[1], f"{group_name}: transistor_b2_cooling[1]-tim_conductivity"))
 
         # Perform the boundary check for tim-thickness
         is_check_passed, issue_report = BoundaryCheck.check_float_value_list(
@@ -1000,11 +1000,6 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
             logger.warning("Study is not initialized!")
             return
 
-        if self._dab_config is None:
-            raise ValueError("_dab_config needs to be initialized first.")
-        if self._fixed_parameters is None:
-            raise ValueError("_fixed_parameters needs to be initialized first.")
-
         # Function to execute
         if self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_3_dimensional.value:
             func = lambda trial: DabCircuitOptimization._objective_pareto_3_dimensions(trial, self._dab_config, self._fixed_parameters)
@@ -1101,10 +1096,14 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
                                  f"Program is terminated.\n"
                                  f"Difference: {difference}")
 
-        if self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_3_dimensional:
+        if self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_3_dimensional.value:
             directions: list[Literal["minimize", "maximize"]] = ["maximize", "minimize", "maximize"]
-        else:
+        elif (self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_2_dimensional.value or \
+              self._dab_config.filter.filter_algorithm == DabEnums.sort_frequency.value or \
+              self._dab_config.filter.filter_algorithm == DabEnums.sort_lowest.value):
             directions = ["maximize", "minimize"]
+        else:
+            raise ValueError(f"Filter algorithm {_self._dab_config.filter.filter_algorithm} not available.")
 
         # Calculate the fixed parameters
         self._fixed_parameters = DabCircuitOptimization.calculate_fixed_parameters(self._dab_config)
@@ -1966,10 +1965,10 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
             '#include "stddef.h"\n\n'
             "// Define a struct to store the values for each entry\n"
             "typedef struct {\n"
-            "    uint8_t number;\n"
-            "    uint8_t target_voltage_1;\n"
-            "    uint8_t target_voltage_2;\n"
-            "    uint8_t target_power;\n"
+            "    uint16_t number;\n"
+            "    uint16_t target_voltage_1;\n"
+            "    uint16_t target_voltage_2;\n"
+            "    uint16_t target_power;\n"
             "    double phi_deg;\n"
             "    double tau1_deg;\n"
             "    double tau2_deg;\n"
