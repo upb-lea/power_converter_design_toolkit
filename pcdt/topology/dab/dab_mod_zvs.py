@@ -110,7 +110,7 @@ def calc_modulation_params(n: np.float64, ls: np.float64, lc1: np.float64, lc2: 
     _tau2_III_leq_pi_mask = np.less_equal(tau2_III, np.pi)
     # Interval III part 1 mask
     # fix here: _phi_I_g_zero_mask was missing!!!
-    _IIIm1_part_1_mask = np.bitwise_and(_tau2_III_leq_pi_mask, _tau1_II_g_pi_mask, _phi_I_g_zero_mask)
+    _IIIm1_part_1_mask = np.bitwise_and(np.bitwise_and(_tau2_III_leq_pi_mask, _tau1_II_g_pi_mask), _phi_I_g_zero_mask)
     # Interval III part 2 mask
     # from interval 3. Must be inside the function, as tau2 is manipulated inside this function and a calculation afterward is not possible
 
