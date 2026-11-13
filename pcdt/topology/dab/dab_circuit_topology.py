@@ -1103,7 +1103,7 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
               self._dab_config.filter.filter_algorithm == DabEnums.sort_lowest.value):
             directions = ["maximize", "minimize"]
         else:
-            raise ValueError(f"Filter algorithm {_self._dab_config.filter.filter_algorithm} not available.")
+            raise ValueError(f"Filter algorithm {self._dab_config.filter.filter_algorithm} not available.")
 
         # Calculate the fixed parameters
         self._fixed_parameters = DabCircuitOptimization.calculate_fixed_parameters(self._dab_config)
