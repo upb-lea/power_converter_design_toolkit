@@ -284,7 +284,8 @@ class InductorOptimization:
                                                        progress_status=ProgressStatus.Idle)
 
         # Check for valid filtered_list_id
-        if len(self._optimization_config_list[index]) > filtered_list_id:
+        if (0 <= index < len(self._optimization_config_list)
+            and 0 <= filtered_list_id < len(self._optimization_config_list[index])):
             # Lock statistical performance data access
             with self._i_lock_stat:
                 # Check if list is in progress
@@ -379,7 +380,7 @@ class InductorOptimization:
             b_max_array = np.full_like(inductor_requirements.time_array[..., 0], np.nan)
             winding_loss_array = np.full_like(inductor_requirements.time_array[..., 0], np.nan)
 
-            if os.path.exists(os.path.join(new_circuit_dto_directory, f"{inductor_id}.pkl")):
+            if os.path.exists(os.path.join(new_circuit_dto_directory, f"{int(inductor_id)}.pkl")):
                 logger.info(f"All-operating point simulation of circuit {circuit_id} with inductor {inductor_id} already exists. Skip.")
             else:
                 for vec_vvp in np.ndindex(inductor_requirements.time_array[..., 0].shape):
@@ -565,8 +566,8 @@ class InductorOptimization:
                 core_loss_array = np.full_like(inductor_requirements.time_array[..., 0], np.nan)
 
                 # check if simulation already exists or has already failed in the past
-                if (os.path.exists(os.path.join(new_circuit_dto_directory, f"{inductor_id}.pkl")) \
-                        or os.path.exists(os.path.join(new_circuit_dto_directory, f"{inductor_id}_failed.txt"))):
+                if (os.path.exists(os.path.join(new_circuit_dto_directory, f"{int(inductor_id)}.pkl")) \
+                    or os.path.exists(os.path.join(new_circuit_dto_directory, f"{int(inductor_id)}_failed.txt"))):
                     logger.info(f"FEM-simulation of circuit {circuit_id}, inductor {inductor_id} already exists or has already failed in the past. Skip.")
                 else:
                     logger.info(f"Start FEM-simulation of circuit {circuit_id}, inductor {inductor_id}.")
