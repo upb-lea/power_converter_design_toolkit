@@ -1211,12 +1211,15 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
             logger.warning("Circuit configuration is not initialized!")
             return
 
-        if self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_3_dimensional:
+        if self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_3_dimensional.value:
             target_names = ["Weighted efficiency / %", r"i_\mathrm{cost}", "ZVS coverage"]
-        elif self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_2_dimensional:
+        elif self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_2_dimensional.value:
             target_names = ["Weighted efficiency / %", r"i_\mathrm{cost}"]
-        else:
+        elif self._dab_config.filter.filter_algorithm == DabEnums.sort_lowest.value or \
+                self._dab_config.filter.filter_algorithm == DabEnums.sort_frequency.value:
             target_names = ["ZVS coverage / %", r"i_\mathrm{cost}"]
+        else:
+            raise ValueError(f"Filter algorithm {self._dab_config.filter.filter_algorithm} not available.")
         fig = optuna.visualization.plot_pareto_front(self._study_in_storage, target_names=target_names)
         fig.update_layout(title=f"{self._dab_config.circuit_study_name} <br><sup>{self._dab_config.project_directory}</sup>")
         fig.write_html(
@@ -1553,13 +1556,16 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
         df = self._study_in_storage.trials_dataframe()
         df.to_csv(f'{self.circuit_study_data.optimization_directory}/{self._dab_config.circuit_study_name}.csv')
 
-        if self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_3_dimensional:
+        if self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_3_dimensional.value:
             df = df.loc[df["user_attrs_dead_time_zvs_coverage"].eq(100)]
-        elif self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_2_dimensional:
+        elif self._dab_config.filter.filter_algorithm == DabEnums.sort_pareto_2_dimensional.value:
             df = df.loc[df["user_attrs_dead_time_zvs_coverage"].eq(100)]
-        else:
+        elif (self._dab_config.filter.filter_algorithm == DabEnums.sort_frequency.value or \
+              self._dab_config.filter.filter_algorithm == DabEnums.sort_lowest.value):
             # get 100 percent ZVS coverage designs
             df = df[df["values_0"] == 100]
+        else:
+            raise ValueError(f"Filter algorithm {self._dab_config.filter.filter_algorithm} not available.")
 
         print(df.head())
 
