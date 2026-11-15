@@ -618,8 +618,18 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
         return pareto_html
 
     @staticmethod
+    def _get_transistor_dto_maps(fixed_parameters: d_dtos.FixedParameters) -> tuple[
+            dict[str, d_dtos.TransistorDTO], dict[str, d_dtos.TransistorDTO]]:
+        """Index the configured transistor DTOs by name for fast objective lookups."""
+        transistor_1_by_name = {dto.name: dto for dto in fixed_parameters.transistor_1_dto_list}
+        transistor_2_by_name = {dto.name: dto for dto in fixed_parameters.transistor_2_dto_list}
+        return transistor_1_by_name, transistor_2_by_name
+
+    @staticmethod
     def _objective_pareto_3_dimensions(trial: optuna.Trial, dab_config: circuit_dtos.CircuitParetoDabDesign,
-                                       fixed_parameters: d_dtos.FixedParameters) -> tuple:
+                                       fixed_parameters: d_dtos.FixedParameters,
+                                       transistor_1_by_name: dict[str, d_dtos.TransistorDTO],
+                                       transistor_2_by_name: dict[str, d_dtos.TransistorDTO]) -> tuple:
         """
         Objective function to optimize as a pareto plane with maximizing weighted efficiency and minimizing weighted bridge RMS current.
 
@@ -640,13 +650,8 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
         transistor_1_name_suggest = trial.suggest_categorical('transistor_1_name_suggest', dab_config.design_space.transistor_1_name_list)
         transistor_2_name_suggest = trial.suggest_categorical('transistor_2_name_suggest', dab_config.design_space.transistor_2_name_list)
 
-        for _, transistor_dto in enumerate(fixed_parameters.transistor_1_dto_list):
-            if transistor_dto.name == transistor_1_name_suggest:
-                transistor_1_dto: d_dtos.TransistorDTO = transistor_dto
-
-        for _, transistor_dto in enumerate(fixed_parameters.transistor_2_dto_list):
-            if transistor_dto.name == transistor_2_name_suggest:
-                transistor_2_dto: d_dtos.TransistorDTO = transistor_dto
+        transistor_1_dto = transistor_1_by_name[transistor_1_name_suggest]
+        transistor_2_dto = transistor_2_by_name[transistor_2_name_suggest]
 
         dab_calc = HandleDabDto.init_config(
             circuit_id=str(trial.number),
@@ -710,7 +715,9 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
 
     @staticmethod
     def _objective_pareto_2_dimensions(trial: optuna.Trial, dab_config: circuit_dtos.CircuitParetoDabDesign,
-                                       fixed_parameters: d_dtos.FixedParameters) -> tuple:
+                                       fixed_parameters: d_dtos.FixedParameters,
+                                       transistor_1_by_name: dict[str, d_dtos.TransistorDTO],
+                                       transistor_2_by_name: dict[str, d_dtos.TransistorDTO]) -> tuple:
         """
         Objective function to optimize as a pareto plane with maximizing weighted efficiency and minimizing weighted bridge RMS current.
 
@@ -731,13 +738,8 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
         transistor_1_name_suggest = trial.suggest_categorical('transistor_1_name_suggest', dab_config.design_space.transistor_1_name_list)
         transistor_2_name_suggest = trial.suggest_categorical('transistor_2_name_suggest', dab_config.design_space.transistor_2_name_list)
 
-        for _, transistor_dto in enumerate(fixed_parameters.transistor_1_dto_list):
-            if transistor_dto.name == transistor_1_name_suggest:
-                transistor_1_dto: d_dtos.TransistorDTO = transistor_dto
-
-        for _, transistor_dto in enumerate(fixed_parameters.transistor_2_dto_list):
-            if transistor_dto.name == transistor_2_name_suggest:
-                transistor_2_dto: d_dtos.TransistorDTO = transistor_dto
+        transistor_1_dto = transistor_1_by_name[transistor_1_name_suggest]
+        transistor_2_dto = transistor_2_by_name[transistor_2_name_suggest]
 
         dab_calc = HandleDabDto.init_config(
             circuit_id=str(trial.number),
@@ -802,7 +804,10 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
             return float('nan'), float('nan')
 
     @staticmethod
-    def _objective(trial: optuna.Trial, dab_config: circuit_dtos.CircuitParetoDabDesign, fixed_parameters: d_dtos.FixedParameters) -> tuple:
+    def _objective(trial: optuna.Trial, dab_config: circuit_dtos.CircuitParetoDabDesign,
+                   fixed_parameters: d_dtos.FixedParameters,
+                   transistor_1_by_name: dict[str, d_dtos.TransistorDTO],
+                   transistor_2_by_name: dict[str, d_dtos.TransistorDTO]) -> tuple:
         """
         Objective function to optimize.
 
@@ -823,13 +828,8 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
         transistor_1_name_suggest = trial.suggest_categorical('transistor_1_name_suggest', dab_config.design_space.transistor_1_name_list)
         transistor_2_name_suggest = trial.suggest_categorical('transistor_2_name_suggest', dab_config.design_space.transistor_2_name_list)
 
-        for _, transistor_dto in enumerate(fixed_parameters.transistor_1_dto_list):
-            if transistor_dto.name == transistor_1_name_suggest:
-                transistor_1_dto: d_dtos.TransistorDTO = transistor_dto
-
-        for _, transistor_dto in enumerate(fixed_parameters.transistor_2_dto_list):
-            if transistor_dto.name == transistor_2_name_suggest:
-                transistor_2_dto: d_dtos.TransistorDTO = transistor_dto
+        transistor_1_dto = transistor_1_by_name[transistor_1_name_suggest]
+        transistor_2_dto = transistor_2_by_name[transistor_2_name_suggest]
 
         dab_calc = HandleDabDto.init_config(
             circuit_id=str(trial.number),
@@ -1002,14 +1002,19 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
             logger.warning("Study is not initialized!")
             return
 
+        transistor_1_by_name, transistor_2_by_name = DabCircuitOptimization._get_transistor_dto_maps(_fixed_parameters)
+
         # Function to execute
         if _dab_config.filter.filter_algorithm == DabEnums.sort_pareto_3_dimensional.value:
-            func = lambda trial: DabCircuitOptimization._objective_pareto_3_dimensions(trial, _dab_config, _fixed_parameters)
+            func = lambda trial: DabCircuitOptimization._objective_pareto_3_dimensions(
+                trial, _dab_config, _fixed_parameters, transistor_1_by_name, transistor_2_by_name)
         elif _dab_config.filter.filter_algorithm == DabEnums.sort_pareto_2_dimensional.value:
-            func = lambda trial: DabCircuitOptimization._objective_pareto_2_dimensions(trial, _dab_config, _fixed_parameters)
+            func = lambda trial: DabCircuitOptimization._objective_pareto_2_dimensions(
+                trial, _dab_config, _fixed_parameters, transistor_1_by_name, transistor_2_by_name)
         elif (_dab_config.filter.filter_algorithm == DabEnums.sort_lowest.value or \
               _dab_config.filter.filter_algorithm == DabEnums.sort_frequency.value):
-            func = lambda trial: DabCircuitOptimization._objective(trial, _dab_config, _fixed_parameters)
+            func = lambda trial: DabCircuitOptimization._objective(
+                trial, _dab_config, _fixed_parameters, transistor_1_by_name, transistor_2_by_name)
         else:
             raise ValueError(f"Filter algorithm {_dab_config.filter.filter_algorithm} not available")
 
@@ -1026,18 +1031,23 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
         :param act_number_trials: Number of trials adding to the existing study
         :type  act_number_trials: int
         """
-        if self._dab_config is None:
+        dab_config = self._dab_config
+        fixed_parameters = self._fixed_parameters
+        if dab_config is None:
             logger.warning("Circuit configuration is not initialized!")
             return
-        elif self._fixed_parameters is None:
+        elif fixed_parameters is None:
             logger.warning("Parameter calculation is missing!")
             return
 
+        transistor_1_by_name, transistor_2_by_name = DabCircuitOptimization._get_transistor_dto_maps(fixed_parameters)
+
         # Function to execute
-        func = lambda trial: DabCircuitOptimization._objective(trial, self._dab_config, self._fixed_parameters)
+        func = lambda trial: DabCircuitOptimization._objective(
+            trial, dab_config, fixed_parameters, transistor_1_by_name, transistor_2_by_name)
 
         # Each process create his own study instance with the same database and study name
-        act_study = optuna.load_study(storage=act_storage_url, study_name=self._dab_config.circuit_study_name)
+        act_study = optuna.load_study(storage=act_storage_url, study_name=dab_config.circuit_study_name)
         # Run optimization
         try:
             act_study.optimize(func, n_trials=act_number_trials, n_jobs=1, show_progress_bar=True)
