@@ -633,6 +633,7 @@ class SummaryProcessing:
             inductor_pd_list: list[pd.DataFrame] = []
             for inductor_data in design.inductor_data_list:
                 df_inductors = SummaryProcessing.component_to_dataframe(inductor_data)
+                logger.info(f"Pre-summary/summary: {len(df_inductors)} inductors for circuit {circuit_dict["circuit_id"]} found.")
                 # Merge different df by creating a common key
                 df_inductors['key'] = 0
                 inductor_pd_list.append(df_inductors)
@@ -641,6 +642,7 @@ class SummaryProcessing:
             transformer_pd_list: list[pd.DataFrame] = []
             for transformer_data in design.transformer_data_list:
                 df_transformers = SummaryProcessing.component_to_dataframe(transformer_data)
+                logger.info(f"Pre-summary/summary: {len(df_transformers)} transformers for circuit {circuit_dict["circuit_id"]} found.")
                 # Merge different df by creating a common key
                 df_transformers['key'] = 0
                 transformer_pd_list.append(df_transformers)
@@ -844,7 +846,7 @@ class SummaryProcessing:
         # Convert for saving data in CSV-format
         act_df = SummaryProcessing._convert_for_csv(
             act_df, ["total_loss_array", "circuit_loss_array", "capacitor_loss_array",
-                     "inductor_loss_array", "transformer_loss_array", "circuit_loss_array"])
+                     "inductor_loss_array", "transformer_loss_array"])
 
         act_df.to_csv(f"{self._summary_study_data.optimization_directory}/{DF_SUMMARY_FINAL}")
 
