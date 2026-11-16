@@ -336,7 +336,7 @@ def read_csv_candidate_data(file_path_dict: dict, act_cid: int) -> dict[str, lis
 
     capacitor_parameter_list: list[tuple[str, str, str]] = [("volume", "cap_vol", "m³"), ("power_loss_total", "cap_loss", "W"), ("power_loss_per_capacitor", "cap_per_loss", "W"),
                                                       ("ordering code", "cap_order", NAME_KEY), ("in_series_needed", "cap_series", ""), ("in_parallel_needed", "cap_parallel", ""),
-                                                      ("capacitance", "cap_capa", "F"), ("ESL_in_H", "cap_esl", "H"), ("ESR_85degree_in_Ohm", "cap_esr", "Ohm")]
+                                                      ("capacitance", "cap_capa", "F"), ("ESL_in_H", "cap_esl", "H"), ("ESR_85degree_in_Ohm", "cap_esr", "&Omega;")]
 
     inductor_parameter_list: list[tuple[str, str, str]] = [("values_0", "ind_vol", "m³"), ("values_1", "ind_loss", "W"), ("user_attrs_flux_density_peak", "ind_peak_flux", "T"),
                                                       ("params_core_name", "ind_core", NAME_KEY), ("params_material_name", "ind_material", NAME_KEY), ("params_material_name", "ind_l", "H"),

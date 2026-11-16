@@ -29,7 +29,7 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <th>Switching frequency[kHz]</th><td>{{ candidate_data.cir_data.fs }}</td>
+                        <th>Switching frequency</th><td>{{ candidate_data.cir_data.fs }}</td>
                         <th>Inductor values</th>
                         <td>L<sub>1</sub>={{ candidate_data.cir_data.l1}}, 
                             L<sub>2</sub>={{ candidate_data.cir_data.l1}}, 
@@ -69,12 +69,12 @@
                     <tr>
                         <th>Power loss</th><td>{{ candidate_data.cap{% endraw %}{{index}}{% raw %}_data.cap_loss }}</td>
                         <th>Components in series</th><td>{{ candidate_data.cap{% endraw %}{{index}}{% raw %}_data.cap_series }}</td>
-                        <th>ESL H</th><td>{{ candidate_data.cap{% endraw %}{{index}}{% raw %}_data.cap_esl }}</td>
+                        <th>ESL</th><td>{{ candidate_data.cap{% endraw %}{{index}}{% raw %}_data.cap_esl }}</td>
                    </tr>
                    <tr>
                         <th>Loss per component</th><td>{{ candidate_data.cap{% endraw %}{{index}}{% raw %}_data.cap_per_loss }}</td>
                         <th>Components in parallel</th><td>{{ candidate_data.cap{% endraw %}{{index}}{% raw %}_data.cap_parallel }}</td>
-                        <th>ESR in Ohm</th><td>{{ candidate_data.cap{% endraw %}{{index}}{% raw %}_data.cap_esr }}</td>
+                        <th>ESR</th><td>{{ candidate_data.cap{% endraw %}{{index}}{% raw %}_data.cap_esr }}</td>
                    </tr>
                 </tbody>
             </table>
