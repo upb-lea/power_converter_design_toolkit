@@ -620,7 +620,12 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
     @staticmethod
     def _get_transistor_dto_maps(fixed_parameters: d_dtos.FixedParameters) -> tuple[
             dict[str, d_dtos.TransistorDTO], dict[str, d_dtos.TransistorDTO]]:
-        """Index the configured transistor DTOs by name for fast objective lookups."""
+        """
+        Index the configured transistor DTOs by name for fast objective optimization.
+
+        :param fixed_parameters: fixed parameters
+        :type fixed_parameters: d_dtos.FixedParameters
+        """
         transistor_1_by_name = {dto.name: dto for dto in fixed_parameters.transistor_1_dto_list}
         transistor_2_by_name = {dto.name: dto for dto in fixed_parameters.transistor_2_dto_list}
         return transistor_1_by_name, transistor_2_by_name
