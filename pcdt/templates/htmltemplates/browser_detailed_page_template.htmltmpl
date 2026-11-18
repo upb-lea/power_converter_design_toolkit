@@ -28,18 +28,9 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <th>Switching frequency</th><td>{{ candidate_data.cir_data.fs }}</td>
-                        <th>Inductor values</th>
-                        <td>L<sub>1</sub>={{ candidate_data.cir_data.l1}}, 
-                            L<sub>2</sub>={{ candidate_data.cir_data.l1}}, 
-                            L<sub>s</sub>={{ candidate_data.cir_data.ls}}
-                        </td>
-                   </tr>
-                    <tr>
-                        <th>Transistor 1</th><td>{{ candidate_data.cir_data.T1_type }}</td>
-                        <th>Transistor 2</th><td>{{ candidate_data.cir_data.T2_type }}</td>
-                   </tr>
+    {% endraw %}
+    {{ circuit.table_data }}
+    {%- raw -%} 
                 </tbody>
             </table>
         </div>

@@ -15,7 +15,7 @@ from pcdt import CapacitorConfiguration, InductorConfiguration, TransformerConfi
 from pcdt.constant_path import (TEMPLATE_FOLDER, HTML_TEMPLATE_FOLDER_NAME, STYLESHEET_FOLDER_NAME, CANDIDATE_BROWSER_HTML,
                                 PYTHON_TEMPLATE_FOLDER_NAME, WEBSERVER_TEMPLATE, VISUALIZATION_TEMPLATE, CB_START_CSS,
                                 CB_DETAIL_CCS, PCDT_ROOT, WEB_SERVER_PY, TMP_DETAILED_HTML, CB_ICON, CB_IDLE_PNG,
-                                CAPACITOR_RESULTS, DF_SUMMARY_FINAL, TARGET_TMP_DETAILED_HTML)
+                                CAPACITOR_RESULTS, DF_SUMMARY_FINAL, TARGET_TMP_DETAILED_HTML, CIRCUIT_TEMPLATE_VAR, TOPOLOGY_KEY)
 
 logger = logging.getLogger(__name__)
 
@@ -104,7 +104,8 @@ class CandidateBrowserGen:
         for stylesheet in stylesheet_list:
             shutil.copy(f"{style_sheet_source_path}/{stylesheet}", style_sheet_path)
 
-    def _generate_webbrowser(self, act_conf_names: dict, act_destination_file_path: str, number_of_components: dict) -> None:
+    def _generate_webbrowser(self, act_conf_names: dict, act_destination_file_path: str,
+                             circuit_data: dict[str, dict | str], number_of_components: dict) -> None:
         """
         Generate html file.
 
@@ -115,6 +116,7 @@ class CandidateBrowserGen:
         """
         # Variable declaration and initialization
         server_path_information: dict = {}
+        circuit_topology_data: dict = {}
 
         # Destination path for template
         template_path: str
@@ -139,7 +141,7 @@ class CandidateBrowserGen:
         # Template are load by data (Special approach of Jinja2 to access the template)
         env = Environment(loader=FileSystemLoader(self.webserver_template_folder))
         web_template = env.get_template(WEBSERVER_TEMPLATE)
-        webserver_app = web_template.render(path_info=server_path_information, component=number_of_components)
+        webserver_app = web_template.render(path_info=server_path_information, circuit_info = circuit_data, component=number_of_components)
 
         # Get folder name
         destination_path = os.path.dirname(act_destination_file_path)
@@ -152,7 +154,7 @@ class CandidateBrowserGen:
         with open(act_destination_file_path, 'w') as f:
             f.write(webserver_app)
 
-    def _generate_detailed_page_template(self, act_destination_file_path: str, number_of_components: dict) -> None:
+    def _generate_detailed_page_template(self, act_destination_file_path: str, circuit_table: dict, number_of_components: dict) -> None:
         """
         Generate html file.
 
@@ -167,7 +169,7 @@ class CandidateBrowserGen:
         # Template are load by data (Special approach of Jinja2 to access the template)
         env = Environment(loader=FileSystemLoader(self.html_template_folder))
         detailes_page_template = env.get_template(TMP_DETAILED_HTML)
-        detailes_page_tmpl = detailes_page_template.render(component=number_of_components)
+        detailes_page_tmpl = detailes_page_template.render(component=number_of_components, circuit=circuit_table)
 
         # Get folder name
         destination_path = os.path.dirname(act_destination_file_path)
@@ -178,6 +180,93 @@ class CandidateBrowserGen:
         # Create or overwrite file
         with open(act_destination_file_path, 'w') as f:
             f.write(detailes_page_tmpl)
+
+    @staticmethod
+    # Generate web browser-file
+    def _generate_circuit_table( act_circuit_data: dict) -> str:
+        """
+        Prepare table with necessary dictionary name and check validity of parameter list.
+
+        :param act_circuit_data: List with design candidate information
+        :type  act_circuit_data: list[dict]
+        :return: list of candidate with brief parameter
+        :rtype: list[dict]
+        """
+        # Variable declaration and initialization
+        cir_parameter: dict = {}
+        # Key
+        prefix_key: str = "candidate_data." + CIRCUIT_TEMPLATE_VAR + "."
+        # = "candidate_data." + CIRCUIT_TEMPLATE_VAR + "."
+        topology_key = TOPOLOGY_KEY + "."
+
+        template_string = act_circuit_data["format"]["table_format"]
+
+        # Create translation dictionary
+        for parameter_set in act_circuit_data["parameter_list"]:
+            orig_key1 = "{{" + parameter_set[0]
+            orig_key2 = "{{ " + parameter_set[0]
+            repl_key = "{{ "+ prefix_key + parameter_set[0]
+            # Check if orig_key1 or orig_key2 is part of the string
+            repl_count = template_string.count(orig_key1) + template_string.count(orig_key1)
+            # Perform replace with key 1
+            template_string = template_string.replace(orig_key1, repl_key)
+            # Perform replace with key 2
+            template_string = template_string.replace(orig_key2, repl_key)
+            # Check if user is to notify
+            if repl_count==0:
+                logger.warning(f"The topology table template does not contains the value '{parameter_set[0]}'!")
+
+        # Load back to dictionary
+        return template_string
+
+
+    @staticmethod
+    def _debug_get_visualization_parameter_list()  -> dict:
+        # Variable declaration
+        # Dictionary to return
+        topology_data: dict = {}
+        format_data: dict = {}
+
+        circuit_data_parameter_list: list[tuple[str, str, str]] = [( "fs","params_f_s_suggest", "Hz"), ( "l1","params_l_1_suggest", "H"),
+                                               ( "l2","params_l_2_suggest", "H"), ( "ls","params_l_s_suggest", "H"),
+                                               ( "T1_type","params_transistor_1_name_suggest", "STR"),
+                                               ( "T2_type","params_transistor_2_name_suggest", "STR")]
+
+        format_data["nb_of_columns"] = 4
+        format_data["Topology_name"] = "Dual active bridge"
+        format_data["table_format"] =  """<!-- Detailed data -->
+                    <tr>
+                        <th>Switching frequency</th><td>{{ fs }}</td>
+                        <th>Inductor values</th>
+                        <td>L<sub>1</sub>={{ l1 }}, 
+                            L<sub>2</sub>={{ l2 }}, 
+                            L<sub>s</sub>={{ ls }}
+                        </td>
+                   </tr>
+                    <tr>
+                        <th>Transistor 1</th><td>{{ T1_type }}</td>
+                        <th>Transistor 2</th><td>{{ T2_type }}</td>
+                   </tr>
+                   """
+        # Add data to dict
+        topology_data["parameter_list"] = circuit_data_parameter_list
+        topology_data["format"] = format_data
+
+        return topology_data
+
+    @staticmethod
+    def _debug_get_visualization_plot_parameter()  -> dict:
+        # Variable declaration
+        # Plot data sub dictionary
+        plot_data: dict[str, str] = {}
+
+        plot_data["x_value"] = "values_0"
+        plot_data["y_value"] = "values_1"
+        plot_data["x_legend"] = "ZVS_rate"
+        plot_data["y_legend"] = "Current_factor"
+        plot_data["key_id"] = "number"
+
+        return plot_data
 
     def generate_html_visualization(self,
                                     circuit_configuration: CircuitOptimizationBase,
@@ -207,12 +296,21 @@ class CandidateBrowserGen:
         candidate_info_list: list[dict]
         # Configuration path dictionary
         conf_names: dict[str, str | list] = {}
+        # Circuit data from topology
+        topology_circuit_data: dict[str, dict] = {}
+        # Circuit data from topology for web server
+        circuit_info: dict[str, dict | str] = {}
+        # Circuit data from topology for web server
+        circuit_table: dict[str, dict | str] = {}
+        # Plot data sub dictionary
+        plot_data: dict[str, str] = {}
         # List for sub path
         conf_sub_list: list[str] = []
         # File path for csv data
         csv_filepath: str = os.path.join(summary_data.optimization_directory, DF_SUMMARY_FINAL)
         # Numbers of components
         number_of_components: dict = {}
+        # Debug
 
         # Get numbers of components
         number_of_components["nb_of_cap"] = circuit_configuration.get_number_of_required_capacitors()
@@ -232,6 +330,19 @@ class CandidateBrowserGen:
             conf_names["work_path"] = circuit_configuration.project_directory
             conf_names["circuit_folder"] = circuit_configuration.circuit_study_data.optimization_directory
             conf_names["circuit"] = circuit_configuration.circuit_study_data.study_name
+
+            # Read data from topology
+            # Add topology dependent information
+            # circuit_data["parameter_list"] = circuit_configuration.get_visualization_parameter_list()
+            # circuit_data["plot_parameter"] = circuit_configuration.get_visualization_plot_parameter()
+            topology_circuit_data["table_data"] = CandidateBrowserGen._debug_get_visualization_parameter_list()
+            topology_circuit_data["plot_parameter"] = CandidateBrowserGen._debug_get_visualization_plot_parameter()
+
+            # Generate web browser-file
+            circuit_table["table_data"] = CandidateBrowserGen._generate_circuit_table(topology_circuit_data["table_data"])
+            circuit_info["parameter_list"] = repr(topology_circuit_data["table_data"]["parameter_list"])
+            circuit_info["plot_parameter"] = topology_circuit_data["plot_parameter"]
+
             # Check if capacitors are part of the topology
             if capacitor_configuration_list:
                 # Set base path for capacitor
@@ -277,6 +388,6 @@ class CandidateBrowserGen:
             webserver_filepath: str = os.path.join(self.candidate_browser_study_data.optimization_directory, WEB_SERVER_PY)
             template_file_path = os.path.join(self.candidate_browser_study_data.optimization_directory, HTML_TEMPLATE_FOLDER_NAME, TARGET_TMP_DETAILED_HTML)
             # Generate web browser-file
-            self._generate_webbrowser(conf_names, webserver_filepath, number_of_components)
+            self._generate_webbrowser(conf_names, webserver_filepath, circuit_info, number_of_components)
             # Generate Detailed page template
-            self._generate_detailed_page_template(template_file_path, number_of_components)
+            self._generate_detailed_page_template(template_file_path, circuit_table, number_of_components)
