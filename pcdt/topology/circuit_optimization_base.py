@@ -570,3 +570,25 @@ class CircuitOptimizationBase(Generic[T_G_D, T_C_D], ABC):
         :rtype:  tuple[bool, str]
         """
         pass
+
+    @staticmethod
+    @abstractmethod
+    def get_visualization_parameter_list() -> dict:
+        """
+        Provide the parameter list for the table to visualize the circuit data.
+
+        :return: Plot parameter for visualization of design candidate
+        :rtype:  dict
+        """
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def get_visualization_plot_parameter() -> dict:
+        """
+        Provide the plot parameter to visualize the plot.
+
+        :return: Plot parameter for visualization of design candidate
+        :rtype:  dict
+        """
+        pass

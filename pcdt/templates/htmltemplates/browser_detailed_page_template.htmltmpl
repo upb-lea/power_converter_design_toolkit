@@ -201,22 +201,18 @@
         let t = 0;
         let tt = 0;
 
+
         // Initialize the circuit list
         {%- for item in plot_data.circuit_data.points %}
-            {%- if item.ZVS_rate is not none and item.ZVS_rate|length > 0 %}
-        circuit_points.push({ x: {{ item.ZVS_rate|float }}, y: {{ item.Current_factor|float }}});
+            {%- if item.x_value is not none and item.x_value|length > 0 %}
+        circuit_points.push({ x: {{ item.x_value|float }}, y: {{ item.y_value|float }}});
             {%- endif %}
         {%- endfor %}
 
         // Initialize the selected point of the circuit
-        circuit_sel_point.push({ x: {{ plot_data.circuit_data.sel_point.ZVS_rate|float }},
-                                 y: {{ plot_data.circuit_data.sel_point.Current_factor|float }}});
-
-        // Debug
-        console.log("Circuit points:", circuit_points);
-        console.log("Circuit selected point:", circuit_sel_point);
-
-    {% endraw %}
+        circuit_sel_point.push({ x: {{ plot_data.circuit_data.sel_point.x_value|float }},
+                                 y: {{ plot_data.circuit_data.sel_point.y_value|float }}});
+    {%- endraw %}
     {% for index in range(component.nb_of_cap) -%}
     {% raw %}
         // Initialize the capacitor{% endraw %}{{ index }}{% raw %} list
@@ -311,11 +307,15 @@
         const cir_layout = {
             title: 'Circuit design candidates',
             xaxis: {
-                title: 'ZVS / %',
+    {%- endraw %}
+                title: '{{circuit.plot_parameter.x_label }}',
+    {%- raw %}
                 range: [0, cir_max_x]
             },
             yaxis: {
-                title: 'I_RMS / I^2',
+    {%- endraw %}
+                title: '{{circuit.plot_parameter.y_label }}',
+    {%- raw %}
                 range: [0, cir_max_y]
             },
             // hovermode: 'closest',

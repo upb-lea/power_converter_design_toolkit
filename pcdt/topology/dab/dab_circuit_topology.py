@@ -39,7 +39,7 @@ from pcdt.components.component_dtos import (CapacitorRequirements, ComponentRequ
                                             TransformerRequirements, ComponentCooling)
 from pcdt.constant_path import (CIRCUIT_INDUCTOR_RELUCTANCE_LOSSES_FOLDER, CIRCUIT_TRANSFORMER_RELUCTANCE_LOSSES_FOLDER,
                                 CIRCUIT_INDUCTOR_FEM_LOSSES_FOLDER, CIRCUIT_TRANSFORMER_FEM_LOSSES_FOLDER,
-                                CIRCUIT_CAPACITOR_LOSS_FOLDER, SUMMARY_COMBINATION_FOLDER, FILTERED_RESULTS_PATH,
+                                CIRCUIT_CAPACITOR_LOSS_FOLDER, SUMMARY_COMBINATION_FOLDER, FILTERED_RESULTS_PATH, NAME_KEY,
                                 DAB_TOPOLOGY_FOLDER, PCDT_ROOT, TOMPL_TEMPLATE_FOLDER_NAME, GENERAL_CONF_TPL, CIRCUIT_CONF_TPL)
 from pcdt.constants import FACTOR_SECONDS_TO_NANOSECONDS
 from pcdt.topology.dab.dab_plot_waveforms import plot_calc_vs_requirements, plot_calc_waveforms, plot_calc_i_hf_waveforms
@@ -1845,3 +1845,72 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
             logger.error(f"Data corruption: Missing template file {template_file_path}")
 
         return is_valid, template_source
+
+    @staticmethod
+    def get_visualization_plot_parameter() -> dict:
+        """
+        Provide the plot parameter to visualize the plot.
+
+        :return: Plot parameter for visualization of design candidate
+        :rtype:  dict
+        """
+        # Variable declaration
+        # Plot data sub dictionary
+        plot_data: dict[str, str] = {}
+
+        # Data column name within csv-result file
+        plot_data["x_value"] = "values_0"
+        plot_data["y_value"] = "values_1"
+        plot_data["key_id"] = "number"
+        # Label of the axes
+        plot_data["x_label"] = "ZVS / %"
+        plot_data["y_label"] = "I_RMS / I²"
+
+        return plot_data
+
+    @staticmethod
+    def get_visualization_parameter_list() -> dict:
+        """
+        Provide the parameter list for the table to visualize the circuit data.
+
+        :return: Plot parameter for visualization of design candidate
+        :rtype:  dict
+        """
+        # Variable declaration
+        # Dictionary to return and intermediate format dictionary
+        topology_data: dict = {}
+        format_data: dict = {}
+        # Parameter triplet (variable name under key 'table_format', name is CSV-file, unit)
+        circuit_data_parameter_list: list[tuple[str, str, str]] = [("fs", "params_f_s_suggest", "Hz"), ("l1", "params_l_1_suggest", "H"),
+                                                                   ("l2", "params_l_2_suggest", "H"), ("ls", "params_l_s_suggest", "H"),
+                                                                   ("T1_type", "params_transistor_1_name_suggest", NAME_KEY),
+                                                                   ("T2_type", "params_transistor_2_name_suggest", NAME_KEY),
+                                                                   ("tr_turn", "params_n_suggest", NAME_KEY)]
+        # Number of columns
+        format_data["nb_of_columns"] = 4
+        # Name of the topology
+        format_data["Topology_name"] = "Dual active bridge"
+        # Table to visualize in html-format
+        format_data["table_format"] = """<!-- Detailed data -->
+                    <tr>
+                        <th>Switching frequency</th><td>{{ fs }}</td>
+                        <th>Transistor 1</th><td>{{ T1_type }}</td>
+                   </tr>
+                    <tr>
+                        <th>Inductor values</th>
+                        <td>L<sub>1</sub>={{ l1 }}, 
+                            L<sub>2</sub>={{ l2 }}, 
+                            L<sub>s</sub>={{ ls }}
+                        </td>
+                        <th>Transistor 2</th><td>{{ T2_type }}</td>
+                   </tr>
+                    <tr>
+                        <th>Transformer turn ration</th><td>{{ tr_turn }}</td>
+                        <th></th><td></td>
+                   </tr>
+                   """
+        # Add data to result dictionary
+        topology_data["parameter_list"] = circuit_data_parameter_list
+        topology_data["format"] = format_data
+
+        return topology_data

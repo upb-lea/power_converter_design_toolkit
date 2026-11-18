@@ -300,7 +300,7 @@ def read_csv_plot_data(plot_file_path_dict: dict,  act_cid: int) -> dict[str, di
     # Read circuit plot data
     plot_data["circuit_data"] = read_component_plot_data( 
         plot_file_path_dict["circuit_csv_file"],"{{ circuit_info.plot_parameter.x_value }}" , "{{ circuit_info.plot_parameter.y_value }}",
-        "{{ circuit_info.plot_parameter.x_legend }}", "{{ circuit_info.plot_parameter.y_legend }}", 
+        "x_value", "y_value", 
         "{{ circuit_info.plot_parameter.key_id }}", candidate_ids["cir_id"] )
 
    {%- for index in range(component.nb_of_cap) %}
@@ -334,11 +334,11 @@ def read_csv_candidate_data(file_path_dict: dict, act_cid: int) -> dict[str, lis
     circuit_parameter_list: list[tuple[str, str, str]] = {{ circuit_info.parameter_list }}
 
     capacitor_parameter_list: list[tuple[str, str, str]] = [("cap_vol", "volume", "m³"), ("cap_loss", "power_loss_total", "W"), ("cap_per_loss", "power_loss_per_capacitor", "W"),
-                                                      ("cap_order", "ordering code", NAME_KEY), ("in_series_needed", "cap_series", ""), ("in_parallel_needed", "cap_parallel", ""),
+                                                      ("cap_order", "ordering code", NAME_KEY), ("cap_series", "in_series_needed", ""), ("cap_parallel", "in_parallel_needed", ""),
                                                       ("cap_capa", "capacitance", "F"), ("cap_esl", "ESL_in_H", "H"), ("cap_esr", "ESR_85degree_in_Ohm", "&Omega;")]
 
     inductor_parameter_list: list[tuple[str, str, str]] = [("ind_vol", "values_0", "m³"), ("ind_loss", "values_1", "W"), ("ind_peak_flux", "user_attrs_flux_density_peak", "T"),
-                                                      ("ind_core", "params_core_name", NAME_KEY), ("params_material_name", "ind_material", NAME_KEY), ("params_material_name", "ind_l", "H"),
+                                                      ("ind_core", "params_core_name", NAME_KEY), ("ind_material", "params_material_name", NAME_KEY), ("ind_l", "params_material_name", "H"),
                                                       ("ind_turns", "params_turns", ""), ("ind_airgap", "user_attrs_l_air_gap", "m"), ("ind_litz", "params_litz_wire_name", NAME_KEY)]
 
     transformer_parameter_list: list[tuple[str, str, str]] = [("tr_vol", "values_0", "m³"), ("tr_loss", "values_1", "W"), ("tr_core", "params_core_name", NAME_KEY),
