@@ -77,6 +77,11 @@ LOGGING_CONF_FILE_NAME = "logging.conf"
 # Configuration path and template file names
 CONFIG_FILE_FOLDER = "00_configuration_files"
 
+# Placeholder used in web server template
+NAME_KEY = "STR"
+TOPOLOGY_KEY = "circuit"
+CIRCUIT_TEMPLATE_VAR = "cir_data"
+
 # Configuration template toml file names and logging file names
 PROG_FLOW_CONF_TPL = "progFlow.tomltmpl"
 MISC_CONF_TPL = "Misc.tomltmpl"
