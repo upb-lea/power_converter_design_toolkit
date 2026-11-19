@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Design candidate details</title>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <link rel="icon" type="image/png" href="/StyleSheets/program_icon.png">
     <link rel="stylesheet" href="StyleSheets/browser_detailed_page.css">

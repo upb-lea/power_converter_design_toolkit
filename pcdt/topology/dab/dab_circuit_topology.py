@@ -1863,8 +1863,8 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
         plot_data["y_value"] = "values_1"
         plot_data["key_id"] = "number"
         # Label of the axes
-        plot_data["x_label"] = "ZVS / %"
-        plot_data["y_label"] = "I_RMS / I²"
+        plot_data["x_label"] = r"$\\mathcal{L}_{ZVS} / \\%$"
+        plot_data["y_label"] = r"$\\mathcal{L}_i  / A^2$"
 
         return plot_data
 

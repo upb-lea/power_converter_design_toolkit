@@ -205,7 +205,7 @@ class CandidateBrowserGen:
             orig_key2 = "{{ " + parameter_set[0]
             repl_key = "{{ " + prefix_key + parameter_set[0]
             # Check if orig_key1 or orig_key2 is part of the string
-            repl_count = template_string.count(orig_key1) + template_string.count(orig_key1)
+            repl_count = template_string.count(orig_key1) + template_string.count(orig_key2)
             # Perform replace with key 1
             template_string = template_string.replace(orig_key1, repl_key)
             # Perform replace with key 2
@@ -257,7 +257,6 @@ class CandidateBrowserGen:
         csv_filepath: str = os.path.join(summary_data.optimization_directory, DF_SUMMARY_FINAL)
         # Numbers of components
         number_of_components: dict = {}
-        # Debug
 
         # Get numbers of components
         number_of_components["nb_of_cap"] = circuit_configuration.get_number_of_required_capacitors()
