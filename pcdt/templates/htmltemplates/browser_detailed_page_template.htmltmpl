@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Design candidate details</title>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <link rel="icon" type="image/png" href="/StyleSheets/program_icon.png">
     <link rel="stylesheet" href="StyleSheets/browser_detailed_page.css">
@@ -28,18 +29,9 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <th>Switching frequency</th><td>{{ candidate_data.cir_data.fs }}</td>
-                        <th>Inductor values</th>
-                        <td>L<sub>1</sub>={{ candidate_data.cir_data.l1}}, 
-                            L<sub>2</sub>={{ candidate_data.cir_data.l1}}, 
-                            L<sub>s</sub>={{ candidate_data.cir_data.ls}}
-                        </td>
-                   </tr>
-                    <tr>
-                        <th>Transistor 1</th><td>{{ candidate_data.cir_data.T1_type }}</td>
-                        <th>Transistor 2</th><td>{{ candidate_data.cir_data.T2_type }}</td>
-                   </tr>
+    {% endraw %}
+    {{ circuit.table_data }}
+    {%- raw -%} 
                 </tbody>
             </table>
         </div>
@@ -210,22 +202,18 @@
         let t = 0;
         let tt = 0;
 
+
         // Initialize the circuit list
         {%- for item in plot_data.circuit_data.points %}
-            {%- if item.ZVS_rate is not none and item.ZVS_rate|length > 0 %}
-        circuit_points.push({ x: {{ item.ZVS_rate|float }}, y: {{ item.Current_factor|float }}});
+            {%- if item.x_value is not none and item.x_value|length > 0 %}
+        circuit_points.push({ x: {{ item.x_value|float }}, y: {{ item.y_value|float }}});
             {%- endif %}
         {%- endfor %}
 
         // Initialize the selected point of the circuit
-        circuit_sel_point.push({ x: {{ plot_data.circuit_data.sel_point.ZVS_rate|float }},
-                                 y: {{ plot_data.circuit_data.sel_point.Current_factor|float }}});
-
-        // Debug
-        console.log("Circuit points:", circuit_points);
-        console.log("Circuit selected point:", circuit_sel_point);
-
-    {% endraw %}
+        circuit_sel_point.push({ x: {{ plot_data.circuit_data.sel_point.x_value|float }},
+                                 y: {{ plot_data.circuit_data.sel_point.y_value|float }}});
+    {%- endraw %}
     {% for index in range(component.nb_of_cap) -%}
     {% raw %}
         // Initialize the capacitor{% endraw %}{{ index }}{% raw %} list
@@ -320,11 +308,15 @@
         const cir_layout = {
             title: 'Circuit design candidates',
             xaxis: {
-                title: 'ZVS / %',
+    {%- endraw %}
+                title: '{{circuit.plot_parameter.x_label }}',
+    {%- raw %}
                 range: [0, cir_max_x]
             },
             yaxis: {
-                title: 'I_RMS / I^2',
+    {%- endraw %}
+                title: '{{circuit.plot_parameter.y_label }}',
+    {%- raw %}
                 range: [0, cir_max_y]
             },
             // hovermode: 'closest',

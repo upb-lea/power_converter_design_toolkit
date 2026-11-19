@@ -40,7 +40,7 @@ from pcdt.components.component_dtos import (CapacitorRequirements, InductorRequi
                                             ComponentRequirements, ComponentCooling)
 from pcdt.constant_path import (CIRCUIT_INDUCTOR_RELUCTANCE_LOSSES_FOLDER, CIRCUIT_TRANSFORMER_RELUCTANCE_LOSSES_FOLDER,
                                 CIRCUIT_INDUCTOR_FEM_LOSSES_FOLDER, CIRCUIT_TRANSFORMER_FEM_LOSSES_FOLDER,
-                                CIRCUIT_CAPACITOR_LOSS_FOLDER, SUMMARY_COMBINATION_FOLDER, PCDT_ROOT,
+                                CIRCUIT_CAPACITOR_LOSS_FOLDER, SUMMARY_COMBINATION_FOLDER, PCDT_ROOT, NAME_KEY,
                                 TOMPL_TEMPLATE_FOLDER_NAME, SBC_TOPOLOGY_FOLDER, GENERAL_CONF_TPL, CIRCUIT_CONF_TPL)
 
 from pcdt.topology.sbc.sbc_constants import MAX_DUTY_CYCLE
@@ -1763,3 +1763,67 @@ class SbcCircuitOptimization(CircuitOptimizationBase[sbc_tc.TomlSbcGeneral, sbc_
             logger.error(f"Data corruption: Missing template file {template_file_path}")
 
         return is_valid, template_source
+
+    @staticmethod
+    def get_visualization_plot_parameter() -> dict:
+        """
+        Provide the plot parameter to visualize the plot.
+
+        :return: Plot parameter for visualization of design candidate
+        :rtype:  dict
+        """
+        # Variable declaration
+        # Plot data sub dictionary
+        plot_data: dict[str, str] = {}
+
+        # Data column name within csv-result file
+        plot_data["x_value"] = "values_0"
+        plot_data["y_value"] = "values_1"
+        plot_data["key_id"] = "number"
+        # Label of the axes
+        plot_data["x_label"] = "Switching Period / s"
+        plot_data["y_label"] = "Power loss / W"
+
+        return plot_data
+
+    @staticmethod
+    def get_visualization_parameter_list() -> dict:
+        """
+        Provide the parameter list for the table to visualize the circuit data.
+
+        :return: Plot parameter for visualization of design candidate
+        :rtype:  dict
+        """
+        # Variable declaration
+        # Dictionary to return and intermediate format dictionary
+        topology_data: dict = {}
+        format_data: dict = {}
+        # Parameter triplet (variable name under key 'table_format', name is CSV-file, unit)
+        circuit_data_parameter_list: list[tuple[str, str, str]] = [("fs", "params_f_s_suggest", "Hz"),
+                                                                   ("ls", "params_l_s_suggest", "H"),
+                                                                   ("T_type", "params_transistor_1_name_suggest", NAME_KEY),
+                                                                   ("p_loss_t", "value_1", "W")]
+        # Number of columns
+        format_data["nb_of_columns"] = 4
+        # Name of the topology
+        format_data["Topology_name"] = "Synchronous buck converter"
+        # Table to visualize in html-format
+        format_data["table_format"] = """<!-- Detailed data -->
+                    <tr>
+                        <th>Switching frequency</th>
+                        <td>{{ fs }}</td>
+                        <th>HS + LS Transistor</th>
+                        <td>{{ T_type }}</td>
+                    </tr>
+                    <tr>
+                        <th>Inductor values</th>
+                        <td>L={{ ls }}
+                        <th>Power loss Transistor</th>
+                        <td>{{ p_loss_t }}</td>
+                   </tr>
+                   """
+        # Add data to result dictionary
+        topology_data["parameter_list"] = circuit_data_parameter_list
+        topology_data["format"] = format_data
+
+        return topology_data
