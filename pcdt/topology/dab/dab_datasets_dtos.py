@@ -318,8 +318,8 @@ class DabCircuitDTO:
     gecko_additional_params: GeckoAdditionalParameters
     gecko_results: GeckoResults | None
     gecko_waveforms: GeckoWaveforms | None
+    capacitor_0_results: CapacitorResults | None
     capacitor_1_results: CapacitorResults | None
-    capacitor_2_results: CapacitorResults | None
     inductor_results: InductorResults | None
     stacked_transformer_results: StackedTransformerResults | None
     circuit_thermal: list[CircuitThermal] | None

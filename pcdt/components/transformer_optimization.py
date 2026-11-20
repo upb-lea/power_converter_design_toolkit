@@ -432,7 +432,7 @@ class TransformerOptimization:
         # Overtake the filtered operation points
         quantity_transformer_id_pareto = len(transformer_id_list_pareto)
 
-        logger.info(f"Full-operating point simulation list with {len(transformer_id_list_pareto)} designs: {transformer_id_list_pareto}")
+        logger.info(f"Reluctance model: Full-operating point simulation list with {len(transformer_id_list_pareto)} designs: {transformer_id_list_pareto}")
 
         new_circuit_dto_directory = os.path.join(act_sto_config.stacked_transformer_optimization_directory, CIRCUIT_TRANSFORMER_RELUCTANCE_LOSSES_FOLDER)
         if not os.path.exists(new_circuit_dto_directory):
@@ -445,6 +445,7 @@ class TransformerOptimization:
             winding_1_loss_array = np.full_like(transformer_requirements.time_array[..., 0], np.nan)
             winding_2_loss_array = np.full_like(transformer_requirements.time_array[..., 0], np.nan)
             core_loss_array = np.full_like(transformer_requirements.time_array[..., 0], np.nan)
+            b_max_array = np.full_like(transformer_requirements.time_array[..., 0], np.nan)
 
             if os.path.exists(os.path.join(new_circuit_dto_directory, f"{transformer_id}.pkl")):
                 logger.info(f"All-operating point simulation of circuit {circuit_id} with transformer {transformer_id} already exists. Skip.")
@@ -465,13 +466,14 @@ class TransformerOptimization:
                     logger.debug(f"   * Transformer study: {act_sto_config.stacked_transformer_study_name}")
                     logger.debug(f"   * Transformer ID: {transformer_id}")
 
-                    volume, combined_losses, area_to_heat_sink, winding_1_loss, winding_2_loss, core_loss = (
+                    volume, combined_losses, area_to_heat_sink, winding_1_loss, winding_2_loss, core_loss, b_max = (
                         fmt.StackedTransformerOptimization.ReluctanceModel.full_simulation(
                             df_transformer_id, current_waveform_1, current_waveform_2, config_filepath))
                     result_array[vec_vvp] = combined_losses
                     winding_1_loss_array[vec_vvp] = winding_1_loss
                     winding_2_loss_array[vec_vvp] = winding_2_loss
                     core_loss_array[vec_vvp] = core_loss
+                    b_max_array[vec_vvp] = b_max
 
                 # Calculate thermal resistance
                 r_th_xfmr_heat_sink = ThermalCalcSupport.calculate_r_th_tim(
@@ -482,6 +484,7 @@ class TransformerOptimization:
                     winding_1_loss_array=winding_1_loss_array,
                     winding_2_loss_array=winding_2_loss_array,
                     core_loss_array=core_loss_array,
+                    b_max_array=b_max_array,
                     volume=volume,
                     area_to_heat_sink=area_to_heat_sink,
                     r_th_xfmr_heat_sink=r_th_xfmr_heat_sink,
@@ -625,7 +628,7 @@ class TransformerOptimization:
 
         transformer_id_list_pareto = df_transformer_pareto["number"].to_numpy()
 
-        logger.info(f"Full-operating point simulation list with {len(transformer_id_list_pareto)} designs: {transformer_id_list_pareto}")
+        logger.info(f"FEM simulation: Full-operating point simulation list with {len(transformer_id_list_pareto)} designs: {transformer_id_list_pareto}")
 
         new_circuit_dto_directory = os.path.join(act_sto_config.stacked_transformer_optimization_directory,
                                                  CIRCUIT_TRANSFORMER_FEM_LOSSES_FOLDER)
@@ -683,6 +686,7 @@ class TransformerOptimization:
                         winding_1_loss_array=winding_1_loss_array,
                         winding_2_loss_array=winding_2_loss_array,
                         core_loss_array=core_loss_array,
+                        b_max_array=0,
                         volume=fem_output.volume,
                         area_to_heat_sink=area_to_heat_sink,
                         r_th_xfmr_heat_sink=r_th_xfmr_heat_sink,

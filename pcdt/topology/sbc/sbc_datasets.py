@@ -21,6 +21,7 @@ import pcdt.components.component_dtos as c_dtos
 from pcdt.components.heat_sink_optimization import ThermalCalcSupport
 import pcdt.topology.sbc.sbc_currents as sbc_currents
 from pcdt.topology.sbc.sbc_circuit_topology_dtos import CircuitSampling
+from pcdt.constants import TRANSISTOR_TEMPERATURE_SAFETY_MARGIN
 
 logger = logging.getLogger(__name__)
 
@@ -497,7 +498,7 @@ class HandleTransistorDto:
         #     raise ValueError(f"Transistor 1: {transistor.name} is of non-allowed type {transistor.type}. "
         #                      f"Allowed types are MOSFET, SiC-MOSFET.")
 
-        t_j_recommended = transistor.switch.t_j_max - 25
+        t_j_recommended = transistor.switch.t_j_max - TRANSISTOR_TEMPERATURE_SAFETY_MARGIN
 
         c_oss, q_oss = HandleSbcDto.get_c_oss_from_tdb(transistor, margin_factor=c_oss_margin_factor)
 

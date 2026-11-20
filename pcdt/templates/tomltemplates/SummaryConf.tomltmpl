@@ -7,8 +7,8 @@
 ####### 'End of Description section' #############################
 [pre_summary]
     filter_distance_losses = [0.01, 100]
-    filter_distance_efficiency = [0.03, 0.9]
+    filter_distance_efficiency = [0.001, 0.9]
 
 [summary]
     filter_distance_losses = [0.01, 100]
-    filter_distance_efficiency = [0.03, 0.9]
+    filter_distance_efficiency = [0.001, 0.9]
