@@ -3,9 +3,18 @@
 import enum
 
 class DabEnums(enum.Enum):
-    """DAB enumerations for the filter."""
+    """DAB enumerations for the filter.
 
-    sort_pareto_2_dimensional = "sort_pareto_2_dimensional"
-    sort_pareto_3_dimensional = "sort_pareto_3_dimensional"
-    sort_frequency = "sort_frequency"
-    sort_lowest = "sort_lowest"
+    Naming convention: x_y_z_sort_filter
+
+    Scheme:
+     - x_y_z objectives in x, y, z or
+     - x_y objectives in x, y
+     - sort_filter sort against the filter value
+    """
+
+    eta_icost_sort_frequency = "eta_icost_sort_frequency"
+    eta_icost_zvs_sort_frequency = "eta_icost_zvs_sort_frequency"
+    zvs_icost_sort_frequency = "zvs_icost_sort_frequency"
+    f_eta_zvs_sort_frequency = "f_eta_zvs_sort_frequency"
+    zvs_icost_sort_irms = "zvs_icost_sort_irms"
