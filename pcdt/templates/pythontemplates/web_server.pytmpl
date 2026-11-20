@@ -39,7 +39,7 @@ TRANSFORMER{{ index }}_CSV: str
 HEAT_SINK_CSV: str
 VISUALIZATION_BASE_PATH: str
 # Name key (Use a key, which does not correspond to any SI-unit)
-NAME_KEY="STR"
+IS_NAME="STR"
 
 # Allocate FastAPI instance
 app = FastAPI()
@@ -225,7 +225,7 @@ def read_component_candidate_data(file_path: str, id_key: str, id: int, paramete
                 # Check if entry is valid
                 if raw_value is not None:
                     # Check if entry is a name
-                    if item[2] is NAME_KEY:
+                    if item[2] is IS_NAME:
                         #Overtake the name
                         candidate_component_data[item[0]] = raw_value
                     else:
@@ -334,17 +334,17 @@ def read_csv_candidate_data(file_path_dict: dict, act_cid: int) -> dict[str, lis
     circuit_parameter_list: list[tuple[str, str, str]] = {{ circuit_info.parameter_list }}
 
     capacitor_parameter_list: list[tuple[str, str, str]] = [("cap_vol", "volume", "m³"), ("cap_loss", "power_loss_total", "W"), ("cap_per_loss", "power_loss_per_capacitor", "W"),
-                                                      ("cap_order", "ordering code", NAME_KEY), ("cap_series", "in_series_needed", ""), ("cap_parallel", "in_parallel_needed", ""),
+                                                      ("cap_order", "ordering code", IS_NAME), ("cap_series", "in_series_needed", ""), ("cap_parallel", "in_parallel_needed", ""),
                                                       ("cap_capa", "capacitance", "F"), ("cap_esl", "ESL_in_H", "H"), ("cap_esr", "ESR_85degree_in_Ohm", "&Omega;")]
 
     inductor_parameter_list: list[tuple[str, str, str]] = [("ind_vol", "values_0", "m³"), ("ind_loss", "values_1", "W"), ("ind_peak_flux", "user_attrs_flux_density_peak", "T"),
-                                                      ("ind_core", "params_core_name", NAME_KEY), ("ind_material", "params_material_name", NAME_KEY), ("ind_l", "params_material_name", "H"),
-                                                      ("ind_turns", "params_turns", ""), ("ind_airgap", "user_attrs_l_air_gap", "m"), ("ind_litz", "params_litz_wire_name", NAME_KEY)]
+                                                      ("ind_core", "params_core_name", IS_NAME), ("ind_material", "params_material_name", IS_NAME), ("ind_l", "params_material_name", "H"),
+                                                      ("ind_turns", "params_turns", ""), ("ind_airgap", "user_attrs_l_air_gap", "m"), ("ind_litz", "params_litz_wire_name", IS_NAME)]
 
-    transformer_parameter_list: list[tuple[str, str, str]] = [("tr_vol", "values_0", "m³"), ("tr_loss", "values_1", "W"), ("tr_core", "params_core_name", NAME_KEY),
-                                                         ("tr_material", "params_material_name", NAME_KEY), ("tr_l", "params_core_name", "H"), ("tr_bot_airgap", "user_attrs_l_bot_air_gap", "m"),
-                                                         ("tr_top_airgap", "user_attrs_l_top_air_gap", "m"), ("tr_litz_prim", "params_primary_litz_name", NAME_KEY),
-                                                         ("tr_litz_sec", "params_secondary_litz_name", NAME_KEY), ("tr_turn_ptop", "params_n_p_top", ""),
+    transformer_parameter_list: list[tuple[str, str, str]] = [("tr_vol", "values_0", "m³"), ("tr_loss", "values_1", "W"), ("tr_core", "params_core_name", IS_NAME),
+                                                         ("tr_material", "params_material_name", IS_NAME), ("tr_l", "params_core_name", "H"), ("tr_bot_airgap", "user_attrs_l_bot_air_gap", "m"),
+                                                         ("tr_top_airgap", "user_attrs_l_top_air_gap", "m"), ("tr_litz_prim", "params_primary_litz_name", IS_NAME),
+                                                         ("tr_litz_sec", "params_secondary_litz_name", IS_NAME), ("tr_turn_ptop", "params_n_p_top", ""),
                                                          ("tr_turn_pbot", "params_n_p_bot", ""), ("tr_turn_sbot", "params_n_s_bot", ""), ("tr_flux_top", "user_attrs_b_max_top", "T"),
                                                          ("tr_core_inner_dia", "user_attrs_core_inner_diameter", "m"), ("tr_flux_mid", "user_attrs_b_max_middle", "T"),
                                                          ("tr_flux_bot", "user_attrs_b_max_bot", "T"), ("tr_wind_loss", "user_attrs_winding_losses", "W")]
