@@ -19,7 +19,7 @@
     t_dead_2_max = 500e-9
 
 [filter_distance]
-    filter_algorithm = "sort_pareto_2_dimensional"  # eta_icost_sort_frequency, eta_icost_zvs_sort_frequency, zvs_icost_sort_frequency, f_eta_zvs_sort_frequency, zvs_icost_sort_irms
+    filter_algorithm = "f_eta_zvs_sort_frequency"  # eta_icost_sort_frequency, eta_icost_zvs_sort_frequency, zvs_icost_sort_frequency, f_eta_zvs_sort_frequency, zvs_icost_sort_irms
     number_filtered_designs = 2
     difference_percentage = 95
 
