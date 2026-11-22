@@ -187,8 +187,8 @@ class CandidateBrowserGen:
         """
         Prepare table with necessary dictionary name and check validity of parameter list.
 
-        :param act_circuit_data: List with design candidate information
-        :type  act_circuit_data: list[dict]
+        :param act_circuit_data: Content of table and design candidate information
+        :type  act_circuit_data: dict
         :return: list of candidate with brief parameter
         :rtype: list[dict]
         """
@@ -197,7 +197,7 @@ class CandidateBrowserGen:
         # Key
         prefix_key: str = "candidate_data." + CIRCUIT_TEMPLATE_VAR + "."
         # Result table template initialized with basic table
-        template_string: str = str(act_circuit_data["format"]["table_format"])
+        template_string: str = str(act_circuit_data["table_data"]["table_content"])
 
         # Create translation dictionary
         for parameter_set in act_circuit_data["parameter_list"]:
@@ -278,15 +278,15 @@ class CandidateBrowserGen:
             conf_names["circuit"] = circuit_configuration.circuit_study_data.study_name
 
             # Read data from topology
-            # Add topology dependent information
-            # circuit_data["parameter_list"] = circuit_configuration.get_visualization_parameter_list()
-            # circuit_data["plot_parameter"] = circuit_configuration.get_visualization_plot_parameter()
-            topology_circuit_data["table_data"] = circuit_configuration.get_visualization_parameter_list()
+            # Get topology dependent information
+            topology_circuit_data = circuit_configuration.get_visualization_parameter_list()
+            # Add plot parameter
             topology_circuit_data["plot_parameter"] = circuit_configuration.get_visualization_plot_parameter()
 
             # Generate web browser-file
-            circuit_info["table_data"] = CandidateBrowserGen._generate_circuit_table(topology_circuit_data["table_data"])
-            circuit_info["parameter_list"] = repr(topology_circuit_data["table_data"]["parameter_list"])
+            circuit_info["table_data"] = CandidateBrowserGen._generate_circuit_table(topology_circuit_data)
+            circuit_info["table_info"] = topology_circuit_data["table_data"]["table_info"]
+            circuit_info["parameter_list"] = repr(topology_circuit_data["parameter_list"])
             circuit_info["plot_parameter"] = topology_circuit_data["plot_parameter"]
 
             # Check if capacitors are part of the topology

@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="/StyleSheets/browser_detailed_page.css">
 </head>
 <body>
-    <h1>Detailed view of selected candidate</h1>
+    <h1>Detailed view of the selected '{% endraw %}{{ circuit.table_info.topology_name }}{%- raw -%}' design candidate</h1>
     <div class="container">
         <div class="plot-column">
             <!-- Circuit plot -->
@@ -23,7 +23,7 @@
             <table>
                 <thead>
                     <tr>
-                        <th colspan="4">Circuit parameter
+                        <th colspan="{% endraw %}{{ circuit.table_info.nb_of_columns }}{%- raw -%}">Circuit parameter
                         <span class="table-subtitle">(Design ID: {{ candidate_data.cir_data.id_key }}
                         Combination ID: {{ candidate_data.cid }} )</span></th>
                     </tr>

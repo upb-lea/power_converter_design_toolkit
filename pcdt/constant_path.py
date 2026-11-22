@@ -78,7 +78,8 @@ LOGGING_CONF_FILE_NAME = "logging.conf"
 CONFIG_FILE_FOLDER = "00_configuration_files"
 
 # Placeholder used in web server template
-NAME_KEY = "STR"
+# IS_NAME-keyword indicates, that a data is display as name instead of a value in data visualization
+IS_NAME = "STR"
 TOPOLOGY_KEY = "circuit"
 CIRCUIT_TEMPLATE_VAR = "cir_data"
 

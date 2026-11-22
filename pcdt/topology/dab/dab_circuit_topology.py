@@ -39,7 +39,7 @@ from pcdt.components.component_dtos import (CapacitorRequirements, ComponentRequ
                                             TransformerRequirements, ComponentCooling)
 from pcdt.constant_path import (CIRCUIT_INDUCTOR_RELUCTANCE_LOSSES_FOLDER, CIRCUIT_TRANSFORMER_RELUCTANCE_LOSSES_FOLDER,
                                 CIRCUIT_INDUCTOR_FEM_LOSSES_FOLDER, CIRCUIT_TRANSFORMER_FEM_LOSSES_FOLDER,
-                                CIRCUIT_CAPACITOR_LOSS_FOLDER, SUMMARY_COMBINATION_FOLDER, FILTERED_RESULTS_PATH, NAME_KEY,
+                                CIRCUIT_CAPACITOR_LOSS_FOLDER, SUMMARY_COMBINATION_FOLDER, FILTERED_RESULTS_PATH, IS_NAME,
                                 DAB_TOPOLOGY_FOLDER, PCDT_ROOT, TOMPL_TEMPLATE_FOLDER_NAME, GENERAL_CONF_TPL, CIRCUIT_CONF_TPL)
 from pcdt.constants import FACTOR_SECONDS_TO_NANOSECONDS
 from pcdt.topology.dab.dab_plot_waveforms import plot_calc_vs_requirements, plot_calc_waveforms, plot_calc_i_hf_waveforms
@@ -1849,10 +1849,22 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
     @staticmethod
     def get_visualization_plot_parameter() -> dict:
         """
-        Provide the plot parameter to visualize the plot.
+        Provide topology-specific plot settings for the design candidate detail page.
 
-        :return: Plot parameter for visualization of design candidate
-        :rtype:  dict
+        Return a dictionary containing the following keys:
+            - 'x_value': CSV column name for the x-axis values.
+            - 'y_value': CSV column name for the y-axis values.
+            - 'key_id': CSV column name for the circuit ID.
+            - 'x_label': Label for the x-axis.
+            - 'y_label': Label for the y-axis.
+        Axis labels support LaTeX notation when MathJax is available.
+        Enclose LaTeX expressions in dollar signs.
+        The labels are insert directly into JavaScript string literals,
+        so raw Python strings with doubled backslashes are necessary.
+        It means one backslash in LaTeX is to enter 2 times in label.
+
+        :return: CSV column mappings and axis labels for the circuit plot.
+        :rtype: dict
         """
         # Variable declaration
         # Plot data sub dictionary
@@ -1871,30 +1883,51 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
     @staticmethod
     def get_visualization_parameter_list() -> dict:
         """
-        Provide the parameter list for the table to visualize the circuit data.
+        Provide topology-specific table data for the design candidate detail page.
 
-        :return: Plot parameter for visualization of design candidate
-        :rtype:  dict
+        The returned dictionary contains the keys 'table_data' and 'parameter_list'.
+        'table_data' contains:
+            - 'table_info': A dictionary with the following keys:
+                - 'nb_of_columns' (int): Number of table columns.
+                - 'topology_name' (str): Display name of the topology.
+            - 'table_content' (str): HTML template for the table body.
+              Jinja2 placeholders ({{ ... }}) reference parameter names defined
+              by the first element of each tuple in 'parameter_list'.
+              These placeholders are populated with values during rendering.
+
+        'parameter_list' contains a list of tuples of three strings:
+        Each tuple must follow this order:
+            1. Parameter name referenced by the HTML template.
+            2. Name of the column containing the value in the corresponding CSV file.
+            3. Unit of the value, or IS_NAME for textual values.
+
+        IS_NAME is defined in constant_path.py.
+
+        :return: Table metadata, HTML template, and parameter mappings.
+        :rtype: dict
         """
         # Variable declaration
         # Dictionary to return and intermediate format dictionary
         topology_data: dict = {}
-        format_data: dict = {}
+        table_data: dict = {}
+        table_info: dict = {}
         # Parameter triplet (variable name under key 'table_format', name is CSV-file, unit)
         circuit_data_parameter_list: list[tuple[str, str, str]] = [("fs", "params_f_s_suggest", "Hz"), ("l1", "params_l_1_suggest", "H"),
                                                                    ("l2", "params_l_2_suggest", "H"), ("ls", "params_l_s_suggest", "H"),
-                                                                   ("T1_type", "params_transistor_1_name_suggest", NAME_KEY),
-                                                                   ("T2_type", "params_transistor_2_name_suggest", NAME_KEY),
-                                                                   ("tr_turn", "params_n_suggest", NAME_KEY)]
+                                                                   ("t1_type", "params_transistor_1_name_suggest", IS_NAME),
+                                                                   ("t2_type", "params_transistor_2_name_suggest", IS_NAME),
+                                                                   ("tr_turn", "params_n_suggest", IS_NAME)]
         # Number of columns
-        format_data["nb_of_columns"] = 4
+        table_info["nb_of_columns"] = 4
         # Name of the topology
-        format_data["Topology_name"] = "Dual active bridge"
+        table_info["topology_name"] = "Dual active bridge"
+        # Add information to table data dictionary
+        table_data["table_info"] = table_info
         # Table to visualize in html-format
-        format_data["table_format"] = """<!-- Detailed data -->
+        table_data["table_content"] = """<!-- Detailed data -->
                     <tr>
                         <th>Switching frequency</th><td>{{ fs }}</td>
-                        <th>Transistor 1</th><td>{{ T1_type }}</td>
+                        <th>Transistor 1</th><td>{{ t1_type }}</td>
                    </tr>
                     <tr>
                         <th>Inductor values</th>
@@ -1902,7 +1935,7 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
                             L<sub>2</sub>={{ l2 }}, 
                             L<sub>s</sub>={{ ls }}
                         </td>
-                        <th>Transistor 2</th><td>{{ T2_type }}</td>
+                        <th>Transistor 2</th><td>{{ t2_type }}</td>
                    </tr>
                     <tr>
                         <th>Transformer turn ration</th><td>{{ tr_turn }}</td>
@@ -1910,7 +1943,7 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
                    </tr>
                    """
         # Add data to result dictionary
+        topology_data["table_data"] = table_data
         topology_data["parameter_list"] = circuit_data_parameter_list
-        topology_data["format"] = format_data
 
         return topology_data
