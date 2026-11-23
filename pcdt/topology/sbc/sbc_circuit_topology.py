@@ -40,7 +40,7 @@ from pcdt.components.component_dtos import (CapacitorRequirements, InductorRequi
                                             ComponentRequirements, ComponentCooling)
 from pcdt.constant_path import (CIRCUIT_INDUCTOR_RELUCTANCE_LOSSES_FOLDER, CIRCUIT_TRANSFORMER_RELUCTANCE_LOSSES_FOLDER,
                                 CIRCUIT_INDUCTOR_FEM_LOSSES_FOLDER, CIRCUIT_TRANSFORMER_FEM_LOSSES_FOLDER,
-                                CIRCUIT_CAPACITOR_LOSS_FOLDER, SUMMARY_COMBINATION_FOLDER, PCDT_ROOT, NAME_KEY,
+                                CIRCUIT_CAPACITOR_LOSS_FOLDER, SUMMARY_COMBINATION_FOLDER, PCDT_ROOT, IS_NAME,
                                 TOMPL_TEMPLATE_FOLDER_NAME, SBC_TOPOLOGY_FOLDER, GENERAL_CONF_TPL, CIRCUIT_CONF_TPL)
 
 from pcdt.topology.sbc.sbc_constants import MAX_DUTY_CYCLE
@@ -1767,10 +1767,22 @@ class SbcCircuitOptimization(CircuitOptimizationBase[sbc_tc.TomlSbcGeneral, sbc_
     @staticmethod
     def get_visualization_plot_parameter() -> dict:
         """
-        Provide the plot parameter to visualize the plot.
+        Provide topology-specific plot settings for the design candidate detail page.
 
-        :return: Plot parameter for visualization of design candidate
-        :rtype:  dict
+        Return a dictionary containing the following keys:
+            - 'x_value': CSV column name for the x-axis values.
+            - 'y_value': CSV column name for the y-axis values.
+            - 'key_id': CSV column name for the circuit ID.
+            - 'x_label': Label for the x-axis.
+            - 'y_label': Label for the y-axis.
+        Axis labels support LaTeX notation when MathJax is available.
+        Enclose LaTeX expressions in dollar signs.
+        The labels are insert directly into JavaScript string literals,
+        so raw Python strings with doubled backslashes are necessary.
+        It means one backslash in LaTeX is to enter 2 times in label.
+
+        :return: CSV column mappings and axis labels for the circuit plot.
+        :rtype: dict
         """
         # Variable declaration
         # Plot data sub dictionary
@@ -1789,10 +1801,28 @@ class SbcCircuitOptimization(CircuitOptimizationBase[sbc_tc.TomlSbcGeneral, sbc_
     @staticmethod
     def get_visualization_parameter_list() -> dict:
         """
-        Provide the parameter list for the table to visualize the circuit data.
+        Provide topology-specific table data for the design candidate detail page.
 
-        :return: Plot parameter for visualization of design candidate
-        :rtype:  dict
+        The returned dictionary contains the keys 'table_data' and 'parameter_list'.
+        'table_data' contains:
+            - 'table_info': A dictionary with the following keys:
+                - 'nb_of_columns' (int): Number of table columns.
+                - 'topology_name' (str): Display name of the topology.
+            - 'table_content' (str): HTML template for the table body.
+              Jinja2 placeholders ({{ ... }}) reference parameter names defined
+              by the first element of each tuple in 'parameter_list'.
+              These placeholders are populated with values during rendering.
+
+        'parameter_list' contains a list of tuples of three strings:
+        Each tuple must follow this order:
+            1. Parameter name referenced by the HTML template.
+            2. Name of the column containing the value in the corresponding CSV file.
+            3. Unit of the value, or IS_NAME for textual values.
+
+        IS_NAME is defined in constant_path.py.
+
+        :return: Table metadata, HTML template, and parameter mappings.
+        :rtype: dict
         """
         # Variable declaration
         # Dictionary to return and intermediate format dictionary
@@ -1801,19 +1831,19 @@ class SbcCircuitOptimization(CircuitOptimizationBase[sbc_tc.TomlSbcGeneral, sbc_
         # Parameter triplet (variable name under key 'table_format', name is CSV-file, unit)
         circuit_data_parameter_list: list[tuple[str, str, str]] = [("fs", "params_f_s_suggest", "Hz"),
                                                                    ("ls", "params_l_s_suggest", "H"),
-                                                                   ("T_type", "params_transistor_1_name_suggest", NAME_KEY),
+                                                                   ("t_type", "params_transistor_1_name_suggest", IS_NAME),
                                                                    ("p_loss_t", "value_1", "W")]
         # Number of columns
         format_data["nb_of_columns"] = 4
         # Name of the topology
-        format_data["Topology_name"] = "Synchronous buck converter"
+        format_data["topology_name"] = "Synchronous buck converter"
         # Table to visualize in html-format
         format_data["table_format"] = """<!-- Detailed data -->
                     <tr>
                         <th>Switching frequency</th>
                         <td>{{ fs }}</td>
                         <th>HS + LS Transistor</th>
-                        <td>{{ T_type }}</td>
+                        <td>{{ t_type }}</td>
                     </tr>
                     <tr>
                         <th>Inductor values</th>
