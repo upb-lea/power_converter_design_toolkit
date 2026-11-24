@@ -707,7 +707,7 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
 
         trial.set_user_attr('dead_time_zvs_coverage', dab_calc.calc_dead_time.zvs_coverage * 100)
         trial.set_user_attr('zvs_coverage', dab_calc.calc_modulation.zvs_coverage * 100)
-        trial.set_user_attr('i_cost_matrix_weighted', i_cost_matrix_weighted)
+        trial.set_user_attr('i_cost', i_cost)
 
         # add transistor losses
         dab_calc = HandleDabDto.add_transistor_turn_off_currents_losses(dab_calc)
@@ -796,7 +796,7 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
 
         trial.set_user_attr('dead_time_zvs_coverage', dab_calc.calc_dead_time.zvs_coverage * 100)
         trial.set_user_attr('zvs_coverage', dab_calc.calc_modulation.zvs_coverage * 100)
-        trial.set_user_attr('i_cost_matrix_weighted', i_cost_matrix_weighted)
+        trial.set_user_attr('i_cost', i_cost)
 
         # add transistor losses
         dab_calc = HandleDabDto.add_transistor_turn_off_currents_losses(dab_calc)
@@ -887,7 +887,7 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
 
         trial.set_user_attr('dead_time_zvs_coverage', dab_calc.calc_dead_time.zvs_coverage * 100)
         trial.set_user_attr('zvs_coverage', dab_calc.calc_modulation.zvs_coverage * 100)
-        trial.set_user_attr('i_cost_matrix_weighted', i_cost_matrix_weighted)
+        trial.set_user_attr('i_cost', i_cost)
 
         # add transistor losses
         dab_calc = HandleDabDto.add_transistor_turn_off_currents_losses(dab_calc)
@@ -979,7 +979,7 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
 
         trial.set_user_attr('dead_time_zvs_coverage', dab_calc.calc_dead_time.zvs_coverage * 100)
         trial.set_user_attr('zvs_coverage', dab_calc.calc_modulation.zvs_coverage * 100)
-        trial.set_user_attr('i_cost_matrix_weighted', i_cost_matrix_weighted)
+        trial.set_user_attr('i_cost', i_cost)
 
         # add transistor losses
         dab_calc = HandleDabDto.add_transistor_turn_off_currents_losses(dab_calc)
@@ -1071,7 +1071,7 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
 
         trial.set_user_attr('dead_time_zvs_coverage', dab_calc.calc_dead_time.zvs_coverage * 100)
         trial.set_user_attr('zvs_coverage', dab_calc.calc_modulation.zvs_coverage * 100)
-        trial.set_user_attr('i_cost_matrix_weighted', i_cost_matrix_weighted)
+        trial.set_user_attr('i_cost', i_cost)
 
         return dab_calc.calc_dead_time.zvs_coverage * 100, i_cost
 
