@@ -892,7 +892,7 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
         # add transistor losses
         dab_calc = HandleDabDto.add_transistor_turn_off_currents_losses(dab_calc)
 
-        if dab_calc.calc_losses is not None:
+        if dab_calc.calc_losses is not None and dab_calc.calc_dead_time is not None:
 
             transistor_efficiency = (np.abs(fixed_parameters.mesh_p) - dab_calc.calc_losses.p_dab) / np.abs(fixed_parameters.mesh_p)
 
@@ -984,7 +984,7 @@ class DabCircuitOptimization(CircuitOptimizationBase[dab_tc.TomlDabGeneral, dab_
         # add transistor losses
         dab_calc = HandleDabDto.add_transistor_turn_off_currents_losses(dab_calc)
 
-        if dab_calc.calc_losses is not None:
+        if dab_calc.calc_losses is not None and dab_calc.calc_dead_time is not None:
 
             transistor_efficiency = (np.abs(fixed_parameters.mesh_p) - dab_calc.calc_losses.p_dab) / np.abs(fixed_parameters.mesh_p)
 
