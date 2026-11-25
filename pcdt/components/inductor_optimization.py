@@ -379,7 +379,7 @@ class InductorOptimization:
         if not os.path.exists(new_circuit_dto_directory):
             os.makedirs(new_circuit_dto_directory)
 
-        # in case of already existing pkl or failed files which do not macht with the pareto front, delete these files (in case of 'continue' an optimization)
+        # in case of already existing pkl or failed files which do not match with the pareto front, delete these files (in case of 'continue' an optimization)
         allowed_names = set(df_inductor_pareto.index.astype(str))
         files_to_delete = []
         for filename in os.listdir(new_circuit_dto_directory):
