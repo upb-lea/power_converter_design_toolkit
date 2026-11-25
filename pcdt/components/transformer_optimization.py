@@ -629,8 +629,13 @@ class TransformerOptimization:
 
         # Filter study. Use same filter as in the reluctance model
         df = fmt.optimization.StackedTransformerOptimization.ReluctanceModel.study_to_df(act_sto_config)
-        df_transformer_pareto = fmt.optimization.StackedTransformerOptimization.ReluctanceModel.filter_loss_list_df(
-            df, factor_min_dc_losses=factor_dc_losses_min_max_list[0], factor_max_dc_losses=factor_dc_losses_min_max_list[1], filter_saturation=True)
+
+        # read inductor IDs from the reluctance model folder
+        reluctance_model_dto_directory = os.path.join(act_sto_config.stacked_transformer_optimization_directory, CIRCUIT_TRANSFORMER_RELUCTANCE_LOSSES_FOLDER)
+        reluctance_model_pkl_names = [int(f.replace(".pkl", "")) for f in os.listdir(reluctance_model_dto_directory) if f.lower().endswith(".pkl") and \
+                                      os.path.isfile(os.path.join(reluctance_model_dto_directory, f))]
+        df_transformer_pareto = df[df.index.isin(reluctance_model_pkl_names)]
+
         if debug.general.is_debug:
             # reduce dataset to the given number from the debug configuration
             df_transformer_pareto = df_transformer_pareto.iloc[:debug.transformer.number_fem_working_point_max]

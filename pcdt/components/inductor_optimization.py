@@ -547,8 +547,13 @@ class InductorOptimization:
         process_number = current_process().name
 
         df_inductor = fmt.optimization.InductorOptimization.ReluctanceModel.study_to_df(act_io_config)
-        df_inductor_pareto = fmt.optimization.InductorOptimization.ReluctanceModel.filter_loss_list_df(
-            df_inductor, factor_min_dc_losses=factor_dc_losses_min_max_list[0], factor_max_dc_losses=factor_dc_losses_min_max_list[1])
+
+        # read inductor IDs from the reluctance model folder
+        reluctance_model_dto_directory = os.path.join(act_io_config.inductor_optimization_directory, CIRCUIT_INDUCTOR_RELUCTANCE_LOSSES_FOLDER)
+        reluctance_model_pkl_names = [int(f.replace(".pkl", "")) for f in os.listdir(reluctance_model_dto_directory) if f.lower().endswith(".pkl") and \
+                                      os.path.isfile(os.path.join(reluctance_model_dto_directory, f))]
+        df_inductor_pareto = df_inductor[df_inductor.index.isin(reluctance_model_pkl_names)]
+
         if debug.general.is_debug:
             # reduce dataset to the fist given number from the debug configuration file
             df_inductor_pareto = df_inductor_pareto.iloc[:debug.inductor.number_fem_working_point_max]
