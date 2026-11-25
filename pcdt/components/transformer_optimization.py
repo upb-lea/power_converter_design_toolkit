@@ -381,6 +381,18 @@ class TransformerOptimization:
         return self._number_performed_calculations
 
     @staticmethod
+    def base_name(filename: str) -> str:
+        """
+        Remove the extension (.pkl or _failed.txt) and returns the plain name.
+
+        :param filename: filename
+        :type filename: str
+        """
+        if filename.endswith("_failed.txt"):
+            return filename[:-len("_failed.txt")]
+        return os.path.splitext(filename)[0]  # for .pkl
+
+    @staticmethod
     def _optimize_reluctance_model(circuit_id: str, act_sto_config: fmt.StoSingleInputConfig, circuit_study_name: str,
                                    transformer_requirements: TransformerRequirements, thermal_data: ComponentCooling,
                                    target_number_trials: int, factor_dc_losses_min_max_list: list[float], debug: pcdt.Debug) -> int:
@@ -438,6 +450,20 @@ class TransformerOptimization:
         new_circuit_dto_directory = os.path.join(act_sto_config.stacked_transformer_optimization_directory, CIRCUIT_TRANSFORMER_RELUCTANCE_LOSSES_FOLDER)
         if not os.path.exists(new_circuit_dto_directory):
             os.makedirs(new_circuit_dto_directory)
+
+        # in case of already existing pkl or failed files which do not macht with the pareto front, delete these files (in case of 'continue' an optimization)
+        allowed_names = set(df_transformer_pareto.index.astype(str))
+        files_to_delete = []
+        for filename in os.listdir(new_circuit_dto_directory):
+            full_path = os.path.join(new_circuit_dto_directory, filename)
+            if not os.path.isfile(full_path):
+                continue
+            if filename.endswith(".pkl") or filename.endswith("_failed_.txt"):
+                if TransformerOptimization.base_name(filename) not in allowed_names:
+                    files_to_delete.append(full_path)
+        for full_path in files_to_delete:
+            os.remove(full_path)
+            logger.info(f"Deleted: {os.path.basename(full_path)}")
 
         for transformer_id in tqdm.tqdm(transformer_id_list_pareto):
             df_transformer_id = df_transformer_pareto[df_transformer_pareto["number"] == transformer_id]

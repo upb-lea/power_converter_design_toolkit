@@ -309,6 +309,18 @@ class InductorOptimization:
 
         return act_number_performed_calculations
 
+    @staticmethod
+    def base_name(filename: str) -> str:
+        """
+        Remove the extension (.pkl or _failed.txt) and returns the plain name.
+
+        :param filename: filename
+        :type filename: str
+        """
+        if filename.endswith("_failed.txt"):
+            return filename[:-len("_failed.txt")]
+        return os.path.splitext(filename)[0]  # for .pkl
+
     # Simulation handler. Later the simulation handler starts a process per list entry.
     @staticmethod
     def _optimize_reluctance_model(circuit_id: str, act_io_config: fmt.InductorOptimizationDTO, circuit_study_name: str,
@@ -366,6 +378,20 @@ class InductorOptimization:
         new_circuit_dto_directory = os.path.join(act_io_config.inductor_optimization_directory, CIRCUIT_INDUCTOR_RELUCTANCE_LOSSES_FOLDER)
         if not os.path.exists(new_circuit_dto_directory):
             os.makedirs(new_circuit_dto_directory)
+
+        # in case of already existing pkl or failed files which do not macht with the pareto front, delete these files (in case of 'continue' an optimization)
+        allowed_names = set(df_inductor_pareto.index.astype(str))
+        files_to_delete = []
+        for filename in os.listdir(new_circuit_dto_directory):
+            full_path = os.path.join(new_circuit_dto_directory, filename)
+            if not os.path.isfile(full_path):
+                continue
+            if filename.endswith(".pkl") or filename.endswith("_failed_.txt"):
+                if InductorOptimization.base_name(filename) not in allowed_names:
+                    files_to_delete.append(full_path)
+        for full_path in files_to_delete:
+            os.remove(full_path)
+            logger.info(f"Deleted: {os.path.basename(full_path)}")
 
         # simulate all operating points
         for inductor_id in tqdm.tqdm(inductor_id_list_pareto):
