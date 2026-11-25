@@ -27,6 +27,7 @@ from pcdt.components.component_dtos import (CircuitThermal, CapacitorRequirement
                                             InductorResults, StackedTransformerResults, ComponentCooling)
 from pcdt.components.heat_sink_optimization import ThermalCalcSupport
 from pcdt.topology.dab.dab_losses import transistor_turn_off_loss, calculate_turn_off_currents_single_operating_point
+from pcdt.constants import TRANSISTOR_TEMPERATURE_SAFETY_MARGIN
 
 logger = logging.getLogger(__name__)
 
@@ -184,8 +185,8 @@ class HandleDabDto:
             gecko_additional_params=gecko_additional_params,
             gecko_results=None,
             gecko_waveforms=None,
+            capacitor_0_results=None,
             capacitor_1_results=None,
-            capacitor_2_results=None,
             inductor_results=None,
             stacked_transformer_results=None,
             circuit_thermal=None,
@@ -353,16 +354,16 @@ class HandleDabDto:
                                                                                                                 dto.calc_modulation.tau2[vec_vvp])
             p_turn_off_1a[vec_vvp] = transistor_turn_off_loss(
                 float(i_turn_off_1a[vec_vvp]), dto.input_config.transistor_dto_1, dto.input_config.mesh_v1[vec_vvp],
-                dto.input_config.transistor_dto_1.t_j_max_op - 25, dto.input_config.fs, dto.input_config.c_par_1)
+                dto.input_config.transistor_dto_1.t_j_max_op - TRANSISTOR_TEMPERATURE_SAFETY_MARGIN, dto.input_config.fs, dto.input_config.c_par_1)
             p_turn_off_1b[vec_vvp] = transistor_turn_off_loss(
                 float(i_turn_off_1b[vec_vvp]), dto.input_config.transistor_dto_1, dto.input_config.mesh_v1[vec_vvp],
-                dto.input_config.transistor_dto_1.t_j_max_op - 25, dto.input_config.fs, dto.input_config.c_par_1)
+                dto.input_config.transistor_dto_1.t_j_max_op - TRANSISTOR_TEMPERATURE_SAFETY_MARGIN, dto.input_config.fs, dto.input_config.c_par_1)
             p_turn_off_2a[vec_vvp] = transistor_turn_off_loss(
                 float(i_turn_off_2a[vec_vvp]), dto.input_config.transistor_dto_2, dto.input_config.mesh_v2[vec_vvp],
-                dto.input_config.transistor_dto_2.t_j_max_op - 25, dto.input_config.fs, dto.input_config.c_par_2)
+                dto.input_config.transistor_dto_2.t_j_max_op - TRANSISTOR_TEMPERATURE_SAFETY_MARGIN, dto.input_config.fs, dto.input_config.c_par_2)
             p_turn_off_2b[vec_vvp] = transistor_turn_off_loss(
                 float(i_turn_off_2b[vec_vvp]), dto.input_config.transistor_dto_2, dto.input_config.mesh_v2[vec_vvp],
-                dto.input_config.transistor_dto_2.t_j_max_op - 25, dto.input_config.fs, dto.input_config.c_par_2)
+                dto.input_config.transistor_dto_2.t_j_max_op - TRANSISTOR_TEMPERATURE_SAFETY_MARGIN, dto.input_config.fs, dto.input_config.c_par_2)
 
         if dto.calc_losses is not None:  # mypy
             p_m1_cond = dto.calc_losses.p_m1_conduction
@@ -983,7 +984,7 @@ class HandleDabDto:
             raise ValueError(f"Transistor 1: {transistor.name} is of non-allowed type {transistor.type}. "
                              f"Allowed types are MOSFET, SiC-MOSFET.")
 
-        t_j_recommended = transistor.switch.t_j_max - 25
+        t_j_recommended = transistor.switch.t_j_max - TRANSISTOR_TEMPERATURE_SAFETY_MARGIN
 
         v_interp, c_oss, q_oss, e_oss = (HandleDabDto.get_c_oss_from_tdb(transistor, margin_factor=c_oss_margin_factor))
 
@@ -1109,7 +1110,7 @@ class HandleDabDto:
             time_vec=sorted_max_rms_angles / (2 * np.pi * dab_dto.input_config.fs),
             time_array=time_array_resorted,
             current_array=current_array_resorted,
-            v_dc_max=np.max(dab_dto.input_config.mesh_v1),
+            v_dc_max=np.max(dab_dto.input_config.mesh_v2),
             study_name="",
             circuit_id=dab_dto.circuit_id,
             capacitor_number_in_circuit=1
