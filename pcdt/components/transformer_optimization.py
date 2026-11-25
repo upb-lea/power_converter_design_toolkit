@@ -17,6 +17,7 @@ import tqdm
 
 # own libraries
 import pcdt
+from pcdt.constants import SATURATION_THRESHOLD
 from pcdt.circuit_enums import CalcModeEnum
 from pcdt.components.transformer_optimization_dtos import TransformerOptimizationDto
 import femmt as fmt
@@ -447,58 +448,70 @@ class TransformerOptimization:
             core_loss_array = np.full_like(transformer_requirements.time_array[..., 0], np.nan)
             b_max_array = np.full_like(transformer_requirements.time_array[..., 0], np.nan)
 
-            if os.path.exists(os.path.join(new_circuit_dto_directory, f"{transformer_id}.pkl")):
-                logger.info(f"All-operating point simulation of circuit {circuit_id} with transformer {transformer_id} already exists. Skip.")
+            if (os.path.exists(os.path.join(new_circuit_dto_directory, f"{transformer_id}.pkl")) \
+                    or os.path.exists(os.path.join(new_circuit_dto_directory, f"{transformer_id}_failed.txt"))):
+                logger.info(f"Reluctance model of circuit {circuit_id}, inductor {transformer_id} already exists or has already failed in the past. Skip.")
             else:
-                for vec_vvp in np.ndindex(result_array.shape):
-                    time, unique_indices = np.unique(transformer_requirements.time_array[vec_vvp], return_index=True)
-                    current_1 = transformer_requirements.current_1_array[vec_vvp][unique_indices]
-                    current_2 = transformer_requirements.current_2_array[vec_vvp][unique_indices]
+                try:
+                    for vec_vvp in np.ndindex(result_array.shape):
+                        time, unique_indices = np.unique(transformer_requirements.time_array[vec_vvp], return_index=True)
+                        current_1 = transformer_requirements.current_1_array[vec_vvp][unique_indices]
+                        current_2 = transformer_requirements.current_2_array[vec_vvp][unique_indices]
 
-                    current_waveform_1 = np.array([time, current_1])
-                    current_waveform_2 = np.array([time, current_2])
+                        current_waveform_1 = np.array([time, current_1])
+                        current_waveform_2 = np.array([time, current_2])
 
-                    logger.debug(f"{current_waveform_1=}")
-                    logger.debug("----------------------")
-                    logger.debug("Re-simulation of:")
-                    logger.debug(f"   * Circuit study: {circuit_study_name}")
-                    logger.debug(f"   * Circuit ID: {circuit_id}")
-                    logger.debug(f"   * Transformer study: {act_sto_config.stacked_transformer_study_name}")
-                    logger.debug(f"   * Transformer ID: {transformer_id}")
+                        logger.debug(f"{current_waveform_1=}")
+                        logger.debug("----------------------")
+                        logger.debug("Re-simulation of:")
+                        logger.debug(f"   * Circuit study: {circuit_study_name}")
+                        logger.debug(f"   * Circuit ID: {circuit_id}")
+                        logger.debug(f"   * Transformer study: {act_sto_config.stacked_transformer_study_name}")
+                        logger.debug(f"   * Transformer ID: {transformer_id}")
 
-                    volume, combined_losses, area_to_heat_sink, winding_1_loss, winding_2_loss, core_loss, b_max = (
-                        fmt.StackedTransformerOptimization.ReluctanceModel.full_simulation(
-                            df_transformer_id, current_waveform_1, current_waveform_2, config_filepath))
-                    result_array[vec_vvp] = combined_losses
-                    winding_1_loss_array[vec_vvp] = winding_1_loss
-                    winding_2_loss_array[vec_vvp] = winding_2_loss
-                    core_loss_array[vec_vvp] = core_loss
-                    b_max_array[vec_vvp] = b_max
+                        volume, combined_losses, area_to_heat_sink, winding_1_loss, winding_2_loss, core_loss, b_max = (
+                            fmt.StackedTransformerOptimization.ReluctanceModel.full_simulation(
+                                df_transformer_id, current_waveform_1, current_waveform_2, config_filepath))
+                        result_array[vec_vvp] = combined_losses
+                        winding_1_loss_array[vec_vvp] = winding_1_loss
+                        winding_2_loss_array[vec_vvp] = winding_2_loss
+                        core_loss_array[vec_vvp] = core_loss
+                        b_max_array[vec_vvp] = b_max
 
-                # Calculate thermal resistance
-                r_th_xfmr_heat_sink = ThermalCalcSupport.calculate_r_th_tim(
-                    area_to_heat_sink, thermal_data)
+                        if b_max > SATURATION_THRESHOLD:
+                            raise ValueError(f"Saturation detected ({b_max} T > {SATURATION_THRESHOLD} T): Skip design candidate.")
 
-                transformer_results = StackedTransformerResults(
-                    loss_array=result_array,
-                    winding_1_loss_array=winding_1_loss_array,
-                    winding_2_loss_array=winding_2_loss_array,
-                    core_loss_array=core_loss_array,
-                    b_max_array=b_max_array,
-                    volume=volume,
-                    area_to_heat_sink=area_to_heat_sink,
-                    r_th_xfmr_heat_sink=r_th_xfmr_heat_sink,
-                    circuit_id=circuit_id,
-                    transformer_id=transformer_id,
-                    transformer_number_in_circuit=transformer_requirements.transformer_number_in_circuit,
-                    l_s=transformer_requirements.l_s12_target,
-                    l_h=transformer_requirements.l_h_target,
-                    n=transformer_requirements.n_target,
-                )
+                    # Calculate thermal resistance
+                    r_th_xfmr_heat_sink = ThermalCalcSupport.calculate_r_th_tim(
+                        area_to_heat_sink, thermal_data)
 
-                pickle_file = os.path.join(new_circuit_dto_directory, f"{int(transformer_id)}.pkl")
-                with open(pickle_file, 'wb') as output:
-                    pickle.dump(transformer_results, output, pickle.HIGHEST_PROTOCOL)
+                    transformer_results = StackedTransformerResults(
+                        loss_array=result_array,
+                        winding_1_loss_array=winding_1_loss_array,
+                        winding_2_loss_array=winding_2_loss_array,
+                        core_loss_array=core_loss_array,
+                        b_max_array=b_max_array,
+                        volume=volume,
+                        area_to_heat_sink=area_to_heat_sink,
+                        r_th_xfmr_heat_sink=r_th_xfmr_heat_sink,
+                        circuit_id=circuit_id,
+                        transformer_id=transformer_id,
+                        transformer_number_in_circuit=transformer_requirements.transformer_number_in_circuit,
+                        l_s=transformer_requirements.l_s12_target,
+                        l_h=transformer_requirements.l_h_target,
+                        n=transformer_requirements.n_target,
+                    )
+
+                    pickle_file = os.path.join(new_circuit_dto_directory, f"{int(transformer_id)}.pkl")
+                    with open(pickle_file, 'wb') as output:
+                        pickle.dump(transformer_results, output, pickle.HIGHEST_PROTOCOL)
+                except Exception as e:
+                    logger.warning(f"Circuit {circuit_id} with inductor {transformer_id}: an operation point exceeds the boundary!")
+                    failed_file = os.path.join(new_circuit_dto_directory, f"{int(transformer_id)}_failed.txt")
+                    traceback_text = traceback.format_exc()
+                    with open(failed_file, "a") as f:
+                        f.write(f"Error message: {e}\n\n\n\n\n\n")
+                        f.write(f"Traceback: {traceback_text}")
 
         # returns the number of filtered results
         return quantity_transformer_id_pareto

@@ -16,6 +16,7 @@ import tqdm
 # own libraries
 import femmt as fmt
 import pcdt
+from pcdt.constants import SATURATION_THRESHOLD
 from pcdt.circuit_enums import CalcModeEnum
 from pcdt.boundary_check import CheckCondition as c_flag
 from pcdt.components.inductor_optimization_dtos import InductorOptimizationDto
@@ -379,50 +380,62 @@ class InductorOptimization:
             b_max_array = np.full_like(inductor_requirements.time_array[..., 0], np.nan)
             winding_loss_array = np.full_like(inductor_requirements.time_array[..., 0], np.nan)
 
-            if os.path.exists(os.path.join(new_circuit_dto_directory, f"{int(inductor_id)}.pkl")):
-                logger.info(f"All-operating point simulation of circuit {circuit_id} with inductor {inductor_id} already exists. Skip.")
+            if (os.path.exists(os.path.join(new_circuit_dto_directory, f"{int(inductor_id)}.pkl")) or \
+                    os.path.exists(os.path.join(new_circuit_dto_directory, f"{int(inductor_id)}_failed.txt"))):
+                logger.info(f"Reluctance model of circuit {circuit_id}, inductor {inductor_id} already exists or has already failed in the past. Skip.")
             else:
-                for vec_vvp in np.ndindex(inductor_requirements.time_array[..., 0].shape):
-                    time, unique_indices = np.unique(inductor_requirements.time_array[vec_vvp], return_index=True)
-                    current = inductor_requirements.current_array[vec_vvp][unique_indices]
+                try:
+                    for vec_vvp in np.ndindex(inductor_requirements.time_array[..., 0].shape):
+                        time, unique_indices = np.unique(inductor_requirements.time_array[vec_vvp], return_index=True)
+                        current = inductor_requirements.current_array[vec_vvp][unique_indices]
 
-                    current_waveform = np.array([time, current])
-                    logger.debug(f"{current_waveform=}")
-                    logger.debug("All operating point simulation of:")
-                    logger.debug(f"   * Circuit study: {circuit_study_name}")
-                    logger.debug(f"   * Circuit ID: {circuit_id}")
-                    logger.debug(f"   * Inductor study: {act_io_config.inductor_study_name}")
-                    logger.debug(f"   * Inductor ID: {inductor_id}")
+                        current_waveform = np.array([time, current])
+                        logger.debug(f"{current_waveform=}")
+                        logger.debug("All operating point simulation of:")
+                        logger.debug(f"   * Circuit study: {circuit_study_name}")
+                        logger.debug(f"   * Circuit ID: {circuit_id}")
+                        logger.debug(f"   * Inductor study: {act_io_config.inductor_study_name}")
+                        logger.debug(f"   * Inductor ID: {inductor_id}")
 
-                    inductor_volume, combined_losses, area_to_heat_sink, winding_loss, core_loss, b_max = (
-                        fmt.InductorOptimization.ReluctanceModel.full_simulation(
-                            df_inductor_id, current_waveform=current_waveform,
-                            inductor_config_filepath=config_filepath))
-                    combined_loss_array[vec_vvp] = combined_losses
-                    core_loss_array[vec_vvp] = core_loss
-                    b_max_array[vec_vvp] = b_max
-                    winding_loss_array[vec_vvp] = winding_loss
+                        inductor_volume, combined_losses, area_to_heat_sink, winding_loss, core_loss, b_max = (
+                            fmt.InductorOptimization.ReluctanceModel.full_simulation(
+                                df_inductor_id, current_waveform=current_waveform,
+                                inductor_config_filepath=config_filepath))
+                        combined_loss_array[vec_vvp] = combined_losses
+                        core_loss_array[vec_vvp] = core_loss
+                        b_max_array[vec_vvp] = b_max
+                        winding_loss_array[vec_vvp] = winding_loss
 
-                # Calculate thermal resistance
-                r_th_ind_heat_sink = ThermalCalcSupport.calculate_r_th_tim(area_to_heat_sink, thermal_data)
+                        if b_max > SATURATION_THRESHOLD:
+                            raise ValueError(f"Saturation detected ({b_max} T > {SATURATION_THRESHOLD} T): Skip design candidate.")
 
-                reluctance_inductor_results = InductorResults(
-                    loss_array=combined_loss_array,
-                    winding_loss_array=winding_loss_array,
-                    core_loss_array=core_loss_array,
-                    b_max_array=b_max_array,
-                    volume=inductor_volume,
-                    area_to_heat_sink=area_to_heat_sink,
-                    r_th_ind_heat_sink=r_th_ind_heat_sink,
-                    inductance=inductor_requirements.target_inductance,
-                    circuit_id=circuit_id,
-                    inductor_number_in_circuit=inductor_requirements.inductor_number_in_circuit,
-                    inductor_id=inductor_id
-                )
+                    # Calculate thermal resistance
+                    r_th_ind_heat_sink = ThermalCalcSupport.calculate_r_th_tim(area_to_heat_sink, thermal_data)
 
-                pickle_file = os.path.join(new_circuit_dto_directory, f"{int(inductor_id)}.pkl")
-                with open(pickle_file, 'wb') as output:
-                    pickle.dump(reluctance_inductor_results, output, pickle.HIGHEST_PROTOCOL)
+                    reluctance_inductor_results = InductorResults(
+                        loss_array=combined_loss_array,
+                        winding_loss_array=winding_loss_array,
+                        core_loss_array=core_loss_array,
+                        b_max_array=b_max_array,
+                        volume=inductor_volume,
+                        area_to_heat_sink=area_to_heat_sink,
+                        r_th_ind_heat_sink=r_th_ind_heat_sink,
+                        inductance=inductor_requirements.target_inductance,
+                        circuit_id=circuit_id,
+                        inductor_number_in_circuit=inductor_requirements.inductor_number_in_circuit,
+                        inductor_id=inductor_id
+                    )
+
+                    pickle_file = os.path.join(new_circuit_dto_directory, f"{int(inductor_id)}.pkl")
+                    with open(pickle_file, 'wb') as output:
+                        pickle.dump(reluctance_inductor_results, output, pickle.HIGHEST_PROTOCOL)
+                except Exception as e:
+                    logger.warning(f"Circuit {circuit_id} with inductor {inductor_id}: an operation point exceeds the boundary!")
+                    failed_file = os.path.join(new_circuit_dto_directory, f"{int(inductor_id)}_failed.txt")
+                    traceback_text = traceback.format_exc()
+                    with open(failed_file, "a") as f:
+                        f.write(f"Error message: {e}\n\n\n\n\n\n")
+                        f.write(f"Traceback: {traceback_text}")
 
         # returns the number of filtered results
         return quantity_of_inductor_id_pareto
