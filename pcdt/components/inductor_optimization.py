@@ -17,6 +17,7 @@ import pandas as pd
 # own libraries
 import femmt as fmt
 import pcdt
+from pcdt.constants import SATURATION_THRESHOLD
 from pcdt.circuit_enums import CalcModeEnum
 from pcdt.boundary_check import CheckCondition as c_flag
 from pcdt.components.inductor_optimization_dtos import InductorOptimizationDto
@@ -285,7 +286,7 @@ class InductorOptimization:
                                                        progress_status=ProgressStatus.Idle)
 
         # Check for valid filtered_list_id
-        if len(self._optimization_config_list[index]) > filtered_list_id:
+        if (0 <= index < len(self._optimization_config_list) and 0 <= filtered_list_id < len(self._optimization_config_list[index])):
             # Lock statistical performance data access
             with self._i_lock_stat:
                 # Check if list is in progress
@@ -323,6 +324,17 @@ class InductorOptimization:
         return act_df["state"].eq(COMPLETE_INDICATION).any()
 
 
+    @staticmethod
+    def base_name(filename: str) -> str:
+        """
+        Remove the extension (.pkl or _failed.txt) and returns the plain name.
+
+        :param filename: filename
+        :type filename: str
+        """
+        if filename.endswith("_failed.txt"):
+            return filename[:-len("_failed.txt")]
+        return os.path.splitext(filename)[0]  # for .pkl
 
     # Simulation handler. Later the simulation handler starts a process per list entry.
     @staticmethod
@@ -361,45 +373,70 @@ class InductorOptimization:
             logger.info(f"Target number of trials = {target_number_trials} which are less equal 0!. No simulation is performed")
             return 0
 
+        # Create the directory name and create is, if it doesn't exist
+        new_circuit_dto_directory = os.path.join(act_io_config.inductor_optimization_directory,
+                                                 CIRCUIT_INDUCTOR_RELUCTANCE_LOSSES_FOLDER)
+
+        if not os.path.exists(new_circuit_dto_directory):
+            os.makedirs(new_circuit_dto_directory)
+
         # filter the reluctance model data Pareto front
         df_inductor = fmt.optimization.InductorOptimization.ReluctanceModel.study_to_df(act_io_config)
         # Check, if data frame contains minimum one valid solution
-        if InductorOptimization._is_valid_design_available(df_inductor):
-            df_inductor_pareto = fmt.optimization.InductorOptimization.ReluctanceModel.filter_loss_list_df(
-                df_inductor, factor_min_dc_losses=factor_dc_losses_min_max_list[0], factor_max_dc_losses=factor_dc_losses_min_max_list[1])
-            if debug.general.is_debug:
-                # reduce dataset to the given number from the debug configuration
-                df_inductor_pareto = df_inductor_pareto.iloc[:debug.inductor.number_reluctance_working_point_max]
+        if not InductorOptimization._is_valid_design_available(df_inductor):
+            failed_file = os.path.join(new_circuit_dto_directory, "-1_failed.txt")
+            error_text = f"Error message: For circuit design {circuit_id}, it was not possible to calculate a single valid design for the inductance!"
+            with open(failed_file, "a") as f:
+                f.write(error_text)
+
+            # Provide number of identified designs
+            return 0
+
+        df_inductor_pareto = fmt.optimization.InductorOptimization.ReluctanceModel.filter_loss_list_df(
+            df_inductor, factor_min_dc_losses=factor_dc_losses_min_max_list[0], factor_max_dc_losses=factor_dc_losses_min_max_list[1])
+        if debug.general.is_debug:
+            # reduce dataset to the given number from the debug configuration
+            df_inductor_pareto = df_inductor_pareto.iloc[:debug.inductor.number_reluctance_working_point_max]
 
 
-            config_filepath = os.path.join(act_io_config.inductor_optimization_directory, f"{act_io_config.inductor_study_name}.pkl")
+        config_filepath = os.path.join(act_io_config.inductor_optimization_directory, f"{act_io_config.inductor_study_name}.pkl")
 
-            inductor_id_list_pareto = df_inductor_pareto["number"].to_numpy()
+        inductor_id_list_pareto = df_inductor_pareto["number"].to_numpy()
 
-            # Overtake the filtered operation points
-            quantity_of_inductor_id_pareto = len(inductor_id_list_pareto)
+        logger.info(f"Reluctance model: Full-operating point simulation list with {len(inductor_id_list_pareto)} designs: {inductor_id_list_pareto}")
 
-            logger.info(f"Full-operating point simulation list with {len(inductor_id_list_pareto)} designs: {inductor_id_list_pareto}")
+        # in case of already existing pkl or failed files which do not match with the pareto front, delete these files (in case of 'continue' an optimization)
+        allowed_names = set(df_inductor_pareto.index.astype(str))
+        files_to_delete = []
+        for filename in os.listdir(new_circuit_dto_directory):
+            full_path = os.path.join(new_circuit_dto_directory, filename)
+            if not os.path.isfile(full_path):
+                continue
+            if filename.endswith(".pkl") or filename.endswith("_failed_.txt"):
+                if InductorOptimization.base_name(filename) not in allowed_names:
+                    files_to_delete.append(full_path)
+        for full_path in files_to_delete:
+            os.remove(full_path)
+            logger.info(f"Deleted: {os.path.basename(full_path)}")
 
-            new_circuit_dto_directory = os.path.join(act_io_config.inductor_optimization_directory, CIRCUIT_INDUCTOR_RELUCTANCE_LOSSES_FOLDER)
-            if not os.path.exists(new_circuit_dto_directory):
-                os.makedirs(new_circuit_dto_directory)
+        # simulate all operating points
+        for inductor_id in tqdm.tqdm(inductor_id_list_pareto):
+            df_inductor_id = df_inductor_pareto[df_inductor_pareto["number"] == float(inductor_id)]
 
-            # simulate all operating points
-            for inductor_id in tqdm.tqdm(inductor_id_list_pareto):
-                df_inductor_id = df_inductor_pareto[df_inductor_pareto["number"] == float(inductor_id)]
+            logger.debug(f"single_geometry_number: \n"
+                         f"    {df_inductor_id.head()}")
 
-                logger.debug(f"single_geometry_number: \n"
-                             f"    {df_inductor_id.head()}")
+            # Fill dimensional matrix and remove last dimension (which is the exact time/current value)
+            combined_loss_array = np.full_like(inductor_requirements.time_array[..., 0], np.nan)
+            core_loss_array = np.full_like(inductor_requirements.time_array[..., 0], np.nan)
+            b_max_array = np.full_like(inductor_requirements.time_array[..., 0], np.nan)
+            winding_loss_array = np.full_like(inductor_requirements.time_array[..., 0], np.nan)
 
-                # Fill dimensional matrix and remove last dimension (which is the exact time/current value)
-                combined_loss_array = np.full_like(inductor_requirements.time_array[..., 0], np.nan)
-                core_loss_array = np.full_like(inductor_requirements.time_array[..., 0], np.nan)
-                winding_loss_array = np.full_like(inductor_requirements.time_array[..., 0], np.nan)
-
-                if os.path.exists(os.path.join(new_circuit_dto_directory, f"{inductor_id}.pkl")):
-                    logger.info(f"All-operating point simulation of circuit {circuit_id} with inductor {inductor_id} already exists. Skip.")
-                else:
+            if (os.path.exists(os.path.join(new_circuit_dto_directory, f"{int(inductor_id)}.pkl")) or \
+                    os.path.exists(os.path.join(new_circuit_dto_directory, f"{int(inductor_id)}_failed.txt"))):
+                logger.info(f"Reluctance model of circuit {circuit_id}, inductor {inductor_id} already exists or has already failed in the past. Skip.")
+            else:
+                try:
                     for vec_vvp in np.ndindex(inductor_requirements.time_array[..., 0].shape):
                         time, unique_indices = np.unique(inductor_requirements.time_array[vec_vvp], return_index=True)
                         current = inductor_requirements.current_array[vec_vvp][unique_indices]
@@ -412,21 +449,26 @@ class InductorOptimization:
                         logger.debug(f"   * Inductor study: {act_io_config.inductor_study_name}")
                         logger.debug(f"   * Inductor ID: {inductor_id}")
 
-                        inductor_volume, combined_losses, area_to_heat_sink, winding_loss, core_loss = fmt.InductorOptimization.ReluctanceModel.full_simulation(
-                            df_inductor_id, current_waveform=current_waveform,
-                            inductor_config_filepath=config_filepath)
+                        inductor_volume, combined_losses, area_to_heat_sink, winding_loss, core_loss, b_max = (
+                            fmt.InductorOptimization.ReluctanceModel.full_simulation(
+                                df_inductor_id, current_waveform=current_waveform,
+                                inductor_config_filepath=config_filepath))
                         combined_loss_array[vec_vvp] = combined_losses
                         core_loss_array[vec_vvp] = core_loss
+                        b_max_array[vec_vvp] = b_max
                         winding_loss_array[vec_vvp] = winding_loss
 
+                        if b_max > SATURATION_THRESHOLD:
+                            raise ValueError(f"Saturation detected ({b_max} T > {SATURATION_THRESHOLD} T): Skip design candidate.")
+
                     # Calculate thermal resistance
-                    r_th_ind_heat_sink = ThermalCalcSupport.calculate_r_th_tim(
-                        area_to_heat_sink, thermal_data)
+                    r_th_ind_heat_sink = ThermalCalcSupport.calculate_r_th_tim(area_to_heat_sink, thermal_data)
 
                     reluctance_inductor_results = InductorResults(
                         loss_array=combined_loss_array,
                         winding_loss_array=winding_loss_array,
                         core_loss_array=core_loss_array,
+                        b_max_array=b_max_array,
                         volume=inductor_volume,
                         area_to_heat_sink=area_to_heat_sink,
                         r_th_ind_heat_sink=r_th_ind_heat_sink,
@@ -439,8 +481,13 @@ class InductorOptimization:
                     pickle_file = os.path.join(new_circuit_dto_directory, f"{int(inductor_id)}.pkl")
                     with open(pickle_file, 'wb') as output:
                         pickle.dump(reluctance_inductor_results, output, pickle.HIGHEST_PROTOCOL)
-        else:
-            logger.warning(f"For circuit design {circuit_id} no valid inductor design could be found!")
+                except Exception as e:
+                    logger.warning(f"Circuit {circuit_id} with inductor {inductor_id}: an operation point exceeds the boundary!")
+                    failed_file = os.path.join(new_circuit_dto_directory, f"{int(inductor_id)}_failed.txt")
+                    traceback_text = traceback.format_exc()
+                    with open(failed_file, "a") as f:
+                        f.write(f"Error message: {e}\n\n\n\n\n\n")
+                        f.write(f"Traceback: {traceback_text}")
 
         # returns the number of filtered results
         return quantity_of_inductor_id_pareto
@@ -567,8 +614,13 @@ class InductorOptimization:
         process_number = current_process().name
 
         df_inductor = fmt.optimization.InductorOptimization.ReluctanceModel.study_to_df(act_io_config)
-        df_inductor_pareto = fmt.optimization.InductorOptimization.ReluctanceModel.filter_loss_list_df(
-            df_inductor, factor_min_dc_losses=factor_dc_losses_min_max_list[0], factor_max_dc_losses=factor_dc_losses_min_max_list[1])
+
+        # read inductor IDs from the reluctance model folder
+        reluctance_model_dto_directory = os.path.join(act_io_config.inductor_optimization_directory, CIRCUIT_INDUCTOR_RELUCTANCE_LOSSES_FOLDER)
+        reluctance_model_pkl_names = [int(f.replace(".pkl", "")) for f in os.listdir(reluctance_model_dto_directory) if f.lower().endswith(".pkl") and \
+                                      os.path.isfile(os.path.join(reluctance_model_dto_directory, f))]
+        df_inductor_pareto = df_inductor[df_inductor.index.isin(reluctance_model_pkl_names)]
+
         if debug.general.is_debug:
             # reduce dataset to the fist given number from the debug configuration file
             df_inductor_pareto = df_inductor_pareto.iloc[:debug.inductor.number_fem_working_point_max]
@@ -577,7 +629,7 @@ class InductorOptimization:
 
         inductor_id_list_pareto = df_inductor_pareto["number"].to_numpy()
 
-        logger.info(f"Full-operating point simulation list with {len(inductor_id_list_pareto)} designs: {inductor_id_list_pareto}")
+        logger.info(f"FEM simulation: Full-operating point simulation list with {len(inductor_id_list_pareto)} designs: {inductor_id_list_pareto}")
 
         new_circuit_dto_directory = os.path.join(act_io_config.inductor_optimization_directory, CIRCUIT_INDUCTOR_FEM_LOSSES_FOLDER)
         if not os.path.exists(new_circuit_dto_directory):
@@ -598,8 +650,8 @@ class InductorOptimization:
                 core_loss_array = np.full_like(inductor_requirements.time_array[..., 0], np.nan)
 
                 # check if simulation already exists or has already failed in the past
-                if (os.path.exists(os.path.join(new_circuit_dto_directory, f"{inductor_id}.pkl")) \
-                        or os.path.exists(os.path.join(new_circuit_dto_directory, f"{inductor_id}_failed.txt"))):
+                if (os.path.exists(os.path.join(new_circuit_dto_directory, f"{int(inductor_id)}.pkl")) or \
+                        os.path.exists(os.path.join(new_circuit_dto_directory, f"{int(inductor_id)}_failed.txt"))):
                     logger.info(f"FEM-simulation of circuit {circuit_id}, inductor {inductor_id} already exists or has already failed in the past. Skip.")
                 else:
                     logger.info(f"Start FEM-simulation of circuit {circuit_id}, inductor {inductor_id}.")
@@ -629,6 +681,7 @@ class InductorOptimization:
                         loss_array=combined_loss_array,
                         winding_loss_array=winding_loss_array,
                         core_loss_array=core_loss_array,
+                        b_max_array=0,
                         volume=fem_output.volume,
                         area_to_heat_sink=area_to_heat_sink,
                         r_th_ind_heat_sink=r_th_ind_heat_sink,

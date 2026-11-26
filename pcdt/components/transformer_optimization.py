@@ -17,6 +17,7 @@ import tqdm
 
 # own libraries
 import pcdt
+from pcdt.constants import SATURATION_THRESHOLD
 from pcdt.circuit_enums import CalcModeEnum
 from pcdt.components.transformer_optimization_dtos import TransformerOptimizationDto
 import femmt as fmt
@@ -380,6 +381,18 @@ class TransformerOptimization:
         return self._number_performed_calculations
 
     @staticmethod
+    def base_name(filename: str) -> str:
+        """
+        Remove the extension (.pkl or _failed.txt) and returns the plain name.
+
+        :param filename: filename
+        :type filename: str
+        """
+        if filename.endswith("_failed.txt"):
+            return filename[:-len("_failed.txt")]
+        return os.path.splitext(filename)[0]  # for .pkl
+
+    @staticmethod
     def _optimize_reluctance_model(circuit_id: str, act_sto_config: fmt.StoSingleInputConfig, circuit_study_name: str,
                                    transformer_requirements: TransformerRequirements, thermal_data: ComponentCooling,
                                    target_number_trials: int, factor_dc_losses_min_max_list: list[float], debug: pcdt.Debug) -> int:
@@ -432,11 +445,25 @@ class TransformerOptimization:
         # Overtake the filtered operation points
         quantity_transformer_id_pareto = len(transformer_id_list_pareto)
 
-        logger.info(f"Full-operating point simulation list with {len(transformer_id_list_pareto)} designs: {transformer_id_list_pareto}")
+        logger.info(f"Reluctance model: Full-operating point simulation list with {len(transformer_id_list_pareto)} designs: {transformer_id_list_pareto}")
 
         new_circuit_dto_directory = os.path.join(act_sto_config.stacked_transformer_optimization_directory, CIRCUIT_TRANSFORMER_RELUCTANCE_LOSSES_FOLDER)
         if not os.path.exists(new_circuit_dto_directory):
             os.makedirs(new_circuit_dto_directory)
+
+        # in case of already existing pkl or failed files which do not match with the pareto front, delete these files (in case of 'continue' an optimization)
+        allowed_names = set(df_transformer_pareto.index.astype(str))
+        files_to_delete = []
+        for filename in os.listdir(new_circuit_dto_directory):
+            full_path = os.path.join(new_circuit_dto_directory, filename)
+            if not os.path.isfile(full_path):
+                continue
+            if filename.endswith(".pkl") or filename.endswith("_failed_.txt"):
+                if TransformerOptimization.base_name(filename) not in allowed_names:
+                    files_to_delete.append(full_path)
+        for full_path in files_to_delete:
+            os.remove(full_path)
+            logger.info(f"Deleted: {os.path.basename(full_path)}")
 
         for transformer_id in tqdm.tqdm(transformer_id_list_pareto):
             df_transformer_id = df_transformer_pareto[df_transformer_pareto["number"] == transformer_id]
@@ -445,57 +472,72 @@ class TransformerOptimization:
             winding_1_loss_array = np.full_like(transformer_requirements.time_array[..., 0], np.nan)
             winding_2_loss_array = np.full_like(transformer_requirements.time_array[..., 0], np.nan)
             core_loss_array = np.full_like(transformer_requirements.time_array[..., 0], np.nan)
+            b_max_array = np.full_like(transformer_requirements.time_array[..., 0], np.nan)
 
-            if os.path.exists(os.path.join(new_circuit_dto_directory, f"{transformer_id}.pkl")):
-                logger.info(f"All-operating point simulation of circuit {circuit_id} with transformer {transformer_id} already exists. Skip.")
+            if (os.path.exists(os.path.join(new_circuit_dto_directory, f"{transformer_id}.pkl")) \
+                    or os.path.exists(os.path.join(new_circuit_dto_directory, f"{transformer_id}_failed.txt"))):
+                logger.info(f"Reluctance model of circuit {circuit_id}, inductor {transformer_id} already exists or has already failed in the past. Skip.")
             else:
-                for vec_vvp in np.ndindex(result_array.shape):
-                    time, unique_indices = np.unique(transformer_requirements.time_array[vec_vvp], return_index=True)
-                    current_1 = transformer_requirements.current_1_array[vec_vvp][unique_indices]
-                    current_2 = transformer_requirements.current_2_array[vec_vvp][unique_indices]
+                try:
+                    for vec_vvp in np.ndindex(result_array.shape):
+                        time, unique_indices = np.unique(transformer_requirements.time_array[vec_vvp], return_index=True)
+                        current_1 = transformer_requirements.current_1_array[vec_vvp][unique_indices]
+                        current_2 = transformer_requirements.current_2_array[vec_vvp][unique_indices]
 
-                    current_waveform_1 = np.array([time, current_1])
-                    current_waveform_2 = np.array([time, current_2])
+                        current_waveform_1 = np.array([time, current_1])
+                        current_waveform_2 = np.array([time, current_2])
 
-                    logger.debug(f"{current_waveform_1=}")
-                    logger.debug("----------------------")
-                    logger.debug("Re-simulation of:")
-                    logger.debug(f"   * Circuit study: {circuit_study_name}")
-                    logger.debug(f"   * Circuit ID: {circuit_id}")
-                    logger.debug(f"   * Transformer study: {act_sto_config.stacked_transformer_study_name}")
-                    logger.debug(f"   * Transformer ID: {transformer_id}")
+                        logger.debug(f"{current_waveform_1=}")
+                        logger.debug("----------------------")
+                        logger.debug("Re-simulation of:")
+                        logger.debug(f"   * Circuit study: {circuit_study_name}")
+                        logger.debug(f"   * Circuit ID: {circuit_id}")
+                        logger.debug(f"   * Transformer study: {act_sto_config.stacked_transformer_study_name}")
+                        logger.debug(f"   * Transformer ID: {transformer_id}")
 
-                    volume, combined_losses, area_to_heat_sink, winding_1_loss, winding_2_loss, core_loss = (
-                        fmt.StackedTransformerOptimization.ReluctanceModel.full_simulation(
-                            df_transformer_id, current_waveform_1, current_waveform_2, config_filepath))
-                    result_array[vec_vvp] = combined_losses
-                    winding_1_loss_array[vec_vvp] = winding_1_loss
-                    winding_2_loss_array[vec_vvp] = winding_2_loss
-                    core_loss_array[vec_vvp] = core_loss
+                        volume, combined_losses, area_to_heat_sink, winding_1_loss, winding_2_loss, core_loss, b_max = (
+                            fmt.StackedTransformerOptimization.ReluctanceModel.full_simulation(
+                                df_transformer_id, current_waveform_1, current_waveform_2, config_filepath))
+                        result_array[vec_vvp] = combined_losses
+                        winding_1_loss_array[vec_vvp] = winding_1_loss
+                        winding_2_loss_array[vec_vvp] = winding_2_loss
+                        core_loss_array[vec_vvp] = core_loss
+                        b_max_array[vec_vvp] = b_max
 
-                # Calculate thermal resistance
-                r_th_xfmr_heat_sink = ThermalCalcSupport.calculate_r_th_tim(
-                    area_to_heat_sink, thermal_data)
+                        if b_max > SATURATION_THRESHOLD:
+                            raise ValueError(f"Saturation detected ({b_max} T > {SATURATION_THRESHOLD} T): Skip design candidate.")
 
-                transformer_results = StackedTransformerResults(
-                    loss_array=result_array,
-                    winding_1_loss_array=winding_1_loss_array,
-                    winding_2_loss_array=winding_2_loss_array,
-                    core_loss_array=core_loss_array,
-                    volume=volume,
-                    area_to_heat_sink=area_to_heat_sink,
-                    r_th_xfmr_heat_sink=r_th_xfmr_heat_sink,
-                    circuit_id=circuit_id,
-                    transformer_id=transformer_id,
-                    transformer_number_in_circuit=transformer_requirements.transformer_number_in_circuit,
-                    l_s=transformer_requirements.l_s12_target,
-                    l_h=transformer_requirements.l_h_target,
-                    n=transformer_requirements.n_target,
-                )
+                    # Calculate thermal resistance
+                    r_th_xfmr_heat_sink = ThermalCalcSupport.calculate_r_th_tim(
+                        area_to_heat_sink, thermal_data)
 
-                pickle_file = os.path.join(new_circuit_dto_directory, f"{int(transformer_id)}.pkl")
-                with open(pickle_file, 'wb') as output:
-                    pickle.dump(transformer_results, output, pickle.HIGHEST_PROTOCOL)
+                    transformer_results = StackedTransformerResults(
+                        loss_array=result_array,
+                        winding_1_loss_array=winding_1_loss_array,
+                        winding_2_loss_array=winding_2_loss_array,
+                        core_loss_array=core_loss_array,
+                        b_max_array=b_max_array,
+                        volume=volume,
+                        area_to_heat_sink=area_to_heat_sink,
+                        r_th_xfmr_heat_sink=r_th_xfmr_heat_sink,
+                        circuit_id=circuit_id,
+                        transformer_id=transformer_id,
+                        transformer_number_in_circuit=transformer_requirements.transformer_number_in_circuit,
+                        l_s=transformer_requirements.l_s12_target,
+                        l_h=transformer_requirements.l_h_target,
+                        n=transformer_requirements.n_target,
+                    )
+
+                    pickle_file = os.path.join(new_circuit_dto_directory, f"{int(transformer_id)}.pkl")
+                    with open(pickle_file, 'wb') as output:
+                        pickle.dump(transformer_results, output, pickle.HIGHEST_PROTOCOL)
+                except Exception as e:
+                    logger.warning(f"Circuit {circuit_id} with inductor {transformer_id}: an operation point exceeds the boundary!")
+                    failed_file = os.path.join(new_circuit_dto_directory, f"{int(transformer_id)}_failed.txt")
+                    traceback_text = traceback.format_exc()
+                    with open(failed_file, "a") as f:
+                        f.write(f"Error message: {e}\n\n\n\n\n\n")
+                        f.write(f"Traceback: {traceback_text}")
 
         # returns the number of filtered results
         return quantity_transformer_id_pareto
@@ -613,8 +655,13 @@ class TransformerOptimization:
 
         # Filter study. Use same filter as in the reluctance model
         df = fmt.optimization.StackedTransformerOptimization.ReluctanceModel.study_to_df(act_sto_config)
-        df_transformer_pareto = fmt.optimization.StackedTransformerOptimization.ReluctanceModel.filter_loss_list_df(
-            df, factor_min_dc_losses=factor_dc_losses_min_max_list[0], factor_max_dc_losses=factor_dc_losses_min_max_list[1], filter_saturation=True)
+
+        # read inductor IDs from the reluctance model folder
+        reluctance_model_dto_directory = os.path.join(act_sto_config.stacked_transformer_optimization_directory, CIRCUIT_TRANSFORMER_RELUCTANCE_LOSSES_FOLDER)
+        reluctance_model_pkl_names = [int(f.replace(".pkl", "")) for f in os.listdir(reluctance_model_dto_directory) if f.lower().endswith(".pkl") and \
+                                      os.path.isfile(os.path.join(reluctance_model_dto_directory, f))]
+        df_transformer_pareto = df[df.index.isin(reluctance_model_pkl_names)]
+
         if debug.general.is_debug:
             # reduce dataset to the given number from the debug configuration
             df_transformer_pareto = df_transformer_pareto.iloc[:debug.transformer.number_fem_working_point_max]
@@ -625,7 +672,7 @@ class TransformerOptimization:
 
         transformer_id_list_pareto = df_transformer_pareto["number"].to_numpy()
 
-        logger.info(f"Full-operating point simulation list with {len(transformer_id_list_pareto)} designs: {transformer_id_list_pareto}")
+        logger.info(f"FEM simulation: Full-operating point simulation list with {len(transformer_id_list_pareto)} designs: {transformer_id_list_pareto}")
 
         new_circuit_dto_directory = os.path.join(act_sto_config.stacked_transformer_optimization_directory,
                                                  CIRCUIT_TRANSFORMER_FEM_LOSSES_FOLDER)
@@ -683,6 +730,7 @@ class TransformerOptimization:
                         winding_1_loss_array=winding_1_loss_array,
                         winding_2_loss_array=winding_2_loss_array,
                         core_loss_array=core_loss_array,
+                        b_max_array=0,
                         volume=fem_output.volume,
                         area_to_heat_sink=area_to_heat_sink,
                         r_th_xfmr_heat_sink=r_th_xfmr_heat_sink,
