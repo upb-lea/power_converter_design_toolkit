@@ -12,6 +12,7 @@ import traceback
 # 3rd party libraries
 import numpy as np
 import tqdm
+import pandas as pd
 
 # own libraries
 import femmt as fmt
@@ -23,7 +24,7 @@ from pcdt.components.heat_sink_optimization import ThermalCalcSupport
 from pcdt.server_ctl_dtos import ProgressData, ProgressStatus
 from pcdt.server_ctl_dtos import RunTimeMeasurement as RunTime
 from pcdt.datasets_dtos import InductorConfiguration
-from pcdt.constant_path import CIRCUIT_INDUCTOR_RELUCTANCE_LOSSES_FOLDER, CIRCUIT_INDUCTOR_FEM_LOSSES_FOLDER
+from pcdt.constant_path import CIRCUIT_INDUCTOR_RELUCTANCE_LOSSES_FOLDER, CIRCUIT_INDUCTOR_FEM_LOSSES_FOLDER, COMPLETE_INDICATION
 from pcdt.components.component_dtos import InductorRequirements, InductorResults, ComponentCooling
 
 # configure root logger
@@ -308,6 +309,21 @@ class InductorOptimization:
 
         return act_number_performed_calculations
 
+    @staticmethod
+    def _is_valid_design_available(act_df: pd.DataFrame) -> bool:
+        """
+        Check dataframe for any valid entry.
+
+        :param df_inductor: Dataframe with column 'state'
+        :type  df_inductor: pandas DataFrame
+        :return: True, if dataframe contains minimum one valid entry (Keyword complete)
+        :rtype:  bool
+        """
+
+        return act_df["state"].eq(COMPLETE_INDICATION).any()
+
+
+
     # Simulation handler. Later the simulation handler starts a process per list entry.
     @staticmethod
     def _optimize_reluctance_model(circuit_id: str, act_io_config: fmt.InductorOptimizationDTO, circuit_study_name: str,
@@ -347,79 +363,84 @@ class InductorOptimization:
 
         # filter the reluctance model data Pareto front
         df_inductor = fmt.optimization.InductorOptimization.ReluctanceModel.study_to_df(act_io_config)
-        df_inductor_pareto = fmt.optimization.InductorOptimization.ReluctanceModel.filter_loss_list_df(
-            df_inductor, factor_min_dc_losses=factor_dc_losses_min_max_list[0], factor_max_dc_losses=factor_dc_losses_min_max_list[1])
-        if debug.general.is_debug:
-            # reduce dataset to the given number from the debug configuration
-            df_inductor_pareto = df_inductor_pareto.iloc[:debug.inductor.number_reluctance_working_point_max]
+        # Check, if data frame contains minimum one valid solution
+        if InductorOptimization._is_valid_design_available(df_inductor):
+            df_inductor_pareto = fmt.optimization.InductorOptimization.ReluctanceModel.filter_loss_list_df(
+                df_inductor, factor_min_dc_losses=factor_dc_losses_min_max_list[0], factor_max_dc_losses=factor_dc_losses_min_max_list[1])
+            if debug.general.is_debug:
+                # reduce dataset to the given number from the debug configuration
+                df_inductor_pareto = df_inductor_pareto.iloc[:debug.inductor.number_reluctance_working_point_max]
 
-        config_filepath = os.path.join(act_io_config.inductor_optimization_directory, f"{act_io_config.inductor_study_name}.pkl")
 
-        inductor_id_list_pareto = df_inductor_pareto["number"].to_numpy()
+            config_filepath = os.path.join(act_io_config.inductor_optimization_directory, f"{act_io_config.inductor_study_name}.pkl")
 
-        # Overtake the filtered operation points
-        quantity_of_inductor_id_pareto = len(inductor_id_list_pareto)
+            inductor_id_list_pareto = df_inductor_pareto["number"].to_numpy()
 
-        logger.info(f"Full-operating point simulation list with {len(inductor_id_list_pareto)} designs: {inductor_id_list_pareto}")
+            # Overtake the filtered operation points
+            quantity_of_inductor_id_pareto = len(inductor_id_list_pareto)
 
-        new_circuit_dto_directory = os.path.join(act_io_config.inductor_optimization_directory, CIRCUIT_INDUCTOR_RELUCTANCE_LOSSES_FOLDER)
-        if not os.path.exists(new_circuit_dto_directory):
-            os.makedirs(new_circuit_dto_directory)
+            logger.info(f"Full-operating point simulation list with {len(inductor_id_list_pareto)} designs: {inductor_id_list_pareto}")
 
-        # simulate all operating points
-        for inductor_id in tqdm.tqdm(inductor_id_list_pareto):
-            df_inductor_id = df_inductor_pareto[df_inductor_pareto["number"] == float(inductor_id)]
+            new_circuit_dto_directory = os.path.join(act_io_config.inductor_optimization_directory, CIRCUIT_INDUCTOR_RELUCTANCE_LOSSES_FOLDER)
+            if not os.path.exists(new_circuit_dto_directory):
+                os.makedirs(new_circuit_dto_directory)
 
-            logger.debug(f"single_geometry_number: \n"
-                         f"    {df_inductor_id.head()}")
+            # simulate all operating points
+            for inductor_id in tqdm.tqdm(inductor_id_list_pareto):
+                df_inductor_id = df_inductor_pareto[df_inductor_pareto["number"] == float(inductor_id)]
 
-            # Fill dimensional matrix and remove last dimension (which is the exact time/current value)
-            combined_loss_array = np.full_like(inductor_requirements.time_array[..., 0], np.nan)
-            core_loss_array = np.full_like(inductor_requirements.time_array[..., 0], np.nan)
-            winding_loss_array = np.full_like(inductor_requirements.time_array[..., 0], np.nan)
+                logger.debug(f"single_geometry_number: \n"
+                             f"    {df_inductor_id.head()}")
 
-            if os.path.exists(os.path.join(new_circuit_dto_directory, f"{inductor_id}.pkl")):
-                logger.info(f"All-operating point simulation of circuit {circuit_id} with inductor {inductor_id} already exists. Skip.")
-            else:
-                for vec_vvp in np.ndindex(inductor_requirements.time_array[..., 0].shape):
-                    time, unique_indices = np.unique(inductor_requirements.time_array[vec_vvp], return_index=True)
-                    current = inductor_requirements.current_array[vec_vvp][unique_indices]
+                # Fill dimensional matrix and remove last dimension (which is the exact time/current value)
+                combined_loss_array = np.full_like(inductor_requirements.time_array[..., 0], np.nan)
+                core_loss_array = np.full_like(inductor_requirements.time_array[..., 0], np.nan)
+                winding_loss_array = np.full_like(inductor_requirements.time_array[..., 0], np.nan)
 
-                    current_waveform = np.array([time, current])
-                    logger.debug(f"{current_waveform=}")
-                    logger.debug("All operating point simulation of:")
-                    logger.debug(f"   * Circuit study: {circuit_study_name}")
-                    logger.debug(f"   * Circuit ID: {circuit_id}")
-                    logger.debug(f"   * Inductor study: {act_io_config.inductor_study_name}")
-                    logger.debug(f"   * Inductor ID: {inductor_id}")
+                if os.path.exists(os.path.join(new_circuit_dto_directory, f"{inductor_id}.pkl")):
+                    logger.info(f"All-operating point simulation of circuit {circuit_id} with inductor {inductor_id} already exists. Skip.")
+                else:
+                    for vec_vvp in np.ndindex(inductor_requirements.time_array[..., 0].shape):
+                        time, unique_indices = np.unique(inductor_requirements.time_array[vec_vvp], return_index=True)
+                        current = inductor_requirements.current_array[vec_vvp][unique_indices]
 
-                    inductor_volume, combined_losses, area_to_heat_sink, winding_loss, core_loss = fmt.InductorOptimization.ReluctanceModel.full_simulation(
-                        df_inductor_id, current_waveform=current_waveform,
-                        inductor_config_filepath=config_filepath)
-                    combined_loss_array[vec_vvp] = combined_losses
-                    core_loss_array[vec_vvp] = core_loss
-                    winding_loss_array[vec_vvp] = winding_loss
+                        current_waveform = np.array([time, current])
+                        logger.debug(f"{current_waveform=}")
+                        logger.debug("All operating point simulation of:")
+                        logger.debug(f"   * Circuit study: {circuit_study_name}")
+                        logger.debug(f"   * Circuit ID: {circuit_id}")
+                        logger.debug(f"   * Inductor study: {act_io_config.inductor_study_name}")
+                        logger.debug(f"   * Inductor ID: {inductor_id}")
 
-                # Calculate thermal resistance
-                r_th_ind_heat_sink = ThermalCalcSupport.calculate_r_th_tim(
-                    area_to_heat_sink, thermal_data)
+                        inductor_volume, combined_losses, area_to_heat_sink, winding_loss, core_loss = fmt.InductorOptimization.ReluctanceModel.full_simulation(
+                            df_inductor_id, current_waveform=current_waveform,
+                            inductor_config_filepath=config_filepath)
+                        combined_loss_array[vec_vvp] = combined_losses
+                        core_loss_array[vec_vvp] = core_loss
+                        winding_loss_array[vec_vvp] = winding_loss
 
-                reluctance_inductor_results = InductorResults(
-                    loss_array=combined_loss_array,
-                    winding_loss_array=winding_loss_array,
-                    core_loss_array=core_loss_array,
-                    volume=inductor_volume,
-                    area_to_heat_sink=area_to_heat_sink,
-                    r_th_ind_heat_sink=r_th_ind_heat_sink,
-                    inductance=inductor_requirements.target_inductance,
-                    circuit_id=circuit_id,
-                    inductor_number_in_circuit=inductor_requirements.inductor_number_in_circuit,
-                    inductor_id=inductor_id
-                )
+                    # Calculate thermal resistance
+                    r_th_ind_heat_sink = ThermalCalcSupport.calculate_r_th_tim(
+                        area_to_heat_sink, thermal_data)
 
-                pickle_file = os.path.join(new_circuit_dto_directory, f"{int(inductor_id)}.pkl")
-                with open(pickle_file, 'wb') as output:
-                    pickle.dump(reluctance_inductor_results, output, pickle.HIGHEST_PROTOCOL)
+                    reluctance_inductor_results = InductorResults(
+                        loss_array=combined_loss_array,
+                        winding_loss_array=winding_loss_array,
+                        core_loss_array=core_loss_array,
+                        volume=inductor_volume,
+                        area_to_heat_sink=area_to_heat_sink,
+                        r_th_ind_heat_sink=r_th_ind_heat_sink,
+                        inductance=inductor_requirements.target_inductance,
+                        circuit_id=circuit_id,
+                        inductor_number_in_circuit=inductor_requirements.inductor_number_in_circuit,
+                        inductor_id=inductor_id
+                    )
+
+                    pickle_file = os.path.join(new_circuit_dto_directory, f"{int(inductor_id)}.pkl")
+                    with open(pickle_file, 'wb') as output:
+                        pickle.dump(reluctance_inductor_results, output, pickle.HIGHEST_PROTOCOL)
+        else:
+            logger.warning(f"For circuit design {circuit_id} no valid inductor design could be found!")
 
         # returns the number of filtered results
         return quantity_of_inductor_id_pareto
@@ -471,11 +492,18 @@ class InductorOptimization:
 
         number_cpus = cpu_count()
 
-        parameter_set_list = self._generate_optimization_parameter(circuit_study_name, inductor_in_circuit, debug)
+        # parameter_set_list = self._generate_optimization_parameter(circuit_study_name, inductor_in_circuit, debug)
 
-        with Pool(processes=number_cpus) as pool:
-            # Perform parallel calculation
-            pool.starmap(func=InductorOptimization._optimize_reluctance_model, iterable=parameter_set_list)
+        # with Pool(processes=number_cpus) as pool:
+        #     # Perform parallel calculation
+        #     pool.starmap(func=InductorOptimization._optimize_reluctance_model, iterable=parameter_set_list)
+        # Debug
+        for act_optimization_configuration in self._optimization_config_list[inductor_in_circuit]:
+            InductorOptimization._optimize_reluctance_model(act_optimization_configuration.circuit_id, act_optimization_configuration.fmt_inductor_optimization_dto,
+                             circuit_study_name, act_optimization_configuration.inductor_requirements,
+                             act_optimization_configuration.thermal_data,
+                             act_optimization_configuration.number_of_trails, act_optimization_configuration.factor_dc_losses_min_max_list,
+                             debug)
 
     def fem_simulation_handler(self, circuit_study_name: str, inductor_in_circuit: int, debug: pcdt.Debug) -> None:
         """
@@ -497,11 +525,19 @@ class InductorOptimization:
 
         number_cpus = cpu_count()
 
-        parameter_set_list = self._generate_optimization_parameter(circuit_study_name, inductor_in_circuit, debug)
+        # parameter_set_list = self._generate_optimization_parameter(circuit_study_name, inductor_in_circuit, debug)
+        #
+        # with Pool(processes=number_cpus) as pool:
+        #     # Perform parallel calculation
+        #     pool.starmap(func=InductorOptimization._fem_simulation, iterable=parameter_set_list)
 
-        with Pool(processes=number_cpus) as pool:
-            # Perform parallel calculation
-            pool.starmap(func=InductorOptimization._fem_simulation, iterable=parameter_set_list)
+        # Debug
+        for act_optimization_configuration in self._optimization_config_list[inductor_in_circuit]:
+            InductorOptimization._fem_simulation(act_optimization_configuration.circuit_id, act_optimization_configuration.fmt_inductor_optimization_dto,
+                             circuit_study_name, act_optimization_configuration.inductor_requirements,
+                             act_optimization_configuration.thermal_data,
+                             act_optimization_configuration.number_of_trails, act_optimization_configuration.factor_dc_losses_min_max_list,
+                             debug)
 
     # Simulation handler. Later the simulation handler starts a process per list entry.
     @staticmethod

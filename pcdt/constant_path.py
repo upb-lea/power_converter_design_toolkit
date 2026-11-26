@@ -116,6 +116,7 @@ PLOT_CIRCUIT = "circuit"
 PLOT_HEAT_SINK = "heat_sink"
 PLOT_SUMMARY_WEIGHTED_EFFICIENCY = "summary_weighted_efficiency"
 PLOT_SUMMARY_MEAN_LOSS = "summary_mean_loss"
+COMPLETE_INDICATION = "COMPLETE"
 
 # FEMMT fixed folder names, do not change!
 FEMMT_FEM_RESULTS_FOLDER = "02_fem_simulation_results"
